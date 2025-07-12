@@ -17,14 +17,6 @@ app = FastAPI(
 )
 
 app.add_middleware(ExceptionMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 @app.get("/", tags=["general"], status_code=HTTPStatus.ACCEPTED)
 async def get_root():

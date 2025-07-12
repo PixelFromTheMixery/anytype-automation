@@ -15,4 +15,4 @@ router = APIRouter()
 async def test_endpoint():
     """Temp endpoint for testing"""
     logger.info("Test endpoint called")
-    return make_call_with_retry("get", f"{os.getenv("URL")}spaces/{os.getenv("MAIN_SPACE_ID")}", "getting main space")
+    return make_call_with_retry("post", f"{os.getenv("URL")}spaces/{os.getenv("MAIN_SPACE_ID")}/search?limit=3", "getting main space", {"type":["Task"]})#, {"types":["task"]})
