@@ -1,11 +1,13 @@
-from services.antype_service import AnytypeService
-from utils.anytype import AnyTypeUtils
-from utils.api_tools import make_call_with_retry
-from utils.logger import logger
+"""Module that handles endpoints for anytype automation."""
 
-import json
 from dotenv import load_dotenv
 from fastapi import APIRouter
+
+
+from services.antype_service import AnytypeService
+from utils.anytype import AnyTypeUtils
+from utils.api_tools import make_call
+from utils.logger import logger
 
 load_dotenv()
 
@@ -39,4 +41,4 @@ async def test_endpoint():
     url += "views/"
     url += "6872e16da7ace015b4a15bdc/"
     url += "objects"
-    return make_call_with_retry("get", url, "getting automation list objects")
+    return make_call("get", url, "getting automation list objects")
