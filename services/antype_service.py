@@ -1,0 +1,70 @@
+from utils.anytype import AnyTypeUtils
+
+import datetime
+
+class AnytypeService:
+    def __init__(self):
+        self.anytype = AnyTypeUtils()
+        self.overdue = "7b42e161-589d-4eaa-a57b-4e1c6226830f/"
+        self.reset = "8a872d64-7ed4-417e-824c-745d19604849/"
+        self.migrate = "3806f1d1-c2b5-4077-8c89-ebc83baff141/"
+        self.summary = "48899c65-8da0-4c28-9fc1-b2a8811f523e/"
+
+    def unpack_props(self, props:list, relevant_props: list):
+        prop_dict = {
+            idx: prop
+            for idx, prop in enumerate(props)
+            if prop["name"] in relevant_props
+        }
+        print(prop_dict)
+
+        return prop_dict
+
+    def view_list(self):
+        views = self.anytype.get_views_list()
+
+        return [{"name": view["name"], "id": view["id"]} for view in views["data"]]
+
+    def detailed_task_list(self, tasks_to_check):
+        tasks_detailed = []
+        if not tasks_to_check:
+            return None
+        for task in tasks_to_check:
+            tasks_detailed.append(self.anytype.get_task_by_id(task)["object"])
+
+        return tasks_detailed
+
+    def daily_rollover(self):
+        tasks_to_check = self.anytype.get_list_view_objects(self.overdue)
+        if tasks_to_check is None:
+            return "No tasks to update"
+        # if length more than 15, check in notification?
+        dt_now = datetime.datetime.now()
+        dt_tomorrow = dt_now + datetime.timedelta(days=1)
+        dt_tmw_str = dt_tomorrow.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        tasks_detailed = self.detailed_task_list(tasks_to_check)
+
+        # for more complex rollover
+        # relevant_props = ["Rate", "Due date", "Reset Count"]
+        # props = self.unpack_props(tasks_detailed[0]["properties"], relevant_props)
+
+        data = {"properties": [{
+            "key": "due_date",
+            "date": dt_tmw_str
+        }]}
+
+        for task in tasks_detailed:
+            self.anytype.update_task(task["name"], task["id"], data)
+
+    def task_status_reset(self):
+        tasks_to_check = self.anytype.get_list_view_objects("eep")
+        tasks_detailed = []
+        if not tasks_to_check:
+            return "No tasks to update"
+        for task in tasks_to_check:
+            tasks_detailed.append(self.anytype.get_task_by_id(task))
+        for task in tasks_detailed:
+            relevant_props = {prop["name"]:prop for prop in task["properties"] if prop["name"] in ["Rate", "Freqency"]}
+            print(relevant_props)
+        return "Task status update completed"
