@@ -56,6 +56,9 @@ class AnytypeService:
         data["properties"].append({"key": "due_date", "date": dt_tmw_str})
 
         for task in tasks_to_check:
+            if task["Reset Count"]["value"] is None:
+                task["Reset Count"]["value"] = 0
+
             # if reset count is > 7 set to review?
             data["properties"].append(
                 {"key": "reset_count", "number": task["Reset Count"]["value"] + 1}
