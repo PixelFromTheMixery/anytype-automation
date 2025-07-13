@@ -1,5 +1,5 @@
 """Module that handles endpoints for anytype automation."""
-
+import json
 from dotenv import load_dotenv
 from fastapi import APIRouter
 
@@ -36,9 +36,6 @@ async def test_endpoint():
     logger.info("Test endpoint called")
     url = "http://localhost:31009/v1/spaces/"
     url += "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
-    url += "lists/"
-    url += "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi/"
-    url += "views/"
-    url += "6872e16da7ace015b4a15bdc/"
-    url += "objects"
-    return make_call("get", url, "getting automation list objects")
+    url += "search"
+    payload = {"types": ["bafyreibndjvzmbgsscwgj7wg6t5qxuzqriwijmgtjd2thb4qwlmzvwotde"]}
+    return make_call("post", url, "getting automation list objects", payload)

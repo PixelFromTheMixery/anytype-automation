@@ -1,11 +1,10 @@
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from utils.exception import AnytypeException
 from utils.logger import logger
 
-import json
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import ValidationError
-from starlette.middleware.base import BaseHTTPMiddleware
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):

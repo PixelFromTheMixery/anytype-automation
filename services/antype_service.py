@@ -38,26 +38,31 @@ class AnytypeService:
         """Daily automation script"""
         tasks_to_check = self.anytype.get_list_view_objects(self.overdue)
         if tasks_to_check is None:
+            return "raise exception"
+        if len(tasks_to_check) == 0:
             return "No tasks to update"
+
         # if length more than 15, check in notification?
+
+        data = {"properties": []}
+
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         dt_tomorrow = dt_now + relativedelta(days=1)
         dt_tmw_str = dt_tomorrow.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-        # for more complex rollover
-        # relevant_props = ["Rate", "Due date", "Reset Count"]
-        # props = self.unpack_props(tasks_detailed[0]["properties"], relevant_props)
-
-        data = {"properties": [{
-            "key": "due_date",
-            "date": dt_tmw_str
-        }]}
+        # due date tomorrow (runs at 11 so will be "today")
+        data["properties"].append({"key": "due_date", "date": dt_tmw_str})
 
         for task in tasks_to_check:
+            # if reset count is > 7 set to review?
+            data["properties"].append(
+                {"key": "reset_count", "number": task["Reset Count"]["value"] + 1}
+            )
+
             self.anytype.update_task(task["name"], task["id"], data)
-        return f"f{len(tasks_to_check)} tasks with dates moved to tomorrow"
+        return f"{len(tasks_to_check)} tasks with dates moved to tomorrow"
 
     def task_status_reset(self):
         """Presumably for repeating tasks?"""
