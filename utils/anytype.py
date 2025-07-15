@@ -104,7 +104,7 @@ class AnyTypeUtils:
         return object_dict
 
     def get_object_by_id(self, object_id: str, unpack_level: str = "full"):
-        """Pulls detailed object data"""
+        """Pulls detailed object data by id"""
         object_url = config["url"] + config["spaces"]["main"]
         object_url += "objects/" + object_id
 
@@ -134,22 +134,22 @@ class AnyTypeUtils:
             "patch", object_url, f"update object ({object_name}) by id", data
         )
 
-    def add_option_to_property(
-        self, space_id: str, prop_id: str, prop_name: str, option_name: str
-    ):
-        """Adds option to provided property"""
-        prop_url = config["url"] + space_id
-        prop_url += "properties/" + prop_id
-        prop_url += "/tags"
-        data = {"color": "grey", "name": option_name}
-        make_call("post", prop_url, f"add {option_name} to {prop_name} property", data)
-
     def create_object(self, space_id: str, object_name: str, data: dict):
         """Creates object with provided data"""
         object_url = config["url"] + space_id
         object_url += "objects"
         return make_call(
             "post", object_url, f"create object with {object_name} data", data
+        )
+
+    def delete_object(self, object_name: str, object_id: str):
+        """Deletes object by id"""
+        object_url = config["url"] + config["spaces"]["main"]
+        object_url += "objects/" + object_id
+        return make_call(
+            "delete",
+            object_url,
+            f"delete object ({object_name}) by id",
         )
 
     def get_tag_from_list(self, space_id: str, prop_id: str, tag_name: str):
@@ -161,3 +161,16 @@ class AnyTypeUtils:
         for tag in tags:
             if tag["name"] == tag_name:
                 return tag["id"]
+
+    def add_option_to_property(
+        self, space_id: str, prop_id: str, prop_name: str, option_name: str
+    ):
+        """Adds option to provided property"""
+        prop_url = config["url"] + space_id
+        prop_url += "properties/" + prop_id
+        prop_url += "/tags"
+        data = {"color": "grey", "name": option_name}
+        new_tag = make_call(
+            "post", prop_url, f"add {option_name} to {prop_name} property", data
+        )
+        return new_tag["tag"]["id"]

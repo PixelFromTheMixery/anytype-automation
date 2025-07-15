@@ -35,7 +35,9 @@ def make_call(
         result = None
         try:
             logger.info("Attempt to %s. %s of %s", info, attempt, retries)
-            if category == "get":
+            if category == "delete":
+                response = requests.delete(url, headers=headers, timeout=timeout)
+            elif category == "get":
                 response = requests.get(url, headers=headers, timeout=timeout)
             elif category == "patch":
                 response = requests.patch(
@@ -63,7 +65,7 @@ def make_call(
                     time.sleep(delay)
             if result and result.get("status") == 400:
                 return result
-            
+
             else:
                 print(f"RequestException on attempt {attempt}: {e}")
                 message = result.get("message") if result else None

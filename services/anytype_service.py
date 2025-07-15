@@ -133,33 +133,45 @@ class AnytypeService:
         """Define log object for archival"""
         data = {}
         data["type_key"] = "log"
+        data["name"] = task["name"]
         props = [
-            {"key": "type", "select": archive_log["Type"][task["Type"]]},
+            {"key": "do_d", "text": task["DoD"]},
+            {"key": "function", "select": archive_log["Function"][task["Function"]]},
             {"key": "interval", "select": archive_log["Interval"][task["Interval"]]},
-            {"key": "day_segment", "select": archive_log["Day Segment"][task["Day Segment"]]},
+            {
+                "key": "day_segment",
+                "select": archive_log["Day Segment"][task["Day Segment"]],
+            },
         ]
-        # for link in task["Backlinks"]:
-        #     if link["name"] in ["Care", "Finance", "Home", "Management", "Self-Dev", "Workshop"]:
-        #         props.append(
-        #             {"key": "ao_c", "select": archive_log["AoC"][link["name"]]},
-        #         )
-        #         break
+        for link in task["Backlinks"]:
+            if link["name"] in [
+                "Care",
+                "Finance",
+                "Home",
+                "Management",
+                "Self-Dev",
+                "Workshop",
+            ]:
+                props.append(
+                    {"key": "ao_c", "text": archive_log["AoC"][link["name"]]},
+                )
+                break
 
-        # try:
-        #     project_name = task["Project"][0]["name"]
-        #     props.append({"key": "project", "select": archive_log["Project"][project_name]})
-        # except (KeyError, IndexError):
-        #     project_name = task.get("Project", [{}])[0].get("name", "")
-        #     tag_id = self.anytype.get_tag_from_list(
-        #         config["spaces"]["archive"],
-        #         archive_log["Project"]["id"],
-        #         project_name
-        #     )
-        #     archive_log["Project"][project_name] = tag_id
-        #     save_archive_logging(archive_log)
-        #     props.append(
-        #         {"key": "project", "select": tag_id}
-        #     )
+        project_name = task["Project"][0]["name"]
+        try:
+            props.append(
+                {"key": "project", "select": archive_log["Project"][project_name]}
+            )
+        except (KeyError, IndexError):
+            tag_id = self.anytype.add_option_to_property(
+                config["spaces"]["archive"],
+                archive_log["Project"]["id"],
+                "Project",
+                project_name,
+            )
+            archive_log["Project"][project_name] = tag_id
+            save_archive_logging(archive_log)
+            props.append({"key": "project", "select": tag_id})
 
         data["properties"] = props
         return data
@@ -174,6 +186,8 @@ class AnytypeService:
             self.anytype.create_object(
             config["spaces"]["archive"],
             task["name"], data)
+            self.anytype.delete_object(task["name"], task["id"])
+
         return "Task status update completed"
 
 

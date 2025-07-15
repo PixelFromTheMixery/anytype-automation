@@ -43,9 +43,6 @@ async def test_endpoint():
     logger.info("Test endpoint called")
     url = "http://localhost:31009/v1/spaces/"
     url += "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g/"
-    url += "types"
-    # payload = {
-    #     "objects": ["bafyreibgsw73qukgrf2e42ort6borlbzhncxmzi6pooc7763nsrjn4pixq"]
-    # }
+    url += "properties"
     # return make_call("post", url, "getting automation list objects", payload)
     return make_call("get", url, "getting automation list objects")

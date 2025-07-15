@@ -9,7 +9,8 @@ AoC:
 Day Segment:
   id: bafyreihbyfftmjd2ol26caaqa4mjg7wcmlledhhin3smmvbcoshqop6tiq
   Anytime: bafyreiadxnegr4xlzfj73xgco22tkorv4icwi6ba53jldk26ynnxm6sfq4
-  Noon: bafyreic3hby4ivvegumvotocmck3wn5qfnbfsiaz7ufe4grfde2bb7nrti
+  Night: bafyreic3hby4ivvegumvotocmck3wn5qfnbfsiaz7ufe4grfde2bb7nrti
+  Noon: bafyreiav2hsc4kxygytajdormind5pia3gllzcxxgl3yfo3xwktl7fxhny
   Morning: bafyreicq3yslzhihwosse5qhrc5xljo26mr4bqzzjkwrz67mmggpl7vm2m
   Evening: bafyreihtc55jlbuhgrs565chpxbewkfafvdzg2dm6ldryl4hjpvs6lkwha
   Afternoon: bafyreiful4o6d4lph4q7y6dk4wxlkl77n45au63wcrqtyui46czlyic5yu
@@ -18,15 +19,18 @@ Interval:
   🍉: bafyreibotgkgaf4e37hsijexa4jkvq5n2ehucdkdftz3p63q7wybkgcwcy
   🍅: bafyreidhrefzwmuleowxlhmhuxund2orgrbm56ztrujc33zmahyehh6jiy
   🍒: bafyreif53ybgdj4ugrhfckubqu7zujpbmbqknevka7s4v5hjzlakvw7654
-Type:
-  id: bafyreie463pbd53betafvuqxfrqhftuvgwq4utck6uke63zdsodg4tth2e
-  Corrective: bafyreibqgzhwirihc7duptt3i2jbnealswjfeyraxry4mssssj3edwqz54
-  Adaptive: bafyreidjyxioc2l72x7tqbwjs4m4iiaicuq54oke2xrac5iqicncvu3krm
-  Preventative: bafyreie3evtqpprojrvwaxqs3wn4sdtihtp23oxvskh33zmihycvy5lso4
-  Exploratory: bafyreiflh53mymoxp3s65p4ovcuwydqsievulblupli7oxhqzpvhlt3y3y
-  Collective: bafyreifnqvthxqnier7a27w3ewtrjict2aepa3jqm4vylhgug3dq6za46q
-  Generative: bafyreiht7gh42i7o7rglnhz4sp2p2j4ofdjboa4kbac5knjptbj7fqu2cq
+Function:
+  id: bafyreib5dwuhlxsem46yj2hdymwo5zebmmuwgy72mqc6omprwqy4b2nnyy
+  Corrective: bafyreig6glfdb7c2226s7llzfzbzjmeitmtf4zp7kza5uwbqbmnbhezlpi
+  Adaptive: bafyreihldf2ueznvnticrar6s57es4qkozvs7456thocyimpx5qnfzbmrq
+  Preventative: bafyreihvz6nthlb67yqoqfcvtdmhd4eo2lzy5657zfsyvggawgz3vs2ale
+  Exploratory: bafyreigramovhceenbdbyvaj2fkqdqc6wpsabonwsx2kfcm7taepeindwq
+  Collective: bafyreicyf3gybp43omqhypqstnymeqh3vgawvzgivlltrhb4t7tos4wniq
+  Generative: bafyreigh2ayuotnw6cnyweaq3njjzadet2r4ydrxnvubamgfypompulfua
+  Reflective: bafyreieysc3u3sjv35vh3n6kmkcgb7y5slxsb54uqzt4pxaqzms7j2aore
 Project:
   id: bafyreifd2g23kmyvq2oqeo6vnoqhfvegxy5rvzy2g2sqdj6imrw5rhtfym
   Home: bafyreifth4csyc2hlwcqhnv6kvckzxulfwreelae74ymhwpqk6jfq7jqfi
-  Crafts: null
+  Crafts: bafyreihwzqm3qg2vf6rtffr5wp6e7766bte5owcc62l7g7mpus6snmrb7y
+  Anytype Automation: bafyreiadjzxhc4houdsu4mtpm3pa2v2b4rrebhwzvxucsg723jho77qaia
+DoD: bafyreia24nahzotjxtbhy45evepheu7m7hsp6oljmrl5ukiig6q5fxyipu
