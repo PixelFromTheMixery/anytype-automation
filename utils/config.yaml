@@ -1,0 +1,20 @@
+# config.yaml
+url: "http://localhost:31009/v1/spaces/"
+me: "_participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW"
+spaces:
+  main: "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
+  archive: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g/"
+automation_list:
+  id: "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi/"
+  aoc: "3be228ab-8ee7-41a2-b5dd-3398ae19067e/"
+  migrate: "3806f1d1-c2b5-4077-8c89-ebc83baff141/"
+  overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f/"
+  reset: "8a872d64-7ed4-417e-824c-745d19604849/"
+  summary: "48899c65-8da0-4c28-9fc1-b2a8811f523e/"
+collection: 
+  Management: "bafyreihdbrx665q7gjpgho6zcubyxdcl6vox52323xhridhfyx2iyonlki"
+  Workshop: "bafyreid4oztagsumccf62kzpuk5qazmltw2gy75dcmn7qxc3ayrpgyyooq"
+  Self-Dev: "bafyreidxtxwkpj5pyhewg5vrvjndd7o7w5kxublbg5u4fbsocpasuvkbxy"
+  Care: "bafyreig5mvdr4f5cy3diorwvrbleckome6zsylnn2uxnzvfcswzkn3oujy"
+  Finance: "bafyreifikvazzy2htrinkl7zijp5co62mvqczqyvgzfp2bovepvfmdi5y4"
+  Home: "bafyreic5inopow5rcuhky2nmqx2kutpxoole7zw625dzyx2e77buveiyai"  
