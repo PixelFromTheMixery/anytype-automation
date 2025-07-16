@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta, weekday
 
 from utils.anytype import AnyTypeUtils
 from utils.config import config, archive_log, save_archive_logging
+from utils.logger import logger
 
 class AnytypeService:
     """
@@ -103,31 +104,68 @@ class AnytypeService:
         if len(tasks_to_check) == 0:
             return "No tasks to update"
 
-        collections_dict = self.anytype.search_by_type(
-            "collection"
-        )
-
         project = ""
         aoc = ""
         tasks_to_add = []
         for task in tasks_to_check:
-            if project != task["Project"]["value"]["name"]:
-                project = task["Project"]["value"]["name"]
+            if project != task["Project"][0]["name"]:
+                project = task["Project"][0]["name"]
                 project_obj = self.anytype.get_object_by_id(
-                    task["Project"]["value"]["id"]
+                    task["Project"][0]["id"], "project"
                 )
-                if aoc != project_obj["AoC"]["value"]["name"]:
+                if aoc != project_obj["AoC"]:
                     if len(tasks_to_add) != 0:
-                        self.anytype.add_to_list(aoc, collections_dict[aoc], {"objects": tasks_to_add})
+                        self.anytype.add_to_list(
+                            aoc, config["collection"][aoc], {"objects": tasks_to_add}
+                        )
                     tasks_to_add = []
-                    aoc = project_obj["AoC"]["value"]["name"]
+                    aoc = project_obj["AoC"]["name"]
             tasks_to_add.append(task["id"])
-        self.anytype.add_to_list(aoc, collections_dict[aoc], {"objects":tasks_to_add})
+        self.anytype.add_to_list(
+            aoc, config["collection"][aoc], {"objects": tasks_to_add}
+        )
+
+    def summary_writer(self):
+        """Write summery of task"""
+        tasks_to_check = self.anytype.get_list_view_objects(
+            config["automation_list"]["summary"]
+        )
+        # TODO: performance improvement, code duplication, raise exception
+        if tasks_to_check is None:
+            return "raise exception"
+        if len(tasks_to_check) == 0:
+            return "No tasks to update"
+        for task in tasks_to_check:
+            summary = task["Interval"]
+            try:
+                summary += ", " + "Urgent" if task["Urgent"] else ""
+            except KeyError:
+                pass
+            try:
+                summary += ", " + "Important" if task["Important"] else ""
+            except KeyError:
+                pass
+            summary += ", " + task["Function"]
+            summary += ", " + task["Day Segment"]
+            if task["Rate"] != "Once":
+                if task["Rate"] in ["Day", "Week", "Month"] and task["Frequency"] > 1:
+                    task["Rate"] = task["Rate"] + "s"
+                summary += ", every " + str(task["Frequency"]) + " " + task["Rate"]
+            self.anytype.update_object(
+                task["name"],
+                task["id"],
+                {"properties": [{"key": "summary", "text": summary}]},
+            )
 
     def daily_rollover(self):
         """Daily automation script"""
+        logger.info("Running overdue tasks")
         self.overdue()
+        logger.info("Running missing collections")
         self.set_collections()
+        logger.info("Running writing summaries")
+        self.summary_writer()
+        logger.info("Daily Rollover completed")
 
     def define_log_object(self, task):
         """Define log object for archival"""
@@ -177,26 +215,51 @@ class AnytypeService:
         return data
 
     def migrate_tasks(self):
-        """Presumably for repeating tasks?"""
-        tasks_to_check = self.anytype.get_list_view_objects(config["automation_list"]["migrate"])
+        """Migrate completed tasks that occur once to archive"""
+        tasks_to_check = self.anytype.get_list_view_objects(
+            config["automation_list"]["migrate"]
+        )
         if not tasks_to_check:
             return "No tasks to update"
         for task in tasks_to_check:
             data = self.define_log_object(task)
-            self.anytype.create_object(
-            config["spaces"]["archive"],
-            task["name"], data)
+            self.anytype.create_object(config["spaces"]["archive"], task["name"], data)
             self.anytype.delete_object(task["name"], task["id"])
 
-        return "Task status update completed"
+    def reset_repeating(self):
+        """Log and reset repeating tasks"""
 
+        tasks_to_check = self.anytype.get_list_view_objects(
+            config["automation_list"]["reset"]
+        )
+        if not tasks_to_check:
+            return "No tasks to update"
 
-""" 
-reference for next date function
-data["properties"].append(
-                {
-                    "key": "due_date",
-                    "date": self.next_date(dt_now, task["Rate"], task["Frequency"]),
-                }
-            )
-"""
+        dt_now = datetime.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+
+        for task in tasks_to_check:
+            data = self.define_log_object(task)
+            self.anytype.create_object(config["spaces"]["archive"], task["name"], data)
+            data = {
+                "properties": [
+                    {
+                        "key": "due_date",
+                        "date": self.next_date(dt_now, task["Rate"], task["Frequency"]),
+                    },
+                    {"key": "reset_count", "number": 0},
+                    {
+                        "key": "status",
+                        "select": config["automation_list"]["repeating_tag"],
+                    },
+                ]
+            }
+            self.anytype.update_object(task["name"], task["id"], data)
+
+    def recurrent_check(self):
+        """Recurrent automation script"""
+        logger.info("Running completed task migration")
+        self.migrate_tasks()
+        logger.info("Running repeating task reset")
+        self.reset_repeating()

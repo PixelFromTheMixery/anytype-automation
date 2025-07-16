@@ -14,13 +14,11 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
         except AnytypeException as exc:
             logger.error(exc)
             return JSONResponse(
-                status_code = exc.status,
-                content = {"Notion error": exc.message}
+                status_code=exc.status, content={"Anytype error": exc.message}
             )
         except Exception as exc:
             logger.error(exc)
             print(exc)
             raise HTTPException(
-                status_code = 500,
-                detail= {"Misc error": str(exc)}
-            )
+                status_code=500, detail={"Misc error": str(exc)}
+            ) from exc

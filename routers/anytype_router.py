@@ -34,15 +34,17 @@ async def automation_list_view():
 async def recurrent_tcheck():
     """Endpoint for task maintenance"""
     logger.info("Recurrent check endpoint called")
-    return anytype_service.migrate_tasks()
+    return anytype_service.recurrent_check()
 
 
 @router.get("/test")
 async def test_endpoint():
     """Temp endpoint for testing"""
     logger.info("Test endpoint called")
-    url = "http://localhost:31009/v1/spaces/"
-    url += "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g/"
-    url += "properties"
+    url = "http://10.147.17.107:31009/v1/spaces/"
+    url += "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
+    url += "properties/"
+    url += "bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay/"
+    url += "tags"
     # return make_call("post", url, "getting automation list objects", payload)
     return make_call("get", url, "getting automation list objects")

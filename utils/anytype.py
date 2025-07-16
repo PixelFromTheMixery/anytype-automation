@@ -87,7 +87,7 @@ class AnyTypeUtils:
 
             elif prop_type == "objects":
                 if prop[prop_type] is None:
-                    print("Issue")
+                    prop_value = prop[prop_type]
                 elif prop["name"] in [
                     "Links",
                     "Parent Task",
@@ -95,10 +95,11 @@ class AnyTypeUtils:
                     "Last modified by",
                 ]:
                     continue
-                links = []
-                for object_id in prop[prop_type]:
-                    links.append(self.get_object_by_id(object_id, "simple"))
-                prop_value = links
+                else:
+                    links = []
+                    for object_id in prop[prop_type]:
+                        links.append(self.get_object_by_id(object_id, "simple"))
+                    prop_value = links
             object_dict[prop["name"]] = prop_value
 
         return object_dict
@@ -119,6 +120,17 @@ class AnyTypeUtils:
             object_formatted = {
                 "name": object_obj["object"]["name"],
                 "id": object_obj["object"]["id"],
+            }
+        elif unpack_level == "project":
+            aoc = [
+                prop
+                for prop in object_obj["object"]["properties"]
+                if prop["name"] == "AoC"
+            ]
+            object_formatted = {
+                "name": object_obj["object"]["name"],
+                "id": object_obj["object"]["id"],
+                "AoC": self.get_object_by_id(aoc[0]["objects"][0], "simple")
             }
         elif object_obj is not None:
             object_formatted = self.unpack_full_object(object_obj)
