@@ -26,7 +26,7 @@ def make_call(
     if "localhost" in url:
         data = json.dumps(data)
         headers = {
-            "Authorization": f'Bearer {os.getenv("API_KEY")}',
+            "Authorization": f'Bearer {os.getenv("ANYTYPE_KEY")}',
             "Content-Type": "application/json",
             "Anytype-Version": "2025-05-20",
         }

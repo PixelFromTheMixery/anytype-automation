@@ -6,8 +6,10 @@ from dateutil.relativedelta import relativedelta, weekday
 from utils.anytype import AnyTypeUtils
 from utils.config import config, archive_log, save_archive_logging
 from utils.logger import logger
+from utils.pushover import Pushover
 
-class AnytypeService:
+
+class AnytypeAutomation:
     """
     Anytype Services manages the current tasks:
     - resets task due date to today if overdue (simple)
@@ -27,8 +29,9 @@ class AnytypeService:
 
     def next_date(self, date: datetime.datetime, timescale: str, freq: int):
         """Returns formatted string of the next date based on the timescale provided"""
+        day_int = -1
         if timescale in self.converter:
-            timescale = self.converter[timescale]
+            day_int = self.converter[timescale]
         dt_next = datetime.datetime
         if timescale == "Day":
             dt_next =  date + relativedelta(days=freq)
@@ -45,7 +48,7 @@ class AnytypeService:
             while dt_next.weekday() < 5:
                 dt_next += datetime.timedelta(days=freq)
         else:
-            dt_next =  date + relativedelta(weekday=weekday(timescale)(+freq))
+            dt_next =  date + relativedelta(weekday=weekday(day_int)(+freq))
 
         return dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -116,13 +119,13 @@ class AnytypeService:
                 if aoc != project_obj["AoC"]:
                     if len(tasks_to_add) != 0:
                         self.anytype.add_to_list(
-                            aoc, config["collection"][aoc], {"objects": tasks_to_add}
+                            aoc, config["collection"][aoc], tasks_to_add
                         )
                     tasks_to_add = []
                     aoc = project_obj["AoC"]["name"]
             tasks_to_add.append(task["id"])
         self.anytype.add_to_list(
-            aoc, config["collection"][aoc], {"objects": tasks_to_add}
+            aoc, config["collection"][aoc], tasks_to_add
         )
 
     def summary_writer(self):

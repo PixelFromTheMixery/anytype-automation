@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter
 
 
-from services.anytype_service import AnytypeService
+from services.anytype_automation import AnytypeAutomation
 from utils.anytype import AnyTypeUtils
 from utils.api_tools import make_call
 from utils.logger import logger
@@ -12,7 +12,7 @@ from utils.logger import logger
 load_dotenv()
 
 router = APIRouter()
-anytype_service = AnytypeService()
+anytype_automation = AnytypeAutomation()
 anytype_utils = AnyTypeUtils()
 
 
@@ -20,21 +20,21 @@ anytype_utils = AnyTypeUtils()
 async def task_status_reset():
     """Endpoint to update overdue or no collection tasks"""
     logger.info("Daily rollover endpoint called")
-    return anytype_service.daily_rollover()
+    return anytype_automation.daily_rollover()
 
 
 @router.get("/automation_list_view")
 async def automation_list_view():
     """Endpoint to fetch automation list view"""
     logger.info("View fetcher endpoint called")
-    return anytype_service.view_list()
+    return anytype_automation.view_list()
 
 
 @router.get("/recurrent_check")
 async def recurrent_tcheck():
     """Endpoint for task maintenance"""
     logger.info("Recurrent check endpoint called")
-    return anytype_service.recurrent_check()
+    return anytype_automation.recurrent_check()
 
 
 @router.get("/test")

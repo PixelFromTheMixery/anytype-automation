@@ -32,10 +32,13 @@ class AnyTypeUtils:
         lists_url = config["url"] + config["spaces"]["main"]
         lists_url += "lists/" + list_id
         lists_url += "/objects"
-
-        make_call(
-            "post", lists_url, f"add {len(list_items)} items to {list_name}", list_items
-        )
+        if list_items is not None:
+            make_call(
+                "post",
+                lists_url,
+                f"add {len(list_items)} items to {list_name}",
+                {"objects": list_items},
+            )
 
     def search_by_type(self, object_type: str):
         """Returns all objects by type"""
@@ -48,7 +51,7 @@ class AnyTypeUtils:
 
         formatted_objects = {}
 
-        for obj in objects["data"]:
+        for obj in objects["data"] if objects is not None else []:
             formatted_objects[obj["name"]] = obj["id"]
 
         return formatted_objects
@@ -169,7 +172,8 @@ class AnyTypeUtils:
         tag_url = config["url"] + space_id
         tag_url += "properties/" + prop_id
         tag_url += "/tags"
-        tags = make_call("get", tag_url, "get tags from property")["data"]
+        tags = make_call("get", tag_url, "get tags from property")
+        tags = tags["data"] if tags is not None else []
         for tag in tags:
             if tag["name"] == tag_name:
                 return tag["id"]
@@ -185,4 +189,4 @@ class AnyTypeUtils:
         new_tag = make_call(
             "post", prop_url, f"add {option_name} to {prop_name} property", data
         )
-        return new_tag["tag"]["id"]
+        return new_tag["tag"]["id"] if new_tag is not None else None
