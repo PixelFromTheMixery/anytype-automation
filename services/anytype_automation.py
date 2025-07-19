@@ -17,6 +17,7 @@ class AnytypeAutomation:
     """
     def __init__(self):
         self.anytype = AnyTypeUtils()
+        self.pushover = Pushover()
         self.converter = {
             "Monday": 0,
             "Tuesday": 1,
@@ -65,23 +66,31 @@ class AnytypeAutomation:
             return "raise exception"
         if len(tasks_to_check) == 0:
             return "No tasks to update"
-        # TODO:if length more than 15, check in notification?
-        data = {"properties": []}
 
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         dt_next = dt_now + datetime.timedelta(days=1)
+        unix = dt_next.replace(hour=7).timestamp()
+
+        if len(tasks_to_check) > 15:
+            self.pushover.send_message(
+                "Loads of tasks incoming",
+                f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
+                1,
+                unix,
+            )
+
+        data = {"properties": []}
 
         data["properties"].append(
             {"key": "due_date", "date": dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")}
         )
 
-        # TODO: dynamic new date
-
+        tasks_to_review = []
         for task in tasks_to_check:
 
-            if task["Reset Count"] is None:
+            if "Reset Count" not in task:
                 task["Reset Count"] = 0
             elif task["Status"] != "Blocked":
                 task["Reset Count"] = task["Reset Count"] + 1
@@ -89,12 +98,21 @@ class AnytypeAutomation:
             if task["Rate"] != "Once" and task["Frequency"] is None:
                 task["Frequency"] = 1
 
-            # TODO:if reset count is > 7 set to review?
+            if task["Reset Count"] > 4:
+                data["properties"].append(
+                    {"key": "status", "select": config["automation_list"]["review_tag"]}
+                )
+                tasks_to_review.append(task["name"])
             data["properties"].append(
                 {"key": "reset_count", "number": task["Reset Count"]}
-                )
-
+            )
             self.anytype.update_object(task["name"], task["id"], data)
+        if tasks_to_review:
+            message = "The following tasks have been reset 5 times, please review:"
+            for task in tasks_to_review:
+                message += "<br>" + task
+            self.pushover.send_message("Task reset threshold reached", message, 1, unix)
+
         return f"{len(tasks_to_check)} tasks with dates updated"
 
     def set_collections(self):
@@ -105,7 +123,7 @@ class AnytypeAutomation:
         if tasks_to_check is None:
             return "raise exception"
         if len(tasks_to_check) == 0:
-            return "No tasks to update"
+            logger.info("No tasks to update")
 
         project = ""
         aoc = ""
@@ -164,8 +182,9 @@ class AnytypeAutomation:
         """Daily automation script"""
         logger.info("Running overdue tasks")
         self.overdue()
-        logger.info("Running missing collections")
-        self.set_collections()
+        # TODO: fix missing collection
+        logger.info("Missing collections is broken, skippping")
+        # self.set_collections()
         logger.info("Running writing summaries")
         self.summary_writer()
         logger.info("Daily Rollover completed")

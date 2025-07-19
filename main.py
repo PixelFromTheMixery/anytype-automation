@@ -3,10 +3,11 @@
 from http import HTTPStatus
 from fastapi import FastAPI
 
+from middlewares.exception_middleware import ExceptionMiddleware
+from middlewares.auth_middleware import IPAllowlistMiddleware
 from utils.docs import description, tags_metadata
 from utils.logger import logger
 from utils.schedule import lifespan
-from middlewares.exception_middleware import ExceptionMiddleware
 import routers
 
 app = FastAPI(
@@ -18,6 +19,7 @@ app = FastAPI(
 )
 
 app.add_middleware(ExceptionMiddleware)
+app.add_middleware(IPAllowlistMiddleware)
 
 @app.get("/", tags=["general"], status_code=HTTPStatus.ACCEPTED)
 async def get_root():

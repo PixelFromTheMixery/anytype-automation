@@ -8,8 +8,8 @@ from utils.pushover import Pushover
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
     """Middleware to handle exceptions globally."""
-
-    def __init__(self):
+    def __init__(self, app):
+        super().__init__(app)
         self.pushover = Pushover()
 
     async def dispatch(self, request, call_next):
@@ -24,8 +24,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
         except Exception as exc:
             logger.error(exc)
             print(exc)
+            self.pushover.send_message("500", str(exc), priority=1)
             raise HTTPException(
                 status_code=500, detail={"Misc error": str(exc)}
             ) from exc
-        finally:
-            self.pushover.send_message("An error occurred in Anytype Automation")

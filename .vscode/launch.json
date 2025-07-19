@@ -1,6 +1,21 @@
 {
 	"configurations": [
 		{
+			"name": "Python Debugger: FastAPI, local zt",
+			"type": "debugpy",
+			"request": "launch",
+			"module": "uvicorn",
+			"args": [
+				"main_local:app",
+				"--reload",
+				"--host",
+				"10.147.17.107",
+				"--port",
+				"8001"
+			],
+			"jinja": true
+		},
+		{
 			"name": "Python Debugger: FastAPI, local",
 			"type": "debugpy",
 			"request": "launch",

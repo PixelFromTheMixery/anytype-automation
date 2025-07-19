@@ -13,10 +13,10 @@ class AnyTypeUtils:
     def __init__(self):
         pass
 
-    def get_views_list(self):
+    def get_views_list(self, list_id: str = config["automation_list"]["id"]):
         """Pull all views(queries) in the automation query object"""
         views_url = config["url"] + config["spaces"]["main"]
-        views_url += "lists/" + config["automation_list"]["id"]
+        views_url += "lists/" + list_id
         views_url += "views"
 
         views = make_call("get", views_url, "get view list from automation query")

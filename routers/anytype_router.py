@@ -40,11 +40,12 @@ async def recurrent_tcheck():
 @router.get("/test")
 async def test_endpoint():
     """Temp endpoint for testing"""
-    logger.info("Test endpoint called")
-    url = "http://10.147.17.107:31009/v1/spaces/"
-    url += "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
-    url += "properties/"
-    url += "bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay/"
-    url += "tags"
+    # logger.info("Test endpoint called")
+    # url = "http://localhost:31009/v1/spaces/"
+    # url += "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
+    # url += "properties/"
+    # url += "bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay/"
+    # url += "tags"
     # return make_call("post", url, "getting automation list objects", payload)
-    return make_call("get", url, "getting automation list objects")
+    # return make_call("get", url, "getting automation list objects")
+    return anytype_utils.get_views_list()
