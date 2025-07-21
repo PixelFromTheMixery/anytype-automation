@@ -5,13 +5,13 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from utils.logger import logger
-from utils.pushover import Pushover
+from utils.pushover import PushoverUtils
 
 class IPAllowlistMiddleware(BaseHTTPMiddleware):
     """Class for IP allowlist middleware"""
     def __init__(self, app):
         super().__init__(app)
-        self.pushover = Pushover()
+        self.pushover = PushoverUtils()
         self.allowed_ips = [
         "10.147.17.16",
         "10.147.17.211",

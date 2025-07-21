@@ -13,6 +13,20 @@ class AnyTypeUtils:
     def __init__(self):
         pass
 
+    def test(self):
+        """Play area for momentary tasks"""
+        url = "http://localhost:31009/v1/spaces/"
+        url += config["spaces"]["main"]
+        url += "types/"
+        # url += "bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay/"
+        # url += "tags"
+        return self.get_views_list(
+            "bafyreigdfl2kfbymfio375u5ukyabsp2323tqnya6o7d6hhfpmrmhthaue"
+        )
+        # return make_call("post", url, "getting automation list objects", payload)
+        return make_call("get", url, "getting automation list objects")
+        return self.search_by_type_and_or_name("collection")
+
     def get_views_list(self, list_id: str = config["automation_list"]["id"]):
         """Pull all views(queries) in the automation query object"""
         views_url = config["url"] + config["spaces"]["main"]
@@ -40,17 +54,30 @@ class AnyTypeUtils:
                 {"objects": list_items},
             )
 
-    def search_by_type(self, object_type: str):
+    def search_by_type_and_or_name(
+        self,
+        search_criteria: str,
+        obj: bool = True,
+        search_filter: str = "",
+        space_id: str = config["spaces"]["main"],
+    ):
         """Returns all objects by type"""
         url = "http://localhost:31009/v1/spaces/"
-        url += config["spaces"]["main"]
+        url += space_id
         url += "search"
-        data = {"types": [object_type]}
+        data = {}
+        if obj:
+            data["types"] = [search_criteria]
+            if search_filter != "":
+                data["query"] = search_filter
+        else:
+            data = {"query": search_criteria}
+        objects = make_call("post", url, f"searching for {search_criteria}", data)
 
-        objects = make_call("post", url, f"getting list of {object_type}", data)
+        if objects["data"] is None:
+            return "No objects found"
 
         formatted_objects = {}
-
         for obj in objects["data"] if objects is not None else []:
             formatted_objects[obj["name"]] = obj["id"]
 

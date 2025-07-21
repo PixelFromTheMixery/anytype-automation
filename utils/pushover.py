@@ -7,7 +7,8 @@ from utils.api_tools import make_call
 
 load_dotenv()
 
-class Pushover:
+
+class PushoverUtils:
     """Class to handle Overpush notifications."""
     def __init__(self):
         self.url = "https://api.pushover.net/1/messages.json"

@@ -6,7 +6,6 @@ from fastapi import APIRouter
 
 from services.anytype_automation import AnytypeAutomation
 from utils.anytype import AnyTypeUtils
-from utils.api_tools import make_call
 from utils.logger import logger
 
 load_dotenv()
@@ -37,15 +36,15 @@ async def recurrent_tcheck():
     return anytype_automation.recurrent_check()
 
 
+@router.get("/search")
+async def search_endpoint(criteria: str, obj: bool = True, search_filer: str = ""):
+    """Endpoint for searching a space"""
+    logger.info("Search endpoint called")
+    return anytype_utils.search_by_type_and_or_name(criteria, obj, search_filer)
+
+
 @router.get("/test")
 async def test_endpoint():
-    """Temp endpoint for testing"""
-    # logger.info("Test endpoint called")
-    # url = "http://localhost:31009/v1/spaces/"
-    # url += "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
-    # url += "properties/"
-    # url += "bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay/"
-    # url += "tags"
-    # return make_call("post", url, "getting automation list objects", payload)
-    # return make_call("get", url, "getting automation list objects")
-    return anytype_utils.get_views_list()
+    """Endpoint for throwaway tests"""
+    logger.info("Test endpoint called")
+    return anytype_utils.test()

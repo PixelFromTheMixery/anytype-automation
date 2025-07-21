@@ -4,9 +4,9 @@ import datetime
 from dateutil.relativedelta import relativedelta, weekday
 
 from utils.anytype import AnyTypeUtils
-from utils.config import config, archive_log, save_archive_logging
+from utils.config import config, archive_log, load_archive_logging, save_archive_logging
 from utils.logger import logger
-from utils.pushover import Pushover
+from utils.pushover import PushoverUtils
 
 
 class AnytypeAutomation:
@@ -17,7 +17,7 @@ class AnytypeAutomation:
     """
     def __init__(self):
         self.anytype = AnyTypeUtils()
-        self.pushover = Pushover()
+        self.pushover = PushoverUtils()
         self.converter = {
             "Monday": 0,
             "Tuesday": 1,
@@ -49,7 +49,8 @@ class AnytypeAutomation:
             while dt_next.weekday() < 5:
                 dt_next += datetime.timedelta(days=freq)
         else:
-            dt_next =  date + relativedelta(weekday=weekday(day_int)(+freq))
+            dt_next = date + relativedelta(days=1)
+            dt_next = dt_next + relativedelta(weekday=weekday(day_int)(+freq))
 
         return dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -189,6 +190,22 @@ class AnytypeAutomation:
         self.summary_writer()
         logger.info("Daily Rollover completed")
 
+    def get_or_create_archive_tag(self, prop_name, value):
+        """Get or create a tag for a given property in archive_log."""
+        try:
+            return archive_log[prop_name][value]
+        except (KeyError, IndexError):
+            tag_id = self.anytype.add_option_to_property(
+                config["spaces"]["archive"],
+                archive_log[prop_name]["id"],
+                prop_name,
+                value,
+            )
+            archive_log[prop_name][value] = tag_id
+            save_archive_logging(archive_log)
+            load_archive_logging()
+            return tag_id
+
     def define_log_object(self, task):
         """Define log object for archival"""
         data = {}
@@ -196,11 +213,25 @@ class AnytypeAutomation:
         data["name"] = task["name"]
         props = [
             {"key": "do_d", "text": task["DoD"]},
-            {"key": "function", "select": archive_log["Function"][task["Function"]]},
-            {"key": "interval", "select": archive_log["Interval"][task["Interval"]]},
+            {
+                "key": "function",
+                "select": self.get_or_create_archive_tag("Function", task["Function"]),
+            },
+            {
+                "key": "interval",
+                "select": self.get_or_create_archive_tag("Interval", task["Interval"]),
+            },
             {
                 "key": "day_segment",
-                "select": archive_log["Day Segment"][task["Day Segment"]],
+                "select": self.get_or_create_archive_tag(
+                    "Day Segment", task["Day Segment"]
+                ),
+            },
+            {
+                "key": "project",
+                "select": self.get_or_create_archive_tag(
+                    "Project", task["Project"][0]["name"]
+                ),
             },
         ]
         for link in task["Backlinks"]:
@@ -213,25 +244,12 @@ class AnytypeAutomation:
                 "Workshop",
             ]:
                 props.append(
-                    {"key": "ao_c", "text": archive_log["AoC"][link["name"]]},
+                    {
+                        "key": "ao_c",
+                        "text": self.get_or_create_archive_tag("AoC", link["name"]),
+                    },
                 )
                 break
-
-        project_name = task["Project"][0]["name"]
-        try:
-            props.append(
-                {"key": "project", "select": archive_log["Project"][project_name]}
-            )
-        except (KeyError, IndexError):
-            tag_id = self.anytype.add_option_to_property(
-                config["spaces"]["archive"],
-                archive_log["Project"]["id"],
-                "Project",
-                project_name,
-            )
-            archive_log["Project"][project_name] = tag_id
-            save_archive_logging(archive_log)
-            props.append({"key": "project", "select": tag_id})
 
         data["properties"] = props
         return data
@@ -262,6 +280,11 @@ class AnytypeAutomation:
         )
 
         for task in tasks_to_check:
+            if "Summary" not in task:
+                self.summary_writer()
+                self.reset_repeating()
+                break
+
             data = self.define_log_object(task)
             self.anytype.create_object(config["spaces"]["archive"], task["name"], data)
             data = {
@@ -285,3 +308,7 @@ class AnytypeAutomation:
         self.migrate_tasks()
         logger.info("Running repeating task reset")
         self.reset_repeating()
+
+    def test(self):
+        """Temp endpoint for testing"""
+        return self.anytype.test()

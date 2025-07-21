@@ -4,13 +4,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from utils.exception import AnytypeException
 from utils.logger import logger
-from utils.pushover import Pushover
+from utils.pushover import PushoverUtils
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
     """Middleware to handle exceptions globally."""
     def __init__(self, app):
         super().__init__(app)
-        self.pushover = Pushover()
+        self.pushover = PushoverUtils()
 
     async def dispatch(self, request, call_next):
         try:
