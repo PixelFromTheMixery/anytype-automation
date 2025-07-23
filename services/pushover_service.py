@@ -36,7 +36,7 @@ class Pushover:
         }
 
         if template != "":
-            data["template_id"] = config["templates"]["routine"][template]
+            data["template_id"] = config["templates"]["ritual"][template]
 
         new_obj = self.anytype.create_object(space_id, type_name, data)
         obj_url = self.make_deeplink(new_obj["object"]["id"], config["spaces"]["archive"])
