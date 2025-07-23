@@ -1,18 +1,12 @@
 """Module that handles endpoints for anytype automation."""
 
-from dotenv import load_dotenv
 from fastapi import APIRouter
 
-
-from services.anytype_automation import AnytypeAutomation
-from utils.anytype import AnyTypeUtils
+from services.anytype_service import AnytypeAutomation
 from utils.logger import logger
-
-load_dotenv()
 
 router = APIRouter()
 anytype_automation = AnytypeAutomation()
-anytype_utils = AnyTypeUtils()
 
 
 @router.get("/daily_rollover")
@@ -36,15 +30,8 @@ async def recurrent_tcheck():
     return anytype_automation.recurrent_check()
 
 
-@router.get("/search")
-async def search_endpoint(criteria: str, obj: bool = True, search_filer: str = ""):
-    """Endpoint for searching a space"""
-    logger.info("Search endpoint called")
-    return anytype_utils.search_by_type_and_or_name(criteria, obj, search_filer)
-
-
-@router.get("/test")
+@router.get("/test_anytype")
 async def test_endpoint():
     """Endpoint for throwaway tests"""
-    logger.info("Test endpoint called")
-    return anytype_utils.test()
+    logger.info("Anytype test endpoint called")
+    return anytype_automation.test()

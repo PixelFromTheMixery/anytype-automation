@@ -16,22 +16,54 @@ class AnyTypeUtils:
     def test(self):
         """Play area for momentary tasks"""
         url = "http://localhost:31009/v1/spaces/"
-        url += config["spaces"]["main"]
-        url += "types/"
-        # url += "bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay/"
+        url += config["spaces"]["archive"]
+        url += "/types"
+        return make_call("get", url, "getting test data")
         # url += "tags"
-        return self.get_views_list(
-            "bafyreigdfl2kfbymfio375u5ukyabsp2323tqnya6o7d6hhfpmrmhthaue"
+        list_id = config["query"]["Task by Day"]["id"]
+        view_id = config["query"]["Task by Day"]["evening"]
+        return self.get_list_view_objects(
+            view_id,
+            list_id,
         )
+        return self.search_by_type_and_or_name("Task by Day", False)
         # return make_call("post", url, "getting automation list objects", payload)
-        return make_call("get", url, "getting automation list objects")
         return self.search_by_type_and_or_name("collection")
+
+    def search_by_type_and_or_name(
+        self,
+        search_criteria: str,
+        obj: bool = True,
+        search_filter: str = "",
+        space_id: str = config["spaces"]["main"],
+    ):
+        """Returns all objects by type"""
+        url = "http://localhost:31009/v1/spaces/"
+        url += space_id
+        url += "/search"
+        data = {}
+        if obj:
+            data["types"] = [search_criteria]
+            if search_filter != "":
+                data["query"] = search_filter
+        else:
+            data = {"query": search_criteria}
+        objects = make_call("post", url, f"searching for {search_criteria}", data)
+
+        if objects is not None and objects["data"] is None:
+            return "No objects found"
+
+        formatted_objects = {}
+        for obj in objects["data"] if objects is not None else []:
+            formatted_objects[obj["name"]] = obj["id"]
+
+        return formatted_objects
 
     def get_views_list(self, list_id: str = config["automation_list"]["id"]):
         """Pull all views(queries) in the automation query object"""
         views_url = config["url"] + config["spaces"]["main"]
-        views_url += "lists/" + list_id
-        views_url += "views"
+        views_url += "/lists/" + list_id
+        views_url += "/views"
 
         views = make_call("get", views_url, "get view list from automation query")
         views_formatted = []
@@ -44,7 +76,7 @@ class AnyTypeUtils:
     def add_to_list(self, list_name: str, list_id: str, list_items: list):
         """Add list items to object"""
         lists_url = config["url"] + config["spaces"]["main"]
-        lists_url += "lists/" + list_id
+        lists_url += "/lists/" + list_id
         lists_url += "/objects"
         if list_items is not None:
             make_call(
@@ -54,48 +86,24 @@ class AnyTypeUtils:
                 {"objects": list_items},
             )
 
-    def search_by_type_and_or_name(
+    def get_list_view_objects(
         self,
-        search_criteria: str,
-        obj: bool = True,
-        search_filter: str = "",
-        space_id: str = config["spaces"]["main"],
+        view_id: str,
+        list_id: str = config["automation_list"]["id"],
+        unpack_level: str = "full",
     ):
-        """Returns all objects by type"""
-        url = "http://localhost:31009/v1/spaces/"
-        url += space_id
-        url += "search"
-        data = {}
-        if obj:
-            data["types"] = [search_criteria]
-            if search_filter != "":
-                data["query"] = search_filter
-        else:
-            data = {"query": search_criteria}
-        objects = make_call("post", url, f"searching for {search_criteria}", data)
-
-        if objects["data"] is None:
-            return "No objects found"
-
-        formatted_objects = {}
-        for obj in objects["data"] if objects is not None else []:
-            formatted_objects[obj["name"]] = obj["id"]
-
-        return formatted_objects
-
-    def get_list_view_objects(self, view_id: str):
         """Pulls out detailed information of objects in a view (query)"""
         tasks_url = config["url"] + config["spaces"]["main"]
-        tasks_url += "lists/" + config["automation_list"]["id"]
-        tasks_url += "views/" + view_id
-        tasks_url += "objects"
+        tasks_url += "/lists/" + list_id
+        tasks_url += "/views/" + view_id
+        tasks_url += "/objects"
         main_tasks = make_call("get", tasks_url, "get tasks")
 
         tasks_to_check = []
 
         if main_tasks and "data" in main_tasks:
             for task in main_tasks["data"]:
-                tasks_to_check.append(self.get_object_by_id(task["id"]))
+                tasks_to_check.append(self.get_object_by_id(task["id"], unpack_level))
 
         return tasks_to_check
 
@@ -137,7 +145,7 @@ class AnyTypeUtils:
     def get_object_by_id(self, object_id: str, unpack_level: str = "full"):
         """Pulls detailed object data by id"""
         object_url = config["url"] + config["spaces"]["main"]
-        object_url += "objects/" + object_id
+        object_url += "/objects/" + object_id
 
         object_obj = make_call("get", object_url, f"get {unpack_level} object by id")
 
@@ -171,23 +179,23 @@ class AnyTypeUtils:
     def update_object(self, object_name: str, object_id: str, data: dict):
         """Updates object with provided data"""
         object_url = config["url"] + config["spaces"]["main"]
-        object_url += "objects/" + object_id
+        object_url += "/objects/" + object_id
         return make_call(
             "patch", object_url, f"update object ({object_name}) by id", data
         )
 
-    def create_object(self, space_id: str, object_name: str, data: dict):
+    def create_object(self, space_id: str, type_name: str, data: dict):
         """Creates object with provided data"""
         object_url = config["url"] + space_id
-        object_url += "objects"
+        object_url += "/objects"
         return make_call(
-            "post", object_url, f"create object with {object_name} data", data
+            "post", object_url, f"create object with {type_name} data", data
         )
 
     def delete_object(self, object_name: str, object_id: str):
         """Deletes object by id"""
         object_url = config["url"] + config["spaces"]["main"]
-        object_url += "objects/" + object_id
+        object_url += "/objects/" + object_id
         return make_call(
             "delete",
             object_url,
@@ -197,7 +205,7 @@ class AnyTypeUtils:
     def get_tag_from_list(self, space_id: str, prop_id: str, tag_name: str):
         """Returns the tag and name from the provided list"""
         tag_url = config["url"] + space_id
-        tag_url += "properties/" + prop_id
+        tag_url += "/properties/" + prop_id
         tag_url += "/tags"
         tags = make_call("get", tag_url, "get tags from property")
         tags = tags["data"] if tags is not None else []
@@ -210,7 +218,7 @@ class AnyTypeUtils:
     ):
         """Adds option to provided property"""
         prop_url = config["url"] + space_id
-        prop_url += "properties/" + prop_id
+        prop_url += "/properties/" + prop_id
         prop_url += "/tags"
         data = {"color": "grey", "name": option_name}
         new_tag = make_call(

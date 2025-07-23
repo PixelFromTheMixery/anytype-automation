@@ -170,7 +170,7 @@ class AnytypeAutomation:
             summary += ", " + task["Function"]
             summary += ", " + task["Day Segment"]
             if task["Rate"] != "Once":
-                if task["Rate"] in ["Day", "Week", "Month"] and task["Frequency"] > 1:
+                if task["Frequency"] > 1:
                     task["Rate"] = task["Rate"] + "s"
                 summary += ", every " + str(task["Frequency"]) + " " + task["Rate"]
             self.anytype.update_object(

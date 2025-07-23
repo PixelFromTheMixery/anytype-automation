@@ -2,17 +2,17 @@
 url: "http://localhost:31009/v1/spaces/"
 me: "_participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW"
 spaces:
-  main: "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g/"
-  archive: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g/"
+  main: "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g"
+  archive: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
 automation_list:
-  id: "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi/"
-  aoc: "3be228ab-8ee7-41a2-b5dd-3398ae19067e/"
-  migrate: "3806f1d1-c2b5-4077-8c89-ebc83baff141/"
-  overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f/"
-  reset: "8a872d64-7ed4-417e-824c-745d19604849/"
+  id: "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi"
+  aoc: "3be228ab-8ee7-41a2-b5dd-3398ae19067e"
+  migrate: "3806f1d1-c2b5-4077-8c89-ebc83baff141"
+  overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f"
+  reset: "8a872d64-7ed4-417e-824c-745d19604849"
   repeating_tag: "bafyreihfuqod6lpdxeybi45mbdduii6slrfbw6w5e4xmqll24dnclrxvwu"
   review_tag: "bafyreihiiibe566qh7xgl4bd66h7fqh4tokaan623rzodst3hyfdycb5ie"
-  summary: "48899c65-8da0-4c28-9fc1-b2a8811f523e/"
+  summary: "48899c65-8da0-4c28-9fc1-b2a8811f523e"
 collection: 
   Management: "bafyreihdbrx665q7gjpgho6zcubyxdcl6vox52323xhridhfyx2iyonlki"
   Workshop: "bafyreid4oztagsumccf62kzpuk5qazmltw2gy75dcmn7qxc3ayrpgyyooq"
@@ -23,3 +23,13 @@ collection:
 query:
   Task by Day: 
     id: "bafyreigdfl2kfbymfio375u5ukyabsp2323tqnya6o7d6hhfpmrmhthaue"
+    today: "eb7230a2-c65c-4a25-a9c6-173da5eed014"
+    morning: "09f5703f-caaf-4173-9add-93738339926a"
+    noon: "da80f005-519d-4e2d-8b6e-b0a78dcb8ea8"
+    afternoon: "59651999-59eb-46b1-b509-3ff495bedbbc"
+    evening: "e6780ec4-a8ad-4821-94a7-0e0f3cec6d32"
+templates:
+  routine:
+    morning: "bafyreiajvfab4ouumckrduen7cntadngigrteqczfqajlninrvsnfpj7cu"
+    evening: "bafyreiapnnqfhdwmkpd4ewitrh4ust3k6cnb4drzomvjl3aelzh6zwufjq"
+    planning: "bafyreibftkf34iod7ufkawsyxq5f4gqwc6xrzv7gpt2udlzysnlyfdfmcy"
