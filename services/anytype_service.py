@@ -28,6 +28,12 @@ class AnytypeAutomation:
             "Sunday": 6,
         }
 
+    def search(self, search_critera: str, obj: bool = True, search_filter: str = ""):
+        """Conducts a search with provided data"""
+        return self.anytype.search_by_type_and_or_name(
+            search_critera, obj, search_filter
+        )
+
     def next_date(self, date: datetime.datetime, timescale: str, freq: int):
         """Returns formatted string of the next date based on the timescale provided"""
         day_int = -1
@@ -40,6 +46,8 @@ class AnytypeAutomation:
             dt_next =  date + relativedelta(weeks=freq)
         elif timescale == "Month":
             dt_next =  date + relativedelta(months=freq)
+        elif timescale == "Year":
+            dt_next = date + relativedelta(years=freq)
         elif timescale == "Weekday":
             dt_next = date + datetime.timedelta(days=freq)
             while dt_next.weekday() >= 5:
@@ -54,32 +62,27 @@ class AnytypeAutomation:
 
         return dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    def view_list(self):
+    def view_list(self, list_id: str = config["queries"]["automation"]):
         """Formats view objects into consumable objects to add to this object"""
-        return self.anytype.get_views_list()
+        return self.anytype.get_views_list(list_id)
 
-    def overdue(self):
+    def overdue(self, dt_now):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            config["automation_list"]["overdue"]
+            config["views"]["automation"]["overdue"],
         )
         if tasks_to_check is None:
             return "raise exception"
         if len(tasks_to_check) == 0:
             return "No tasks to update"
 
-        dt_now = datetime.datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
         dt_next = dt_now + datetime.timedelta(days=1)
-        unix = dt_next.replace(hour=7).timestamp()
 
         if len(tasks_to_check) > 15:
             self.pushover.send_message(
                 "Loads of tasks incoming",
                 f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
                 1,
-                unix,
             )
 
         data = {"properties": []}
@@ -101,7 +104,16 @@ class AnytypeAutomation:
 
             if task["Reset Count"] > 4:
                 data["properties"].append(
-                    {"key": "status", "select": config["automation_list"]["review_tag"]}
+                    {"key": "status", "select": config["tags"]["status"]["review"]}
+                )
+                data["properties"].append(
+                    {"key": "review_stage", "select": config["tags"]["review"]["day"]}
+                )
+                data["properties"].append(
+                    {
+                        "key": "review_date",
+                        "date": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    }
                 )
                 tasks_to_review.append(task["name"])
             data["properties"].append(
@@ -112,14 +124,18 @@ class AnytypeAutomation:
             message = "The following tasks have been reset 5 times, please review:"
             for task in tasks_to_review:
                 message += "<br>" + task
-            self.pushover.send_message("Task reset threshold reached", message, 1, unix)
+            url = self.pushover.make_deeplink(
+                config["queries"]["task_cleanup"], config["spaces"]["main"]
+            )
+            message += f"<br><a href={url}>Link here</a>"
+            self.pushover.send_message("Task reset threshold reached", message, 1)
 
         return f"{len(tasks_to_check)} tasks with dates updated"
 
     def set_collections(self):
         """Assigns collection to task based on project"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            config["automation_list"]["aoc"]
+            config["views"]["automation"]["aoc"], "full"
         )
         if tasks_to_check is None:
             return "raise exception"
@@ -135,22 +151,20 @@ class AnytypeAutomation:
                 project_obj = self.anytype.get_object_by_id(
                     task["Project"][0]["id"], "project"
                 )
-                if aoc != project_obj["AoC"]:
+                if aoc != project_obj["AoC"]["name"]:
                     if len(tasks_to_add) != 0:
                         self.anytype.add_to_list(
-                            aoc, config["collection"][aoc], tasks_to_add
+                            aoc, config["collections"][aoc], tasks_to_add
                         )
                     tasks_to_add = []
                     aoc = project_obj["AoC"]["name"]
             tasks_to_add.append(task["id"])
-        self.anytype.add_to_list(
-            aoc, config["collection"][aoc], tasks_to_add
-        )
+        self.anytype.add_to_list(aoc, config["collections"][aoc], tasks_to_add)
 
     def summary_writer(self):
         """Write summery of task"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            config["automation_list"]["summary"]
+            config["views"]["automation"]["summary"]
         )
         # TODO: performance improvement, code duplication, raise exception
         if tasks_to_check is None:
@@ -179,15 +193,70 @@ class AnytypeAutomation:
                 {"properties": [{"key": "summary", "text": summary}]},
             )
 
+    def review_check(self, dt_now):
+        """Sets review dates for objects"""
+        objs_to_check = self.anytype.get_list_view_objects(
+            config["views"]["review"]["no_date"], list_id=config["queries"]["review"]
+        )
+        for obj in objs_to_check:
+            data = {
+                "properties": [
+                    {
+                        "key": "review_date",
+                        "select": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    }
+                ]
+            }
+            self.anytype.update_object(obj["name"], obj["id"], data)
+
+        objs_to_check = self.anytype.get_list_view_objects(
+            config["views"]["review"]["to_adjust"], list_id=config["queries"]["review"]
+        )
+        for obj in objs_to_check:
+            new_tag = obj["Review Stage"]
+            new_day = dt_now
+
+            if "Day" in obj["Review Stage"]:
+                new_tag = config["tags"]["review"]["week"]
+                new_day = self.next_date(dt_now, "Week", 1)
+            elif "Week" in obj["Review Stage"]:
+                new_tag = config["tags"]["review"]["month"]
+                new_day = self.next_date(dt_now, "Month", 1)
+            elif "Month" in obj["Review Stage"]:
+                new_tag = config["tags"]["review"]["quarter"]
+                new_day = self.next_date(dt_now, "Month", 3)
+            elif "Quarter" in obj["Review Stage"]:
+                if "Rate" in obj:
+                    if obj["Rate"] != "Once":
+                        new_tag = config["tags"]["review"]["quarter"]
+                        new_day = self.next_date(dt_now, "Month", 3)
+                else:
+                    new_tag = config["tags"]["review"]["quarter"]
+                    new_day = self.next_date(dt_now, "Year", 1)
+            elif "Year" in obj["Review Stage"]:
+                new_day = self.next_date(dt_now, "Year", 1)
+            data = {
+                "properties": [
+                    {"key": "review_stage", "select": new_tag},
+                    {"key": "review_date", "date": new_day},
+                ]
+            }
+            self.anytype.update_object(obj["name"], obj["id"], data)
+
     def daily_rollover(self):
         """Daily automation script"""
-        logger.info("Running overdue tasks")
-        self.overdue()
-        # TODO: fix missing collection
-        logger.info("Missing collections is broken, skippping")
-        # self.set_collections()
+        logger.info("Running missing collections")
+        self.set_collections()
         logger.info("Running writing summaries")
         self.summary_writer()
+
+        dt_now = datetime.datetime.now().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        logger.info("Running overdue tasks")
+        self.overdue(dt_now)
+        logger.info("Running Review updates")
+        self.review_check(dt_now)
         logger.info("Daily Rollover completed")
 
     def get_or_create_archive_tag(self, prop_name, value):
@@ -257,7 +326,7 @@ class AnytypeAutomation:
     def migrate_tasks(self):
         """Migrate completed tasks that occur once to archive"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            config["automation_list"]["migrate"]
+            config["views"]["automation"]["migrate"], "full"
         )
         if not tasks_to_check:
             return "No tasks to update"
@@ -270,7 +339,7 @@ class AnytypeAutomation:
         """Log and reset repeating tasks"""
 
         tasks_to_check = self.anytype.get_list_view_objects(
-            config["automation_list"]["reset"]
+            config["views"]["automation"]["reset"]
         )
         if not tasks_to_check:
             return "No tasks to update"
@@ -296,7 +365,7 @@ class AnytypeAutomation:
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": config["automation_list"]["repeating_tag"],
+                        "select": config["tags"]["automation"]["repeating"],
                     },
                 ]
             }

@@ -33,7 +33,8 @@ async def lifespan(_app: FastAPI):
         pushover.create_object_and_notify,
         "cron",
         args=("ritual", "morning", " - Morning"),
-        hour="6",
+        hour="5",
+        minute="55",
     )
     scheduler.add_job(
         pushover.create_object_and_notify,

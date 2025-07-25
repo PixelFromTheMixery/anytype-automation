@@ -16,18 +16,27 @@ async def task_status_reset():
     return anytype_automation.daily_rollover()
 
 
-@router.get("/automation_list_view")
-async def automation_list_view():
+@router.post("/list_views")
+async def list_views(
+    view_id: str = "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi",
+):
     """Endpoint to fetch automation list view"""
     logger.info("View fetcher endpoint called")
-    return anytype_automation.view_list()
+    return anytype_automation.view_list(view_id)
 
 
 @router.get("/recurrent_check")
-async def recurrent_tcheck():
+async def recurrent_check():
     """Endpoint for task maintenance"""
     logger.info("Recurrent check endpoint called")
     return anytype_automation.recurrent_check()
+
+
+@router.post("/search")
+async def search(search_criteria):
+    """Endpoint for searching objects"""
+    logger.info("Search endpoint called")
+    return anytype_automation.search(search_criteria)
 
 
 @router.get("/test_anytype")

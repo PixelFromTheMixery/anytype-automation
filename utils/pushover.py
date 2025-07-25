@@ -18,6 +18,10 @@ class PushoverUtils:
             "html": 1
         }
 
+    def make_deeplink(self, object_id, space_id: str):
+        """Builds deeplinks for link purposes"""
+        return f"anytype://object?objectId={object_id}&spaceId={space_id}"
+
     def send_message(self, title: str, message: str, priority: int = 0, timestamp=None):
         """Send a message via Pushover.""" 
         data = self.data.copy()

@@ -15,10 +15,6 @@ class Pushover:
         self.anytype = AnyTypeUtils()
         self.pushover = PushoverUtils()
 
-    def make_deeplink(self, object_id, space_id: str = config["spaces"]["main"]):
-        """Builds deeplinks for link purposes"""
-        return f"anytype://object?objectId={object_id}&spaceId={space_id}"
-
     def create_object_and_notify(
         self,
         type_name: str,
@@ -39,7 +35,9 @@ class Pushover:
             data["template_id"] = config["templates"]["ritual"][template]
 
         new_obj = self.anytype.create_object(space_id, type_name, data)
-        obj_url = self.make_deeplink(new_obj["object"]["id"], config["spaces"]["archive"])
+        obj_url = self.pushover.make_deeplink(
+            new_obj["object"]["id"], config["spaces"]["archive"]
+        )
 
         title = ""
         if type_name == "ritual":
@@ -56,7 +54,7 @@ class Pushover:
         dt_now = datetime.datetime.now()
         hour = dt_now.hour
         segment = ""
-        task_segments = config["query"]["Task by Day"]
+        task_segments = config["views"]["task_by_day"]
 
         if hour == 6:
             segment = "morning"
@@ -71,14 +69,18 @@ class Pushover:
 
         title = f"Good {segment}!"
 
-        tasks = self.anytype.get_list_view_objects(task_segments[segment], task_segments["id"], "simple")
+        tasks = self.anytype.get_list_view_objects(
+            task_segments[segment], "simple", config["queries"]["task_by_day"]
+        )
         if len(tasks) == 0:
             return None
         message = f"You have {str(len(tasks))} recommended task"
         if len(tasks) > 1:
             message += "s"
         message += "<br>"
-        link = self.make_deeplink(task_segments["id"])
+        link = self.pushover.make_deeplink(
+            config["queries"]["task_by_day"], config["spaces"]["archive"]
+        )
 
         message += f"<a href='{link}'>Here's the link.<a/> And here is the list:"
         for task in tasks:

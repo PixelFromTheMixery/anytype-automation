@@ -16,9 +16,13 @@ class AnyTypeUtils:
     def test(self):
         """Play area for momentary tasks"""
         url = "http://localhost:31009/v1/spaces/"
-        url += config["spaces"]["archive"]
-        url += "/types"
+        url += config["spaces"]["main"]
+        url += "/properties"
+        return self.get_tag_from_list(
+            config["spaces"]["main"], config["tags"]["review"]["id"], "Review Stage"
+        )
         return make_call("get", url, "getting test data")
+
         # url += "tags"
         list_id = config["query"]["Task by Day"]["id"]
         view_id = config["query"]["Task by Day"]["evening"]
@@ -59,7 +63,7 @@ class AnyTypeUtils:
 
         return formatted_objects
 
-    def get_views_list(self, list_id: str = config["automation_list"]["id"]):
+    def get_views_list(self, list_id: str = config["queries"]["automation"]):
         """Pull all views(queries) in the automation query object"""
         views_url = config["url"] + config["spaces"]["main"]
         views_url += "/lists/" + list_id
@@ -89,8 +93,8 @@ class AnyTypeUtils:
     def get_list_view_objects(
         self,
         view_id: str,
-        list_id: str = config["automation_list"]["id"],
-        unpack_level: str = "full",
+        unpack_level: str = "most",
+        list_id: str = config["queries"]["automation"],
     ):
         """Pulls out detailed information of objects in a view (query)"""
         tasks_url = config["url"] + config["spaces"]["main"]
@@ -107,7 +111,7 @@ class AnyTypeUtils:
 
         return tasks_to_check
 
-    def unpack_full_object(self, object_obj: dict):
+    def unpack_full_object(self, object_obj: dict, sub_objects: bool = True):
         """Pulls out name, id, and properties for use"""
         object_dict = {
             "name": object_obj["object"]["name"],
@@ -123,7 +127,7 @@ class AnyTypeUtils:
             elif prop_type in ["select", "multiselect"]:
                 prop_value = prop[prop_type]["name"]
 
-            elif prop_type == "objects":
+            elif prop_type == "objects" and sub_objects is True:
                 if prop[prop_type] is None:
                     prop_value = prop[prop_type]
                 elif prop["name"] in [
@@ -142,7 +146,7 @@ class AnyTypeUtils:
 
         return object_dict
 
-    def get_object_by_id(self, object_id: str, unpack_level: str = "full"):
+    def get_object_by_id(self, object_id: str, unpack_level: str = "most"):
         """Pulls detailed object data by id"""
         object_url = config["url"] + config["spaces"]["main"]
         object_url += "/objects/" + object_id
@@ -170,6 +174,8 @@ class AnyTypeUtils:
                 "id": object_obj["object"]["id"],
                 "AoC": self.get_object_by_id(aoc[0]["objects"][0], "simple")
             }
+        elif unpack_level == "most":
+            object_formatted = self.unpack_full_object(object_obj, False)
         elif object_obj is not None:
             object_formatted = self.unpack_full_object(object_obj)
         else:
