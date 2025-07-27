@@ -1,5 +1,6 @@
 """Utility module for anytype, abstracted for common tasks"""
 
+from venv import logger
 from utils.api_tools import make_call
 from utils.config import config
 
@@ -17,10 +18,7 @@ class AnyTypeUtils:
         """Play area for momentary tasks"""
         url = "http://localhost:31009/v1/spaces/"
         url += config["spaces"]["main"]
-        url += "/properties"
-        return self.get_tag_from_list(
-            config["spaces"]["main"], config["tags"]["review"]["id"], "Review Stage"
-        )
+        url += "/types"
         return make_call("get", url, "getting test data")
 
         # url += "tags"
@@ -97,19 +95,21 @@ class AnyTypeUtils:
         list_id: str = config["queries"]["automation"],
     ):
         """Pulls out detailed information of objects in a view (query)"""
-        tasks_url = config["url"] + config["spaces"]["main"]
-        tasks_url += "/lists/" + list_id
-        tasks_url += "/views/" + view_id
-        tasks_url += "/objects"
-        main_tasks = make_call("get", tasks_url, "get tasks")
+        obj_url = config["url"] + config["spaces"]["main"]
+        obj_url += "/lists/" + list_id
+        obj_url += "/views/" + view_id
+        obj_url += "/objects"
+        main_obj = make_call("get", obj_url, "get obj")
 
-        tasks_to_check = []
+        objs_to_check = []
 
-        if main_tasks and "data" in main_tasks:
-            for task in main_tasks["data"]:
-                tasks_to_check.append(self.get_object_by_id(task["id"], unpack_level))
+        if main_obj and "data" in main_obj:
+            logger.info("Found %s objects", len(main_obj["data"]))
 
-        return tasks_to_check
+            for obj in main_obj["data"]:
+                objs_to_check.append(self.get_object_by_id(obj["id"], unpack_level))
+
+        return objs_to_check
 
     def unpack_full_object(self, object_obj: dict, sub_objects: bool = True):
         """Pulls out name, id, and properties for use"""

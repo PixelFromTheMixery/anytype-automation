@@ -63,9 +63,6 @@ def make_call(
             if result and result.get("status") == 429:
                 if attempt < retries:
                     time.sleep(delay)
-            if result and result.get("status") == 400:
-                return result
-
             else:
                 print(f"RequestException on attempt {attempt}: {e}")
                 message = result.get("message") if result else None

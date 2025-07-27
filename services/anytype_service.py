@@ -85,15 +85,13 @@ class AnytypeAutomation:
                 1,
             )
 
-        data = {"properties": []}
-
-        data["properties"].append(
-            {"key": "due_date", "date": dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")}
-        )
-
         tasks_to_review = []
         for task in tasks_to_check:
+            data = {"properties": []}
 
+            data["properties"].append(
+                {"key": "due_date", "date": dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")}
+            )
             if "Reset Count" not in task:
                 task["Reset Count"] = 0
             elif task["Status"] != "Blocked":
@@ -105,9 +103,6 @@ class AnytypeAutomation:
             if task["Reset Count"] > 4:
                 data["properties"].append(
                     {"key": "status", "select": config["tags"]["status"]["review"]}
-                )
-                data["properties"].append(
-                    {"key": "review_stage", "select": config["tags"]["review"]["day"]}
                 )
                 data["properties"].append(
                     {
@@ -141,7 +136,7 @@ class AnytypeAutomation:
             return "raise exception"
         if len(tasks_to_check) == 0:
             logger.info("No tasks to update")
-
+            return None
         project = ""
         aoc = ""
         tasks_to_add = []
@@ -193,52 +188,74 @@ class AnytypeAutomation:
                 {"properties": [{"key": "summary", "text": summary}]},
             )
 
-    def review_check(self, dt_now):
-        """Sets review dates for objects"""
+    def set_reflection(self, dt_now):
+        """Sets review obj for task"""
         objs_to_check = self.anytype.get_list_view_objects(
-            config["views"]["review"]["no_date"], list_id=config["queries"]["review"]
+            config["views"]["automation"]["reflection"]
         )
         for obj in objs_to_check:
+
+            data = {
+                "type_key": "reflection",
+                "name": obj["name"],
+                "template_id": config["templates"]["reflection"],
+                "properties": [
+                    {"key": "due_date", "date": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ")}
+                ],
+            }
+
+            if obj["Rate"] != "Once":
+                data["properties"].append({"key": "repeating_task", "checkbox": True})
+
+            reflection = self.anytype.create_object(
+                config["spaces"]["main"], "reflection", data
+            )
+
+            if reflection is None:
+                logger.error("Can't find created reflection object")
+                break
+
+            data = {}
             data = {
                 "properties": [
-                    {
-                        "key": "review_date",
-                        "select": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    }
+                    {"key": "reflection", "objects": [reflection["object"]["id"]]}
                 ]
             }
             self.anytype.update_object(obj["name"], obj["id"], data)
 
+    def reflection_updates(self, dt_now):
+        """Updates dates of completed reflections"""
         objs_to_check = self.anytype.get_list_view_objects(
-            config["views"]["review"]["to_adjust"], list_id=config["queries"]["review"]
+            config["views"]["reflect"]["to_adjust"],
+            list_id=config["queries"]["reflect"],
         )
         for obj in objs_to_check:
-            new_tag = obj["Review Stage"]
+            new_tag = obj["Rate"]
             new_day = dt_now
 
-            if "Day" in obj["Review Stage"]:
-                new_tag = config["tags"]["review"]["week"]
+            if obj["Rate"] == "Day":
+                new_tag = config["tags"]["rate"]["week"]
                 new_day = self.next_date(dt_now, "Week", 1)
-            elif "Week" in obj["Review Stage"]:
-                new_tag = config["tags"]["review"]["month"]
+            elif obj["Rate"] == "Week":
+                new_tag = config["tags"]["rate"]["month"]
                 new_day = self.next_date(dt_now, "Month", 1)
-            elif "Month" in obj["Review Stage"]:
-                new_tag = config["tags"]["review"]["quarter"]
+            elif obj["Rate"] == "Month":
+                new_tag = config["tags"]["rate"]["quarter"]
                 new_day = self.next_date(dt_now, "Month", 3)
-            elif "Quarter" in obj["Review Stage"]:
-                if "Rate" in obj:
-                    if obj["Rate"] != "Once":
-                        new_tag = config["tags"]["review"]["quarter"]
-                        new_day = self.next_date(dt_now, "Month", 3)
+            elif obj["Rate"] == "Quarter":
+                if "Repeating Task" in obj:
+                    new_tag = config["tags"]["rate"]["quarter"]
+                    new_day = self.next_date(dt_now, "Month", 3)
                 else:
-                    new_tag = config["tags"]["review"]["quarter"]
+                    new_tag = config["tags"]["rate"]["year"]
                     new_day = self.next_date(dt_now, "Year", 1)
-            elif "Year" in obj["Review Stage"]:
+            elif "Year" in obj["Rate"]:
                 new_day = self.next_date(dt_now, "Year", 1)
             data = {
                 "properties": [
-                    {"key": "review_stage", "select": new_tag},
-                    {"key": "review_date", "date": new_day},
+                    {"key": "status", "select": config["tags"]["status"]["review"]},
+                    {"key": "rate", "select": new_tag},
+                    {"key": "due_date", "date": new_day},
                 ]
             }
             self.anytype.update_object(obj["name"], obj["id"], data)
@@ -255,8 +272,10 @@ class AnytypeAutomation:
         )
         logger.info("Running overdue tasks")
         self.overdue(dt_now)
-        logger.info("Running Review updates")
-        self.review_check(dt_now)
+        logger.info("Setting reflections")
+        self.set_reflection(dt_now)
+        logger.info("Updating Reflections")
+        self.reflection_updates(dt_now)
         logger.info("Daily Rollover completed")
 
     def get_or_create_archive_tag(self, prop_name, value):
@@ -330,16 +349,30 @@ class AnytypeAutomation:
         )
         if not tasks_to_check:
             return "No tasks to update"
-        for task in tasks_to_check:
-            data = self.define_log_object(task)
-            self.anytype.create_object(config["spaces"]["archive"], task["name"], data)
-            self.anytype.delete_object(task["name"], task["id"])
+        try:
+            for task in tasks_to_check:
+                data = self.define_log_object(task)
+                self.anytype.create_object(
+                    config["spaces"]["archive"], task["name"], data
+                )
+                self.anytype.delete_object(task["name"], task["id"])
+        finally:
+            self.set_collections()
+            tasks_to_check = self.anytype.get_list_view_objects(
+                config["views"]["automation"]["migrate"], "full"
+            )
+            for task in tasks_to_check:
+                data = self.define_log_object(task)
+                self.anytype.create_object(
+                    config["spaces"]["archive"], task["name"], data
+                )
+                self.anytype.delete_object(task["name"], task["id"])
 
     def reset_repeating(self):
         """Log and reset repeating tasks"""
 
         tasks_to_check = self.anytype.get_list_view_objects(
-            config["views"]["automation"]["reset"]
+            config["views"]["automation"]["reset"], "full"
         )
         if not tasks_to_check:
             return "No tasks to update"
@@ -360,12 +393,16 @@ class AnytypeAutomation:
                 "properties": [
                     {
                         "key": "due_date",
-                        "date": self.next_date(dt_now, task["Rate"], task["Frequency"]),
+                        "date": self.next_date(
+                            dt_now,
+                            task["Rate"],
+                            task["Frequency"] if "Frequency" in task else 1,
+                        ),
                     },
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": config["tags"]["automation"]["repeating"],
+                        "select": config["tags"]["status"]["repeating"],
                     },
                 ]
             }
@@ -380,4 +417,9 @@ class AnytypeAutomation:
 
     def test(self):
         """Temp endpoint for testing"""
+        return self.anytype.get_tag_from_list(
+            config["spaces"]["main"],
+            "bafyreiakcjhtb4elqbuqznpjditjaitei2gqxj7jf62qi7qqfptetpybve",
+            "bleh",
+        )
         return self.anytype.test()

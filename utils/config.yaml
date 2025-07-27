@@ -13,33 +13,30 @@ collections:
   Care: "bafyreig5mvdr4f5cy3diorwvrbleckome6zsylnn2uxnzvfcswzkn3oujy"
   Finance: "bafyreifikvazzy2htrinkl7zijp5co62mvqczqyvgzfp2bovepvfmdi5y4"
   Home: "bafyreic5inopow5rcuhky2nmqx2kutpxoole7zw625dzyx2e77buveiyai"  
-
-properties:
-  review_date: "67dab1b02bf7cb67453ef126"
+  
 
 queries:
   automation: "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi"
+  reflect: "bafyreiamuhczticd2adaix6vvnxhvln72euag2mwgjuvnciyfe54pkhaze"
   task_by_day: "bafyreigdfl2kfbymfio375u5ukyabsp2323tqnya6o7d6hhfpmrmhthaue"
-  review: "bafyreiamuhczticd2adaix6vvnxhvln72euag2mwgjuvnciyfe54pkhaze"
   task_cleanup: "bafyreih64htmirwgoxmlrkc6cy57q2ep63rcg2n2gybtpa33q5izsol6je"
   
 tags:
   status:
     repeating: "bafyreihfuqod6lpdxeybi45mbdduii6slrfbw6w5e4xmqll24dnclrxvwu"
     review: "bafyreihiiibe566qh7xgl4bd66h7fqh4tokaan623rzodst3hyfdycb5ie"
-  review:
-    id: "bafyreicsass7zrgi6zph4cyrusqf7ffhjvoht3qb4q6ltxkxmmlrojbsc4"
-    day: "bafyreiggpz3dm2kw6wxpnfpnsl4dkkwmpa7xqvouyplavxosxnm5ldaeby"
-    week: "bafyreigdph4ppovrlslw4pbfsjyly4fews5s4hpmcgnbblsrktsp6355ga"
-    month: "bafyreidf5qjhwobgvfn4ydvit7gdnn22xnuzfeqfoaq6by473rui2eawaa"
-    quarter: "bafyreiapiugw27uvbmlwsdjxxsoqsblnc5ep74wk756ygmt5scs6v46hse"
-    year: "bafyreie6ghvmxwjxzpvbfxyt4l7eqeuvjdslb2umllvrwnp64hhltk2vee"
+  rate:
+    week: "bafyreiblx5og5fzfi7tlbf5sehaymirkk523obf4ovvilpc5xzxdukhawe"
+    month: "bafyreifwimiqyv4lwjd77tjiw5z5zp4exbnzycvsvqc4ldh3rc6bzpb5va"
+    quarter: "bafyreiblwfvrxtoe4wu7fqaxaj22vj7oclgxn34mj5ymprkpfvxgu4ny74"
+    year: "bafyreicb6rrjzdv3zxoesx5t2jmqyfoxor4zoyzs6hiamvqbirx6k6cpi4"
     
 templates:
   ritual:
     morning: "bafyreiajvfab4ouumckrduen7cntadngigrteqczfqajlninrvsnfpj7cu"
     evening: "bafyreiapnnqfhdwmkpd4ewitrh4ust3k6cnb4drzomvjl3aelzh6zwufjq"
     planning: "bafyreibftkf34iod7ufkawsyxq5f4gqwc6xrzv7gpt2udlzysnlyfdfmcy"
+  reflection: "bafyreibrw732djcqudmirf3tgxxnxggnone6zt4n4cvtomxeb7w6ql3ciq"
 
 views:
   automation:
@@ -48,12 +45,13 @@ views:
     overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f"
     reset: "8a872d64-7ed4-417e-824c-745d19604849"
     summary: "48899c65-8da0-4c28-9fc1-b2a8811f523e"
+    reflection: "7918cd92-72e4-4c04-a737-11ef4e294f07"
   task_by_day:
     today: "eb7230a2-c65c-4a25-a9c6-173da5eed014"
     morning: "09f5703f-caaf-4173-9add-93738339926a"
     noon: "da80f005-519d-4e2d-8b6e-b0a78dcb8ea8"
     afternoon: "59651999-59eb-46b1-b509-3ff495bedbbc"
     evening: "e6780ec4-a8ad-4821-94a7-0e0f3cec6d32"
-  review:
+  reflect:
     no_date: "a38442fc-0efc-4160-a0fb-f008266fc343"
     to_adjust: "e642e829-ba92-4a39-a63f-321af05ae225"
