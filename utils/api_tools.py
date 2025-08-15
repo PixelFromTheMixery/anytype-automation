@@ -63,6 +63,8 @@ def make_call(
             if result and result.get("status") == 429:
                 if attempt < retries:
                     time.sleep(delay)
+            elif result and "object deleted" in result.get("message"):
+                return url.split("/")[-1]
             else:
                 print(f"RequestException on attempt {attempt}: {e}")
                 message = result.get("message") if result else None

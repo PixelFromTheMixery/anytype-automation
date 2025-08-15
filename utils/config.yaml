@@ -7,7 +7,7 @@ spaces:
   archive: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
   
 collections: 
-  Management: "bafyreihdbrx665q7gjpgho6zcubyxdcl6vox52323xhridhfyx2iyonlki"
+  Management: "bafyreicj6hpsdompq2fmgdhlhhx4yvmytshs6cnv26mx7jsowz4lswys7i"
   Workshop: "bafyreid4oztagsumccf62kzpuk5qazmltw2gy75dcmn7qxc3ayrpgyyooq"
   Self-Dev: "bafyreidxtxwkpj5pyhewg5vrvjndd7o7w5kxublbg5u4fbsocpasuvkbxy"
   Care: "bafyreig5mvdr4f5cy3diorwvrbleckome6zsylnn2uxnzvfcswzkn3oujy"
@@ -36,16 +36,18 @@ templates:
     morning: "bafyreiajvfab4ouumckrduen7cntadngigrteqczfqajlninrvsnfpj7cu"
     evening: "bafyreiapnnqfhdwmkpd4ewitrh4ust3k6cnb4drzomvjl3aelzh6zwufjq"
     planning: "bafyreibftkf34iod7ufkawsyxq5f4gqwc6xrzv7gpt2udlzysnlyfdfmcy"
-  reflection: "bafyreibrw732djcqudmirf3tgxxnxggnone6zt4n4cvtomxeb7w6ql3ciq"
+  reflection: 
+    regular: "bafyreibrw732djcqudmirf3tgxxnxggnone6zt4n4cvtomxeb7w6ql3ciq"
+    cleaning: "bafyreic763jgvbf75yauehsf4armk2ksspaa4zrp2yvqfx3orucusnbd6m"
 
 views:
   automation:
     aoc: "3be228ab-8ee7-41a2-b5dd-3398ae19067e"
-    migrate: "3806f1d1-c2b5-4077-8c89-ebc83baff141"
+    complete: "5883719a-c62f-47fa-a95a-3b983bdec774"
     overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f"
-    reset: "8a872d64-7ed4-417e-824c-745d19604849"
     summary: "48899c65-8da0-4c28-9fc1-b2a8811f523e"
     reflection: "7918cd92-72e4-4c04-a737-11ef4e294f07"
+    other: "1b0970ea-cb8a-4b7c-8b86-82ef264012bc"
   task_by_day:
     today: "eb7230a2-c65c-4a25-a9c6-173da5eed014"
     morning: "09f5703f-caaf-4173-9add-93738339926a"

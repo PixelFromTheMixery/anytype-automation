@@ -167,18 +167,16 @@ class AnytypeAutomation:
         if len(tasks_to_check) == 0:
             return "No tasks to update"
         for task in tasks_to_check:
-            summary = task["Interval"]
+            summary = ""
             try:
                 summary += ", " + "Urgent" if task["Urgent"] else ""
-            except KeyError:
-                pass
-            try:
-                summary += ", " + "Important" if task["Important"] else ""
             except KeyError:
                 pass
             summary += ", " + task["Function"]
             summary += ", " + task["Day Segment"]
             if task["Rate"] != "Once":
+                if "Frequency" not in task:
+                    task["Frequency"] = 1
                 if task["Frequency"] > 1:
                     task["Rate"] = task["Rate"] + "s"
                 summary += ", every " + str(task["Frequency"]) + " " + task["Rate"]
@@ -191,18 +189,21 @@ class AnytypeAutomation:
     def set_reflection(self, dt_now):
         """Sets review obj for task"""
         objs_to_check = self.anytype.get_list_view_objects(
-            config["views"]["automation"]["reflection"]
+            config["views"]["automation"]["reflection"], "full"
         )
         for obj in objs_to_check:
-
             data = {
                 "type_key": "reflection",
                 "name": obj["name"],
-                "template_id": config["templates"]["reflection"],
                 "properties": [
                     {"key": "due_date", "date": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ")}
                 ],
             }
+
+            if obj["Project"][0]["name"] == "Cleaning":
+                data["template_id"] = config["templates"]["reflection"]["cleaning"]
+            else:
+                data["template_id"] = config["templates"]["reflection"]["regular"]
 
             if obj["Rate"] != "Once":
                 data["properties"].append({"key": "repeating_task", "checkbox": True})
@@ -306,8 +307,8 @@ class AnytypeAutomation:
                 "select": self.get_or_create_archive_tag("Function", task["Function"]),
             },
             {
-                "key": "interval",
-                "select": self.get_or_create_archive_tag("Interval", task["Interval"]),
+                "key": "points",
+                "number": task["Points"],
             },
             {
                 "key": "day_segment",
@@ -322,6 +323,7 @@ class AnytypeAutomation:
                 ),
             },
         ]
+
         for link in task["Backlinks"]:
             if link["name"] in [
                 "Care",
@@ -342,84 +344,80 @@ class AnytypeAutomation:
         data["properties"] = props
         return data
 
-    def migrate_tasks(self):
-        """Migrate completed tasks that occur once to archive"""
-        tasks_to_check = self.anytype.get_list_view_objects(
-            config["views"]["automation"]["migrate"], "full"
-        )
-        if not tasks_to_check:
-            return "No tasks to update"
-        try:
-            for task in tasks_to_check:
-                data = self.define_log_object(task)
-                self.anytype.create_object(
-                    config["spaces"]["archive"], task["name"], data
-                )
-                self.anytype.delete_object(task["name"], task["id"])
-        finally:
-            self.set_collections()
+    def process_tasks(self):
+        """Process all tasks: migrate 'Once' tasks, reset repeating tasks."""
+        max_retries = 2
+        for _ in range(max_retries):
             tasks_to_check = self.anytype.get_list_view_objects(
-                config["views"]["automation"]["migrate"], "full"
+                config["views"]["automation"]["complete"], "full"
             )
-            for task in tasks_to_check:
-                data = self.define_log_object(task)
-                self.anytype.create_object(
-                    config["spaces"]["archive"], task["name"], data
-                )
-                self.anytype.delete_object(task["name"], task["id"])
+            if not tasks_to_check:
+                return "No tasks to update"
 
-    def reset_repeating(self):
-        """Log and reset repeating tasks"""
+            dt_now = datetime.datetime.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
 
-        tasks_to_check = self.anytype.get_list_view_objects(
-            config["views"]["automation"]["reset"], "full"
-        )
-        if not tasks_to_check:
-            return "No tasks to update"
+            try:
+                for task in tasks_to_check:
+                    aoc = [
+                        link["name"]
+                        for link in task["Backlinks"]
+                        if link
+                        in [
+                            "Care",
+                            "Finance",
+                            "Home",
+                            "Management",
+                            "Self-Dev",
+                            "Workshop",
+                        ]
+                    ]
 
-        dt_now = datetime.datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+                    data = self.define_log_object(task)
+                    self.anytype.create_object(
+                        config["spaces"]["archive"], task["name"], data
+                    )
 
-        for task in tasks_to_check:
-            if "Summary" not in task:
-                self.summary_writer()
-                self.reset_repeating()
+                    if task.get("Rate") == "Once":
+                        self.anytype.delete_object(task["name"], task["id"])
+                    else:
+                        update_data = {
+                            "properties": [
+                                {
+                                    "key": "due_date",
+                                    "date": self.next_date(
+                                        dt_now,
+                                        task["Rate"],
+                                        task.get("Frequency", 1),
+                                    ),
+                                },
+                                {"key": "reset_count", "number": 0},
+                                {
+                                    "key": "status",
+                                    "select": config["tags"]["status"]["repeating"],
+                                },
+                            ]
+                        }
+                        self.anytype.update_object(
+                            task["name"], task["id"], update_data
+                        )
                 break
-
-            data = self.define_log_object(task)
-            self.anytype.create_object(config["spaces"]["archive"], task["name"], data)
-            data = {
-                "properties": [
-                    {
-                        "key": "due_date",
-                        "date": self.next_date(
-                            dt_now,
-                            task["Rate"],
-                            task["Frequency"] if "Frequency" in task else 1,
-                        ),
-                    },
-                    {"key": "reset_count", "number": 0},
-                    {
-                        "key": "status",
-                        "select": config["tags"]["status"]["repeating"],
-                    },
-                ]
-            }
-            self.anytype.update_object(task["name"], task["id"], data)
+            except TypeError:
+                self.set_collections()
+        else:
+            return "Failed to heal after retries"
 
     def recurrent_check(self):
         """Recurrent automation script"""
-        logger.info("Running completed task migration")
-        self.migrate_tasks()
-        logger.info("Running repeating task reset")
-        self.reset_repeating()
+        logger.info("Running completed task processing")
+        self.process_tasks()
 
     def test(self):
         """Temp endpoint for testing"""
-        return self.anytype.get_tag_from_list(
-            config["spaces"]["main"],
-            "bafyreiakcjhtb4elqbuqznpjditjaitei2gqxj7jf62qi7qqfptetpybve",
-            "bleh",
-        )
         return self.anytype.test()
+
+    def other(self):
+        """Temp endpoint for offhand tasks"""
+
+        return "Completed with no issue"

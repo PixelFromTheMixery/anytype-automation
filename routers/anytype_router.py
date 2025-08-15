@@ -36,7 +36,14 @@ async def recurrent_check():
 async def search(search_criteria):
     """Endpoint for searching objects"""
     logger.info("Search endpoint called")
-    return anytype_automation.search(search_criteria)
+    return anytype_automation.search(search_criteria, False)
+
+
+@router.get("/other_anytype")
+async def other_endpoint():
+    """Endpoint for throwaway automations"""
+    logger.info("Anytype other endpoint called")
+    return anytype_automation.other()
 
 
 @router.get("/test_anytype")

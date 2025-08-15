@@ -1,8 +1,8 @@
 """Utility module for anytype, abstracted for common tasks"""
 
-from venv import logger
 from utils.api_tools import make_call
 from utils.config import config
+from utils.logger import logger
 
 class AnyTypeUtils:
     """
@@ -44,7 +44,7 @@ class AnyTypeUtils:
         url += space_id
         url += "/search"
         data = {}
-        if obj:
+        if obj or obj == "true":
             data["types"] = [search_criteria]
             if search_filter != "":
                 data["query"] = search_filter
@@ -140,7 +140,15 @@ class AnyTypeUtils:
                 else:
                     links = []
                     for object_id in prop[prop_type]:
-                        links.append(self.get_object_by_id(object_id, "simple"))
+                        result = self.get_object_by_id(object_id, "simple")
+                        if "Clear me" not in result:
+                            links.append(result)
+                        else:
+                            self.update_object(
+                                object_obj["object"]["name"],
+                                object_obj["object"]["id"],
+                                {"properties": [{"key": prop_type, "objects": None}]},
+                            )
                     prop_value = links
             object_dict[prop["name"]] = prop_value
 
@@ -157,6 +165,9 @@ class AnyTypeUtils:
             return "raise exception"
 
         object_formatted = None
+
+        if isinstance(object_obj, str):
+            return {"Clear me": object_obj}
 
         if unpack_level == "simple":
             object_formatted = {
@@ -180,6 +191,7 @@ class AnyTypeUtils:
             object_formatted = self.unpack_full_object(object_obj)
         else:
             return "object is None"
+
         return object_formatted
 
     def update_object(self, object_name: str, object_id: str, data: dict):
