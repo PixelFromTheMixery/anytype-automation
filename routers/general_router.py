@@ -18,9 +18,3 @@ async def get_health_endpoint(
     """Health Endpoint, should always return 200 OK"""
     logger.info("Health endpoint called")
     return await health_service.check_health("OK")
-
-
-@router.get("/st")
-async def st_start():
-    """Temp endpoint"""
-    logger.info("ST endpoint called")
