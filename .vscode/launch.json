@@ -1,7 +1,7 @@
 {
 	"configurations": [
 		{
-			"name": "Python Debugger: FastAPI, local zt",
+			"name": "Python Debugger: FastAPI, local, vpn",
 			"type": "debugpy",
 			"request": "launch",
 			"module": "uvicorn",
@@ -29,10 +29,11 @@
 				"--port",
 				"8001"
 			],
-			"jinja": true
+			"jinja": true,
+			"python": "${command:python.interpreterPath}"
 		},
 		{
-			"name": "Python Debugger: FastAPI, zt",
+			"name": "Python Debugger: FastAPI, vpn",
 			"type": "debugpy",
 			"request": "launch",
 			"module": "uvicorn",
@@ -44,10 +45,11 @@
 				"--port",
 				"8001"
 			],
-			"jinja": true
+			"jinja": true,
+			"python": "${command:python.interpreterPath}"
 		},
 		{
-			"name": "Python Debugger: FastAPI, zt bp",
+			"name": "Python Debugger: FastAPI",
 			"type": "debugpy",
 			"request": "launch",
 			"module": "uvicorn",
@@ -59,7 +61,8 @@
 				"--port",
 				"8001"
 			],
-			"jinja": true
+			"jinja": true,
+			"python": "${command:python.interpreterPath}"
 		}
 	]
 }
