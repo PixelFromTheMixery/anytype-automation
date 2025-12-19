@@ -19,17 +19,18 @@ class AnytypeAutomation:
     - resets task due date to today if overdue (simple)
     - adds task to collection based on project
     """
+
     def __init__(self):
         self.anytype = AnyTypeUtils()
         self.pushover = PushoverUtils()
         self.converter = {
-            "Monday": 0,
-            "Tuesday": 1,
-            "Wednesday": 2,
-            "Thursday": 3,
-            "Friday": 4,
-            "Saturday": 5,
-            "Sunday": 6,
+            "mon": 0,
+            "tue": 1,
+            "wed": 2,
+            "thu": 3,
+            "fri": 4,
+            "sat": 5,
+            "sun": 6,
         }
 
     def search(self, search_critera: str, obj: bool = True, search_filter: str = ""):
@@ -38,31 +39,53 @@ class AnytypeAutomation:
             search_critera, obj, search_filter
         )
 
-    def next_date(self, date: datetime.datetime, timescale: str, freq: int):
-        """Returns formatted string of the next date based on the timescale provided"""
-        day_int = -1
-        if timescale in self.converter:
-            day_int = self.converter[timescale]
-        dt_next = datetime.datetime
-        if timescale == "Day":
-            dt_next =  date + relativedelta(days=freq)
-        elif timescale == "Week":
-            dt_next =  date + relativedelta(weeks=freq)
-        elif timescale == "Month":
-            dt_next =  date + relativedelta(months=freq)
-        elif timescale == "Year":
-            dt_next = date + relativedelta(years=freq)
-        elif timescale == "Weekday":
-            dt_next = date + datetime.timedelta(days=freq)
-            while dt_next.weekday() >= 5:
-                dt_next += datetime.timedelta(days=freq)
-        elif timescale == "Weekend":
-            dt_next = date + datetime.timedelta(days=freq)
-            while dt_next.weekday() < 5:
-                dt_next += datetime.timedelta(days=freq)
+    def date_eligibility(self, unit, modifier=None):
+        """Returns list of eligible values for days of the week"""
+
+        if unit in ["month", "quarter", "year"]:
+            allowed = [0, 1, 2, 3, 4, 5, 6]
+        elif unit == "week" and modifier:
+            allowed = [self.converter[d] for d in modifier.split(",")]
+        elif unit == "weekday":
+            allowed = [0, 1, 2, 3, 4]
+        elif unit == "weekend":
+            allowed = [5, 6]
         else:
-            dt_next = date + relativedelta(days=1)
-            dt_next = dt_next + relativedelta(weekday=weekday(day_int)(+freq))
+            allowed = [self.converter.get(unit)]
+
+        return allowed
+
+    def next_date(self, date: datetime.datetime, rate: str):
+        """
+        Returns formatted string of the next date based on the timescale provided
+        n@unit:modifier
+        Currently supported units:
+        days of the week - 1@week:mon,thu
+        day of the month - 1@month:15
+        """
+        n, unit = rate.split("@")
+        n = int(n)
+        modifier = None
+        if ":" in unit:
+            unit, modifier = unit.split(":", 1)
+            if unit in ["month", "year"]:
+                modifier = int(modifier)
+
+        allowed = self.date_eligibility(unit, modifier)
+
+        delta_map = {
+            "day": lambda d, n: d + relativedelta(days=n),
+            "week": lambda d, n: d + relativedelta(weeks=n),
+            "month": lambda d, n, m=None: (
+                d + relativedelta(months=n, day=m) if m else d + relativedelta(months=n)
+            ),
+            "quarter": lambda d, n: d + relativedelta(months=n * 3),
+            "year": lambda d, n: d + relativedelta(years=n),
+        }
+        dt_next = delta_map.get(unit, lambda d, n: d + relativedelta(days=n))(date, n)
+
+        while dt_next.weekday() not in allowed:
+            dt_next += datetime.timedelta(days=1)
 
         return dt_next.strftime(DATETIME_FORMAT)
 
@@ -72,20 +95,13 @@ class AnytypeAutomation:
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
-        
+
         if "Reset Count" not in task:
             task["Reset Count"] = 0
         elif task["Status"] != "Blocked":
             task["Reset Count"] = task["Reset Count"] + 1
-
-        if task["Rate"] != "Once" and "Frequency" not in task.keys():
-            task["Frequency"] = 1
-
-        data["properties"].append(
-            {"key": "reset_count", "number": task["Reset Count"]}
-        )
+        data["properties"].append({"key": "reset_count", "number": task["Reset Count"]})
         return data
-
 
     def overdue(self, dt_now):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
@@ -147,7 +163,7 @@ class AnytypeAutomation:
         if len(tasks_to_check) == 0:
             logger.info(NO_TASKS)
             return None
-        
+
         for task in tasks_to_check:
             aoc = config["AoC"].get(task["Project"][0]["name"][-3:])
             self.anytype.add_to_list(aoc, config["collections"][aoc], [task["id"]])
@@ -155,7 +171,9 @@ class AnytypeAutomation:
     def set_reflection(self, dt_now):
         """Sets review obj for task"""
         objs_to_check = self.anytype.get_list_view_objects(
-            config["views"]["reflect"]["placeholder"], "full"
+            config["views"]["reflect_prop"]["placeholder"],
+            "full",
+            config["queries"]["reflect_prop"],
         )
         for obj in objs_to_check:
             data = {
@@ -166,12 +184,12 @@ class AnytypeAutomation:
                 ],
             }
 
-            if obj["Project"][0]["name"] == "Cleaning":
+            if "Project" in obj and obj["Project"][0]["name"] == "Cleaning":
                 data["template_id"] = config["templates"]["reflection"]["cleaning"]
             else:
                 data["template_id"] = config["templates"]["reflection"]["regular"]
 
-            if obj["Rate"] != "Once":
+            if "Rate" in obj and obj["Rate"] != "":
                 data["properties"].append({"key": "repeating_task", "checkbox": True})
 
             reflection = self.anytype.create_object(
@@ -193,40 +211,33 @@ class AnytypeAutomation:
     def reflection_updates(self, dt_now):
         """Updates dates of completed reflections"""
         objs_to_check = self.anytype.get_list_view_objects(
-            config["views"]["reflect"]["to_adjust"],
-            list_id=config["queries"]["reflect"],
+            config["views"]["reflect_object"]["to_adjust"],
+            list_id=config["queries"]["reflect_object"],
         )
         for obj in objs_to_check:
-            new_tag = obj["Rate"]
-            new_day = dt_now
+            today_day = dt_now
 
-            if obj["Rate"] == "Day":
-                new_tag = config["tags"]["rate"]["week"]
-                new_day = self.next_date(dt_now, "Week", 1)
+            if "Rate" not in obj or obj["Rate"] == "":
+                new_tag = "1@day"
+            elif obj["Rate"] == "1@day":
+                new_tag = "1@week"
             elif obj["Rate"] == "Week":
-                new_tag = config["tags"]["rate"]["month"]
-                new_day = self.next_date(dt_now, "Month", 1)
+                new_tag = "1@month"
             elif obj["Rate"] == "Month":
-                new_tag = config["tags"]["rate"]["quarter"]
-                new_day = self.next_date(dt_now, "Month", 3)
-            elif obj["Rate"] == "Quarter":
-                if "Repeating Task" in obj:
-                    new_tag = config["tags"]["rate"]["quarter"]
-                    new_day = self.next_date(dt_now, "Month", 3)
-                else:
-                    new_tag = config["tags"]["rate"]["year"]
-                    new_day = self.next_date(dt_now, "Year", 1)
-            elif "Year" in obj["Rate"]:
-                new_day = self.next_date(dt_now, "Year", 1)
+                new_tag = "1@quarter"
+            elif obj["Rate"] == "Quarter" and "Repeating Task" not in obj:
+                new_tag = "1@year"
+
+            new_day = self.next_date(today_day, new_tag)
+
             data = {
                 "properties": [
                     {"key": "status", "select": config["tags"]["status"]["review"]},
-                    {"key": "rate", "select": new_tag},
+                    {"key": "rate", "text": new_tag},
                     {"key": "due_date", "date": new_day},
                 ]
             }
             self.anytype.update_object(obj["name"], obj["id"], data)
-
 
     def daily_rollover(self):
         """Daily automation script"""
@@ -270,7 +281,7 @@ class AnytypeAutomation:
         - Day Segment (Select)
         - Project (Select)
         - Area of Concern (Select)
-        
+
         """
         data = {}
         data["type_key"] = "log"
@@ -300,10 +311,7 @@ class AnytypeAutomation:
         ]
 
         data["properties"] = props
-        self.anytype.create_object(
-            config["spaces"]["archive"], task["name"], data
-        )
-
+        self.anytype.create_object(config["spaces"]["archive"], task["name"], data)
 
     def task_status_reset(self, task, dt_now):
         """
@@ -314,7 +322,11 @@ class AnytypeAutomation:
         if config["settings"]["archive"]:
             self.log_task_in_archive(task)
 
-        if task.get("Rate") == "Once":
+        if "Rate" not in task or task["Rate"] == "":
+            if task["Reflection"][0]["name"] != "Placeholder":
+                self.anytype.delete_object(
+                    "Reflection for " + task["name"], task["Reflection"][0]["id"]
+                )
             self.anytype.delete_object(task["name"], task["id"])
         else:
             update_data = {
@@ -324,7 +336,6 @@ class AnytypeAutomation:
                         "date": self.next_date(
                             dt_now,
                             task["Rate"],
-                            task.get("Frequency", 1),
                         ),
                     },
                     {"key": "reset_count", "number": 0},
@@ -334,11 +345,7 @@ class AnytypeAutomation:
                     },
                 ]
             }
-            self.anytype.update_object(
-                task["name"], task["id"], update_data
-            )
-
-
+            self.anytype.update_object(task["name"], task["id"], update_data)
 
     def recurrent_check(self):
         """Collect tasks for processing from completed view"""
@@ -356,8 +363,7 @@ class AnytypeAutomation:
             )
 
             for task in tasks_to_check:
-                # TODO Check if this is still needed
-                try:            
+                try:
                     [
                         link["name"]
                         for link in task["Backlinks"]
@@ -383,5 +389,13 @@ class AnytypeAutomation:
 
     def other(self):
         """Temp endpoint for offhand tasks"""
+        tasks_to_check = self.anytype.get_list_view_objects(
+            config["views"]["automation"]["all"],
+            list_id=config["queries"]["automation"],
+        )
 
+        for task in tasks_to_check:
+            update_data = {"properties": [{"key": "placeholder", "text": ""}]}
+
+            self.anytype.update_object(task["name"], task["id"], update_data)
         return "Completed with no issue"

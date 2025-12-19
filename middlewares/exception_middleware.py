@@ -25,7 +25,9 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 status_code=exc.status, content={"Anytype error": exc.message}
             )
         except Exception as exc:
-            logger.exception(f"Unhandled exception processing {request.method}, {request.url.path}")
+            logger.exception(
+                f"Unhandled exception processing {request.method}, {request.url.path}"
+            )
             tb = traceback.format_exc()
             message = (
                 f"500 Internal Server Error\n"
@@ -34,4 +36,6 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 f"Traceback:\n{tb}"
             )
             self.pushover.send_message("500 Internal Server Error", message, priority=1)
-            raise HTTPException(status_code=500, detail={"Misc error": "Internal Server Error"}) from exc
+            raise HTTPException(
+                status_code=500, detail={"Misc error": "Internal Server Error"}
+            ) from exc

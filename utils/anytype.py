@@ -4,6 +4,7 @@ from utils.api_tools import make_call
 from utils.config import config
 from utils.logger import logger
 
+
 class AnyTypeUtils:
     """
     Pulls views for automation, refer to anytype service
@@ -150,7 +151,6 @@ class AnyTypeUtils:
             object_dict[prop["name"]] = prop_value
 
         return object_dict
-
 
     def get_object_by_id(self, object_id: str, unpack_level: str = "most"):
         """Pulls detailed object data by id"""
