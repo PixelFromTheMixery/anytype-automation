@@ -9,6 +9,10 @@ from utils.logger import logger
 from utils.pushover import PushoverUtils
 
 
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+NO_TASKS = "No tasks to update"
+
+
 class AnytypeAutomation:
     """
     Anytype Services manages the current tasks:
@@ -60,11 +64,28 @@ class AnytypeAutomation:
             dt_next = date + relativedelta(days=1)
             dt_next = dt_next + relativedelta(weekday=weekday(day_int)(+freq))
 
-        return dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return dt_next.strftime(DATETIME_FORMAT)
 
     def view_list(self, list_id: str = config["queries"]["automation"]):
         """Formats view objects into consumable objects to add to this object"""
         return self.anytype.get_views_list(list_id)
+
+    def task_review_cleanup(self, task, data):
+        """Updates tasks that have been left unattended"""
+        
+        if "Reset Count" not in task:
+            task["Reset Count"] = 0
+        elif task["Status"] != "Blocked":
+            task["Reset Count"] = task["Reset Count"] + 1
+
+        if task["Rate"] != "Once" and "Frequency" not in task.keys():
+            task["Frequency"] = 1
+
+        data["properties"].append(
+            {"key": "reset_count", "number": task["Reset Count"]}
+        )
+        return data
+
 
     def overdue(self, dt_now):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
@@ -74,7 +95,7 @@ class AnytypeAutomation:
         if tasks_to_check is None:
             return "raise exception"
         if len(tasks_to_check) == 0:
-            return "No tasks to update"
+            return NO_TASKS
 
         dt_next = dt_now + datetime.timedelta(days=1)
 
@@ -86,35 +107,24 @@ class AnytypeAutomation:
             )
 
         tasks_to_review = []
+
         for task in tasks_to_check:
             data = {"properties": []}
 
             data["properties"].append(
-                {"key": "due_date", "date": dt_next.strftime("%Y-%m-%dT%H:%M:%SZ")}
+                {"key": "due_date", "date": dt_next.strftime(DATETIME_FORMAT)}
             )
-            if "Reset Count" not in task:
-                task["Reset Count"] = 0
-            elif task["Status"] != "Blocked":
-                task["Reset Count"] = task["Reset Count"] + 1
 
-            if task["Rate"] != "Once" and task["Frequency"] is None:
-                task["Frequency"] = 1
-
-            if task["Reset Count"] > 4:
-                data["properties"].append(
-                    {"key": "status", "select": config["tags"]["status"]["review"]}
-                )
-                data["properties"].append(
-                    {
-                        "key": "review_date",
-                        "date": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    }
-                )
+            if config["settings"]["review_threshold"] > 0:
+                data = self.task_review_cleanup(task, data)
+                if task["Reset Count"] > config["settings"]["review_threshold"]:
+                    data["properties"].append(
+                        {"key": "status", "select": config["tags"]["status"]["review"]}
+                    )
                 tasks_to_review.append(task["name"])
-            data["properties"].append(
-                {"key": "reset_count", "number": task["Reset Count"]}
-            )
+
             self.anytype.update_object(task["name"], task["id"], data)
+
         if tasks_to_review:
             message = "The following tasks have been reset 5 times, please review:"
             for task in tasks_to_review:
@@ -135,68 +145,24 @@ class AnytypeAutomation:
         if tasks_to_check is None:
             return "raise exception"
         if len(tasks_to_check) == 0:
-            logger.info("No tasks to update")
+            logger.info(NO_TASKS)
             return None
-        project = ""
-        aoc = ""
-        tasks_to_add = []
+        
         for task in tasks_to_check:
-            if project != task["Project"][0]["name"]:
-                project = task["Project"][0]["name"]
-                project_obj = self.anytype.get_object_by_id(
-                    task["Project"][0]["id"], "project"
-                )
-                if aoc != project_obj["AoC"]["name"]:
-                    if len(tasks_to_add) != 0:
-                        self.anytype.add_to_list(
-                            aoc, config["collections"][aoc], tasks_to_add
-                        )
-                    tasks_to_add = []
-                    aoc = project_obj["AoC"]["name"]
-            tasks_to_add.append(task["id"])
-        self.anytype.add_to_list(aoc, config["collections"][aoc], tasks_to_add)
-
-    def summary_writer(self):
-        """Write summery of task"""
-        tasks_to_check = self.anytype.get_list_view_objects(
-            config["views"]["automation"]["summary"]
-        )
-        # TODO: performance improvement, code duplication, raise exception
-        if tasks_to_check is None:
-            return "raise exception"
-        if len(tasks_to_check) == 0:
-            return "No tasks to update"
-        for task in tasks_to_check:
-            summary = ""
-            try:
-                summary += ", " + "Urgent" if task["Urgent"] else ""
-            except KeyError:
-                pass
-            summary += ", " + task["Function"]
-            summary += ", " + task["Day Segment"]
-            if task["Rate"] != "Once":
-                if "Frequency" not in task:
-                    task["Frequency"] = 1
-                if task["Frequency"] > 1:
-                    task["Rate"] = task["Rate"] + "s"
-                summary += ", every " + str(task["Frequency"]) + " " + task["Rate"]
-            self.anytype.update_object(
-                task["name"],
-                task["id"],
-                {"properties": [{"key": "summary", "text": summary}]},
-            )
+            aoc = config["AoC"].get(task["Project"][0]["name"][-3:])
+            self.anytype.add_to_list(aoc, config["collections"][aoc], [task["id"]])
 
     def set_reflection(self, dt_now):
         """Sets review obj for task"""
         objs_to_check = self.anytype.get_list_view_objects(
-            config["views"]["automation"]["reflection"], "full"
+            config["views"]["reflect"]["placeholder"], "full"
         )
         for obj in objs_to_check:
             data = {
                 "type_key": "reflection",
                 "name": obj["name"],
                 "properties": [
-                    {"key": "due_date", "date": dt_now.strftime("%Y-%m-%dT%H:%M:%SZ")}
+                    {"key": "due_date", "date": dt_now.strftime(DATETIME_FORMAT)}
                 ],
             }
 
@@ -261,12 +227,11 @@ class AnytypeAutomation:
             }
             self.anytype.update_object(obj["name"], obj["id"], data)
 
+
     def daily_rollover(self):
         """Daily automation script"""
         logger.info("Running missing collections")
         self.set_collections()
-        logger.info("Running writing summaries")
-        self.summary_writer()
 
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
@@ -295,8 +260,18 @@ class AnytypeAutomation:
             load_archive_logging()
             return tag_id
 
-    def define_log_object(self, task):
-        """Define log object for archival"""
+    def log_task_in_archive(self, task):
+        """
+        Define log object for archival
+        Currently supported properties:
+        - Defintion of Done (Text)
+        - Function (Select)
+        - Points (Number)
+        - Day Segment (Select)
+        - Project (Select)
+        - Area of Concern (Select)
+        
+        """
         data = {}
         data["type_key"] = "log"
         data["name"] = task["name"]
@@ -324,43 +299,66 @@ class AnytypeAutomation:
             },
         ]
 
-        for link in task["Backlinks"]:
-            if link["name"] in [
-                "Care",
-                "Finance",
-                "Home",
-                "Management",
-                "Self-Dev",
-                "Workshop",
-            ]:
-                props.append(
-                    {
-                        "key": "ao_c",
-                        "text": self.get_or_create_archive_tag("AoC", link["name"]),
-                    },
-                )
-                break
-
         data["properties"] = props
-        return data
+        self.anytype.create_object(
+            config["spaces"]["archive"], task["name"], data
+        )
 
-    def process_tasks(self):
-        """Process all tasks: migrate 'Once' tasks, reset repeating tasks."""
+
+    def task_status_reset(self, task, dt_now):
+        """
+        Delete tasks that occur once
+        Reset tasks that recur
+        Update task based on reset count
+        """
+        if config["settings"]["archive"]:
+            self.log_task_in_archive(task)
+
+        if task.get("Rate") == "Once":
+            self.anytype.delete_object(task["name"], task["id"])
+        else:
+            update_data = {
+                "properties": [
+                    {
+                        "key": "due_date",
+                        "date": self.next_date(
+                            dt_now,
+                            task["Rate"],
+                            task.get("Frequency", 1),
+                        ),
+                    },
+                    {"key": "reset_count", "number": 0},
+                    {
+                        "key": "status",
+                        "select": config["tags"]["status"]["repeating"],
+                    },
+                ]
+            }
+            self.anytype.update_object(
+                task["name"], task["id"], update_data
+            )
+
+
+
+    def recurrent_check(self):
+        """Collect tasks for processing from completed view"""
+        logger.info("Running completed task processing")
         max_retries = 2
         for _ in range(max_retries):
             tasks_to_check = self.anytype.get_list_view_objects(
                 config["views"]["automation"]["complete"], "full"
             )
             if not tasks_to_check:
-                return "No tasks to update"
+                return NO_TASKS
 
             dt_now = datetime.datetime.now().replace(
                 hour=0, minute=0, second=0, microsecond=0
             )
 
-            try:
-                for task in tasks_to_check:
-                    aoc = [
+            for task in tasks_to_check:
+                # TODO Check if this is still needed
+                try:            
+                    [
                         link["name"]
                         for link in task["Backlinks"]
                         if link
@@ -369,49 +367,15 @@ class AnytypeAutomation:
                             "Finance",
                             "Home",
                             "Management",
-                            "Self-Dev",
                             "Workshop",
                         ]
                     ]
-
-                    data = self.define_log_object(task)
-                    self.anytype.create_object(
-                        config["spaces"]["archive"], task["name"], data
-                    )
-
-                    if task.get("Rate") == "Once":
-                        self.anytype.delete_object(task["name"], task["id"])
-                    else:
-                        update_data = {
-                            "properties": [
-                                {
-                                    "key": "due_date",
-                                    "date": self.next_date(
-                                        dt_now,
-                                        task["Rate"],
-                                        task.get("Frequency", 1),
-                                    ),
-                                },
-                                {"key": "reset_count", "number": 0},
-                                {
-                                    "key": "status",
-                                    "select": config["tags"]["status"]["repeating"],
-                                },
-                            ]
-                        }
-                        self.anytype.update_object(
-                            task["name"], task["id"], update_data
-                        )
+                except TypeError:
+                    self.set_collections()
+                self.task_status_reset(task, dt_now)
                 break
-            except TypeError:
-                self.set_collections()
-        else:
-            return "Failed to heal after retries"
-
-    def recurrent_check(self):
-        """Recurrent automation script"""
-        logger.info("Running completed task processing")
-        self.process_tasks()
+            else:
+                return "Failed to heal after retries"
 
     def test(self):
         """Temp endpoint for testing"""

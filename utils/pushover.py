@@ -10,12 +10,13 @@ load_dotenv()
 
 class PushoverUtils:
     """Class to handle Overpush notifications."""
+
     def __init__(self):
         self.url = "https://api.pushover.net/1/messages.json"
         self.data = {
             "token": os.getenv("PUSHOVER_KEY"),
             "user": os.getenv("PUSHOVER_USER"),
-            "html": 1
+            "html": 1,
         }
 
     def make_deeplink(self, object_id, space_id: str):
@@ -23,7 +24,7 @@ class PushoverUtils:
         return f"anytype://object?objectId={object_id}&spaceId={space_id}"
 
     def send_message(self, title: str, message: str, priority: int = 0, timestamp=None):
-        """Send a message via Pushover.""" 
+        """Send a message via Pushover."""
         data = self.data.copy()
         data["title"] = title
         data["priority"] = priority
@@ -34,6 +35,7 @@ class PushoverUtils:
             data["expire"] = 300
         if timestamp is not None:
             data["timestamp"] = timestamp
+        #fmt: off
         make_call(
             "post",
             self.url,

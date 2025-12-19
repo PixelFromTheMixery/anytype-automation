@@ -11,9 +11,6 @@ class AnyTypeUtils:
     Updates tasks with provided data
     """
 
-    def __init__(self):
-        pass
-
     def test(self):
         """Play area for momentary tasks"""
         url = "http://localhost:31009/v1/spaces/"
@@ -104,7 +101,7 @@ class AnyTypeUtils:
         objs_to_check = []
 
         if main_obj and "data" in main_obj:
-            logger.info("Found %s objects", len(main_obj["data"]))
+            logger.info(f"Found {len(main_obj["data"])} objects")
 
             for obj in main_obj["data"]:
                 objs_to_check.append(self.get_object_by_id(obj["id"], unpack_level))
@@ -154,6 +151,7 @@ class AnyTypeUtils:
 
         return object_dict
 
+
     def get_object_by_id(self, object_id: str, unpack_level: str = "most"):
         """Pulls detailed object data by id"""
         object_url = config["url"] + config["spaces"]["main"]
@@ -175,15 +173,10 @@ class AnyTypeUtils:
                 "id": object_obj["object"]["id"],
             }
         elif unpack_level == "project":
-            aoc = [
-                prop
-                for prop in object_obj["object"]["properties"]
-                if prop["name"] == "AoC"
-            ]
             object_formatted = {
                 "name": object_obj["object"]["name"],
                 "id": object_obj["object"]["id"],
-                "AoC": self.get_object_by_id(aoc[0]["objects"][0], "simple")
+                "AoC": config["AoC"].get(object_obj["object"]["name"][-3:]),
             }
         elif unpack_level == "most":
             object_formatted = self.unpack_full_object(object_obj, False)

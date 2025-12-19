@@ -34,7 +34,7 @@ def make_call(
     for attempt in range(1, retries + 1):
         result = None
         try:
-            logger.info("Attempt to %s. %s of %s", info, attempt, retries)
+            logger.info(f"Attempt to {info}. {attempt} of {retries}")
             if category == "delete":
                 response = requests.delete(url, headers=headers, timeout=timeout)
             elif category == "get":

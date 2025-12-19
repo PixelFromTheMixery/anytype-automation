@@ -24,10 +24,10 @@ async def lifespan(_app: FastAPI):
 
     # Pushover
     ## Day Segment
-    scheduler.add_job(pushover.task_notify, "cron", hour="6")
-    scheduler.add_job(pushover.task_notify, "cron", hour="10")
-    scheduler.add_job(pushover.task_notify, "cron", hour="14")
-    scheduler.add_job(pushover.task_notify, "cron", hour="18")
+    # scheduler.add_job(pushover.task_notify, "cron", hour="6")
+    # scheduler.add_job(pushover.task_notify, "cron", hour="10")
+    # scheduler.add_job(pushover.task_notify, "cron", hour="14")
+    # scheduler.add_job(pushover.task_notify, "cron", hour="18")
     ## Rituals
     # scheduler.add_job(
     #     pushover.create_object_and_notify,

@@ -2,14 +2,25 @@
 url: "http://localhost:31009/v1/spaces/"
 me: "_participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW"
 
+settings:
+  archive: true
+  pushover: true
+  review_threshold: 5
+
+AoC:
+  Car: "Care"
+  Fin: "Finance"
+  Hom: "Home"
+  Sys: "Systems"
+  Wsp: "Workshop"
+
 spaces:
   main: "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g"
   archive: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
   
 collections: 
-  Management: "bafyreicj6hpsdompq2fmgdhlhhx4yvmytshs6cnv26mx7jsowz4lswys7i"
+  Systems: "bafyreicj6hpsdompq2fmgdhlhhx4yvmytshs6cnv26mx7jsowz4lswys7i"
   Workshop: "bafyreid4oztagsumccf62kzpuk5qazmltw2gy75dcmn7qxc3ayrpgyyooq"
-  Self-Dev: "bafyreidxtxwkpj5pyhewg5vrvjndd7o7w5kxublbg5u4fbsocpasuvkbxy"
   Care: "bafyreig5mvdr4f5cy3diorwvrbleckome6zsylnn2uxnzvfcswzkn3oujy"
   Finance: "bafyreifikvazzy2htrinkl7zijp5co62mvqczqyvgzfp2bovepvfmdi5y4"
   Home: "bafyreic5inopow5rcuhky2nmqx2kutpxoole7zw625dzyx2e77buveiyai"  
@@ -57,3 +68,4 @@ views:
   reflect:
     no_date: "a38442fc-0efc-4160-a0fb-f008266fc343"
     to_adjust: "e642e829-ba92-4a39-a63f-321af05ae225"
+    placeholder: "8d00073f-6c12-4378-bfc2-f0854fece9ac"

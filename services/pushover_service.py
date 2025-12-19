@@ -1,4 +1,5 @@
 """Notification service for Anytype."""
+
 import datetime
 
 from utils.anytype import AnyTypeUtils
@@ -26,10 +27,7 @@ class Pushover:
         dt_now = datetime.datetime.now()
         date_str = dt_now.strftime("%d/%m/%y")
 
-        data = {
-            "type_key" : type_name,
-            "name" : date_str + suffix
-        }
+        data = {"type_key": type_name, "name": date_str + suffix}
 
         if template != "":
             data["template_id"] = config["templates"]["ritual"][template]

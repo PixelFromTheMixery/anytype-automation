@@ -17,6 +17,7 @@ async def create_repeating_obj():
     logger.info("Create repeating object endpoint called")
     return pushover.create_object_and_notify("ritual", "morning", " - Morning")
 
+
 @router.get("/regular_task_alert")
 async def task_status_reset():
     """Endpoint to update overdue or no collection tasks"""

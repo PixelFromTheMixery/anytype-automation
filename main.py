@@ -21,10 +21,12 @@ app = FastAPI(
 app.add_middleware(ExceptionMiddleware)
 app.add_middleware(IPAllowlistMiddleware)
 
+
 @app.get("/", tags=["general"], status_code=HTTPStatus.ACCEPTED)
 async def get_root():
     """Root Endpoint"""
     logger.info("Root endpoint called")
     return {"Intervalia": "Currently maintained by Pixel from the Mixery"}
+
 
 app.include_router(routers.router)
