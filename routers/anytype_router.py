@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from models.search_request import SearchRequest
 from services.anytype_service import AnytypeAutomation
 from utils.logger import logger
 
@@ -24,10 +25,12 @@ async def recurrent_check():
 
 
 @router.post("/search", tags=["tools"])
-async def search(search_criteria):
+async def search(search_detail, search_request: SearchRequest):
     """Endpoint for searching objects"""
     logger.info("Search endpoint called")
-    return anytype_automation.search(search_criteria, False)
+    return anytype_automation.search(
+        search_detail, SearchRequest.model_dump(search_request)
+    )
 
 
 @router.post("/list_views")

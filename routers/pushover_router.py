@@ -23,3 +23,10 @@ async def task_status_reset():
     """Endpoint to update overdue or no collection tasks"""
     logger.info("Regular task alert endpoint called")
     return pushover.task_notify()
+
+
+@router.get("/pushover_test")
+async def pushover_test():
+    """Endpoint for testing pushover notifications"""
+    logger.info("Pushover test endpoint called")
+    return pushover.pushover_test()

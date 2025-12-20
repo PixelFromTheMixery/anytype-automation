@@ -28,7 +28,7 @@ def make_call(
         headers = {
             "Authorization": f'Bearer {os.getenv("ANYTYPE_KEY")}',
             "Content-Type": "application/json",
-            "Anytype-Version": "2025-05-20",
+            "Anytype-Version": "2025-11-08",
         }
 
     for attempt in range(1, retries + 1):

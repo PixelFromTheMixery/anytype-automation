@@ -33,11 +33,29 @@ class AnytypeAutomation:
             "sun": 6,
         }
 
-    def search(self, search_critera: str, obj: bool = True, search_filter: str = ""):
-        """Conducts a search with provided data"""
-        return self.anytype.search_by_type_and_or_name(
-            search_critera, obj, search_filter
-        )
+    def search(self, search_detail, search_request: dict):
+        search_body = {"types": search_request["types"]}
+
+        if search_request.get("query") is not None:
+            search_body["query"] = search_request["query"]
+
+        """
+        This is just not working at the moment
+        if search_request.get("filters") is not None:
+            search_body["filters"] = {"operator": "and", "conditions": []}
+            search_body["filters"]["conditions"].append(
+                {"checkbox": True, "condition": "nempty", "property_key": "urgent"},
+            )
+
+                    for condition in search_request["filters"]:
+                        search_body["filters"]["conditions"].append(
+                            {
+                                "condition": "nempty",
+                                **condition,
+                            }
+                        )
+        """
+        return self.anytype.search(search_detail, search_body)
 
     def date_eligibility(self, unit, modifier=None):
         """Returns list of eligible values for days of the week"""
@@ -98,7 +116,7 @@ class AnytypeAutomation:
 
         if "Reset Count" not in task:
             task["Reset Count"] = 0
-        elif task["Status"] != "Blocked":
+        elif task["Status"] not in ["Blocked", "Review"]:
             task["Reset Count"] = task["Reset Count"] + 1
         data["properties"].append({"key": "reset_count", "number": task["Reset Count"]})
         return data
@@ -137,7 +155,7 @@ class AnytypeAutomation:
                     data["properties"].append(
                         {"key": "status", "select": config["tags"]["status"]["review"]}
                     )
-                tasks_to_review.append(task["name"])
+                    tasks_to_review.append(task["name"])
 
             self.anytype.update_object(task["name"], task["id"], data)
 
@@ -395,7 +413,11 @@ class AnytypeAutomation:
         )
 
         for task in tasks_to_check:
-            update_data = {"properties": [{"key": "placeholder", "text": ""}]}
+            update_data = {
+                "properties": [
+                    {"key": "status", "select": config["tags"]["status"]["repeating"]},
+                ]
+            }
 
             self.anytype.update_object(task["name"], task["id"], update_data)
         return "Completed with no issue"

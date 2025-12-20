@@ -1,0 +1,31 @@
+meta {
+  name: Search
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/search?search_detail=test
+  body: json
+  auth: inherit
+}
+
+params:query {
+  search_detail: test
+}
+
+body:json {
+  {
+    "filters":[
+      {
+        "property_key": "urgent",
+        "checkbox": true
+      }
+    ]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

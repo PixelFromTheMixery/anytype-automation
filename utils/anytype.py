@@ -30,25 +30,18 @@ class AnyTypeUtils:
         # return make_call("post", url, "getting automation list objects", payload)
         return self.search_by_type_and_or_name("collection")
 
-    def search_by_type_and_or_name(
+    def search(
         self,
-        search_criteria: str,
-        obj: bool = True,
-        search_filter: str = "",
+        search_detail: str,
+        search_body: dict,
+        unpack_level: str = "simple",
         space_id: str = config["spaces"]["main"],
     ):
         """Returns all objects by type"""
         url = "http://localhost:31009/v1/spaces/"
         url += space_id
         url += "/search"
-        data = {}
-        if obj or obj == "true":
-            data["types"] = [search_criteria]
-            if search_filter != "":
-                data["query"] = search_filter
-        else:
-            data = {"query": search_criteria}
-        objects = make_call("post", url, f"searching for {search_criteria}", data)
+        objects = make_call("post", url, f"searching for {search_detail}", search_body)
 
         if objects is not None and objects["data"] is None:
             return "No objects found"

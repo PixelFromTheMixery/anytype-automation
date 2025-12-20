@@ -55,11 +55,8 @@ templates:
 views:
   automation:
     all:        "6872e16da7ace015b4a15bdc"
-    aoc:        "3be228ab-8ee7-41a2-b5dd-3398ae19067e"
     complete:   "5883719a-c62f-47fa-a95a-3b983bdec774"
     overdue:    "7b42e161-589d-4eaa-a57b-4e1c6226830f"
-    summary:    "48899c65-8da0-4c28-9fc1-b2a8811f523e"
-    reflection: "7918cd92-72e4-4c04-a737-11ef4e294f07"
     other:      "1b0970ea-cb8a-4b7c-8b86-82ef264012bc"
   task_by_day:
     today:     "eb7230a2-c65c-4a25-a9c6-173da5eed014"
