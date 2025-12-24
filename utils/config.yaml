@@ -32,7 +32,8 @@ queries:
   reflect_prop:   "bafyreiavaeovi2lyqspukkokanjmdhy53ocyumvse5tbaicthzqiirgsc4"
   task_by_day:    "bafyreigdfl2kfbymfio375u5ukyabsp2323tqnya6o7d6hhfpmrmhthaue"
   task_cleanup:   "bafyreih64htmirwgoxmlrkc6cy57q2ep63rcg2n2gybtpa33q5izsol6je"
-  
+  app:
+
 tags:
   status:
     repeating: "bafyreihfuqod6lpdxeybi45mbdduii6slrfbw6w5e4xmqll24dnclrxvwu"
