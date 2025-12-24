@@ -35,7 +35,7 @@ class PushoverUtils:
             data["expire"] = 300
         if timestamp is not None:
             data["timestamp"] = timestamp
-        #fmt: off
+        # fmt: off
         make_call(
             "post",
             self.url,

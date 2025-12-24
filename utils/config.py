@@ -1,33 +1,30 @@
 """Loads in config file as it is easier to manage than hardcode"""
 
-import os
 import yaml
 
-
-def load_config():
-    """Loads config object"""
-    config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
-    with open(config_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+CONFIG_PATH = "utils/config.yaml"
 
 
-config = load_config()
+class Config:
+    _data = None
 
+    @classmethod
+    def get(cls):
+        """Access the current config, loading if needed."""
+        if cls._data is None:
+            cls.reload()
+        return cls._data
 
-def load_archive_logging():
-    """Loads archive metadata"""
-    archive_path = os.path.join(os.path.dirname(__file__), "archive_data.yaml")
-    with open(archive_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+    @classmethod
+    def reload(cls):
+        """Reload config from disk."""
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            cls._data = yaml.safe_load(f)
+        return cls._data
 
-
-archive_log = load_archive_logging()
-
-
-def save_archive_logging(data):
-    """Saves archive metadata"""
-    archive_path = os.path.join(os.path.dirname(__file__), "archive_data.yaml")
-    with open(archive_path, "w", encoding="utf-8") as f:
-        yaml.safe_dump(
-            data, f, allow_unicode=True, default_flow_style=False, sort_keys=False
-        )
+    @classmethod
+    def save(cls):
+        """Save current config to disk."""
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            yaml.safe_dump(cls._data, f)
+        return cls.reload()

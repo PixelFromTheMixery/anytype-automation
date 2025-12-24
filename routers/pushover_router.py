@@ -2,13 +2,13 @@
 
 from fastapi import APIRouter
 
-from services.anytype_service import AnytypeAutomation
-from services.pushover_service import Pushover
+from services.anytype_service import AnytypeService
+from services.pushover_service import PushoverService
 from utils.logger import logger
 
 router = APIRouter()
-anytype_automation = AnytypeAutomation()
-pushover = Pushover()
+anytype_automation = AnytypeService()
+pushover = PushoverService()
 
 
 @router.get("/test_pushover")

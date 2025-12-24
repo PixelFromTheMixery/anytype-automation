@@ -35,7 +35,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 f"Error: {exc}\n\n"
                 f"Traceback:\n{tb}"
             )
-            self.pushover.send_message("500 Internal Server Error", message, priority=1)
+            # self.pushover.send_message("500 Internal Server Error", message, priority=1)
             raise HTTPException(
                 status_code=500, detail={"Misc error": "Internal Server Error"}
             ) from exc

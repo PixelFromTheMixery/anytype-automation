@@ -10,49 +10,66 @@ from utils.logger import logger
 
 load_dotenv()
 
+RETRIES: int = 3
+DELAY: int = 2
+TIMEOUT: int = 3
+
+RESPONSE_MAP = {
+    "delete": lambda u, h: requests.delete(u, headers=h, timeout=TIMEOUT),
+    "get": lambda u, h: requests.get(u, headers=h, timeout=TIMEOUT),
+    "patch": lambda u, h, d: requests.patch(u, headers=h, timeout=TIMEOUT, data=d),
+    "post": lambda u, h, d: requests.post(u, headers=h, timeout=TIMEOUT, data=d),
+    "put": lambda u, h, d: requests.put(u, headers=h, timeout=TIMEOUT, data=d),
+}
+
+
+def request_builder(url):
+    """Builds request scaffolding for API calls"""
+    headers = {}
+
+    if "localhost" in url:
+        headers = {
+            "Authorization": f'Bearer {os.getenv("ANYTYPE_KEY")}',
+            "Content-Type": "application/json",
+            "Anytype-Version": "2025-11-08",
+        }
+    return headers
+
+
+def exception_handler(e, result, attempt):
+    if result and result.get("status") == 429:
+        if attempt < RETRIES:
+            time.sleep(DELAY)
+            return attempt + 1
+    else:
+        print(f"RequestException on attempt {attempt}: {e}")
+        message = result.get("message") if result else None
+        if message:
+            print(f"json response: {message}")
+        return RETRIES + 1
+
 
 def make_call(
     category: str,
     url: str,
     info: str,
     data: dict | str | None = None,
-    retries: int = 3,
-    delay: int = 2,
-    timeout: int = 3,
 ):
     """Makes web request with retry and some error handling"""
-    headers = {}
+    headers = request_builder(url)
 
-    if "localhost" in url:
-        data = json.dumps(data)
-        headers = {
-            "Authorization": f'Bearer {os.getenv("ANYTYPE_KEY")}',
-            "Content-Type": "application/json",
-            "Anytype-Version": "2025-11-08",
-        }
+    data = json.dumps(data)
 
-    for attempt in range(1, retries + 1):
+    for attempt in range(1, RETRIES + 1):
         result = None
         try:
-            logger.info(f"Attempt to {info}. {attempt} of {retries}")
-            if category == "delete":
-                response = requests.delete(url, headers=headers, timeout=timeout)
-            elif category == "get":
-                response = requests.get(url, headers=headers, timeout=timeout)
-            elif category == "patch":
-                response = requests.patch(
-                    url, headers=headers, timeout=timeout, data=data
-                )
-            elif category == "post":
-                response = requests.post(
-                    url, headers=headers, timeout=timeout, data=data
-                )
-            elif category == "put":
-                response = requests.put(
-                    url, headers=headers, timeout=timeout, data=data
-                )
-            else:
-                raise ValueError(f"Unknown category: {category}")
+            logger.info(f"Attempt to {info}. {attempt} of {RETRIES}")
+
+            response = (
+                RESPONSE_MAP[category](url, headers, data)
+                if category in ["patch", "post", "put"]
+                else RESPONSE_MAP[category](url, headers)
+            )
 
             result = response.json()
             response.raise_for_status()
@@ -60,14 +77,4 @@ def make_call(
             return result
 
         except requests.exceptions.RequestException as e:
-            if result and result.get("status") == 429:
-                if attempt < retries:
-                    time.sleep(delay)
-            elif result and "object deleted" in result.get("message"):
-                return url.split("/")[-1]
-            else:
-                print(f"RequestException on attempt {attempt}: {e}")
-                message = result.get("message") if result else None
-                if message:
-                    print(f"json response: {message}")
-                break
+            attempt = exception_handler(e, result, attempt)

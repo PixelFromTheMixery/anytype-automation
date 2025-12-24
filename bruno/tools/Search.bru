@@ -5,23 +5,19 @@ meta {
 }
 
 post {
-  url: {{host}}/search?search_detail=test
+  url: {{host}}/search?search_detail=Automation
   body: json
   auth: inherit
 }
 
 params:query {
-  search_detail: test
+  search_detail: Automation
 }
 
 body:json {
   {
-    "filters":[
-      {
-        "property_key": "urgent",
-        "checkbox": true
-      }
-    ]
+    "space": "main",
+    "query": "auto"
   }
 }
 

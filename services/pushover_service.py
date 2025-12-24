@@ -3,13 +3,12 @@
 import datetime
 
 from utils.anytype import AnyTypeUtils
-from utils.config import config
+from utils.config import Config
 
-# from utils.logger import logger
 from utils.pushover import PushoverUtils
 
 
-class Pushover:
+class PushoverService:
     """Handles notifications for Anytype."""
 
     def __init__(self):
@@ -20,21 +19,18 @@ class Pushover:
         self,
         type_name: str,
         template: str,
-        suffix: str = "",
-        space_id: str = config["spaces"]["archive"],
+        suffix: str,
+        space_id: str,
     ):
-        """For rituals or day plan or other template based objects"""
+        """Create objects and link via pushover"""
         dt_now = datetime.datetime.now()
         date_str = dt_now.strftime("%d/%m/%y")
 
         data = {"type_key": type_name, "name": date_str + suffix}
 
-        if template != "":
-            data["template_id"] = config["templates"]["ritual"][template]
-
         new_obj = self.anytype.create_object(space_id, type_name, data)
         obj_url = self.pushover.make_deeplink(
-            new_obj["object"]["id"], config["spaces"]["archive"]
+            new_obj["object"]["id"], Config.data["spaces"]["archive"]
         )
 
         title = ""
@@ -52,7 +48,7 @@ class Pushover:
         dt_now = datetime.datetime.now()
         hour = dt_now.hour
         segment = ""
-        task_segments = config["views"]["task_by_day"]
+        task_segments = Config.data["queries"]["task_by_day"]
 
         if hour == 6:
             segment = "morning"
@@ -68,7 +64,7 @@ class Pushover:
         title = f"Good {segment}!"
 
         tasks = self.anytype.get_list_view_objects(
-            task_segments[segment], "simple", config["queries"]["task_by_day"]
+            task_segments[segment], "simple", Config["queries"]["task_by_day"]
         )
         if len(tasks) == 0:
             return None
@@ -77,7 +73,7 @@ class Pushover:
             message += "s"
         message += "<br>"
         link = self.pushover.make_deeplink(
-            config["queries"]["task_by_day"], config["spaces"]["archive"]
+            Config.data["queries"]["task_by_day"], Config.data["spaces"]["archive"]
         )
 
         message += f"<a href='{link}'>Here's the link.<a/> And here is the list:"
