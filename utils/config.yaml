@@ -1,27 +1,31 @@
 # config.yaml
 me: "_participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW"
 
+spaces:
+  tasks: "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g"
+  journal: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"  
+
 settings:
-  task_logs:            false # TODO: Implement
-  task_reset:           true
+  task_logs: true
+  task_reset: true
   task_review_threshold: 5
-  queries:               true
-  pushover:              true
+  prompts:
+    review: true
+  queries: true
+  pushover: false
+  reflection_updates: false
 
 queries:
   automation:
     id: "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi"
-    all:      "6872e16da7ace015b4a15bdc"
+    all: "6872e16da7ace015b4a15bdc"
     complete: "5883719a-c62f-47fa-a95a-3b983bdec774"
-    overdue:  "7b42e161-589d-4eaa-a57b-4e1c6226830f"
-    other:    "1b0970ea-cb8a-4b7c-8b86-82ef264012bc"
+    overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f"
+    other: "1b0970ea-cb8a-4b7c-8b86-82ef264012bc"
 
-spaces:
-  main:    "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g"
-  archive: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"  
 
 tags:
-  main:
+  tasks:
     status:
       id: ""
       repeating: "bafyreihfuqod6lpdxeybi45mbdduii6slrfbw6w5e4xmqll24dnclrxvwu"

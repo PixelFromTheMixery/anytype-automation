@@ -30,7 +30,7 @@ class PushoverService:
 
         new_obj = self.anytype.create_object(space_id, type_name, data)
         obj_url = self.pushover.make_deeplink(
-            new_obj["object"]["id"], Config.data["spaces"]["archive"]
+            new_obj["object"]["id"], Config.data["spaces"]["journal"]
         )
 
         title = ""
@@ -73,7 +73,7 @@ class PushoverService:
             message += "s"
         message += "<br>"
         link = self.pushover.make_deeplink(
-            Config.data["queries"]["task_by_day"], Config.data["spaces"]["archive"]
+            Config.data["queries"]["task_by_day"], Config.data["spaces"]["journal"]
         )
 
         message += f"<a href='{link}'>Here's the link.<a/> And here is the list:"

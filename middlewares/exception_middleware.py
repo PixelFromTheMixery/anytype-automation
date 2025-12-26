@@ -1,11 +1,10 @@
-from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from utils.config import Config
 from utils.exception import AnytypeException
 from utils.logger import logger
 from utils.pushover import PushoverUtils
-import traceback
 
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
@@ -14,6 +13,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         self.pushover = PushoverUtils()
+        self.send = Config.get()["settings"]["pushover"]
 
     async def dispatch(self, request, call_next):
         try:
@@ -21,21 +21,18 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
             return response
         except AnytypeException as exc:
             logger.error(exc)
-            return JSONResponse(
-                status_code=exc.status, content={"Anytype error": exc.message}
-            )
+            return JSONResponse({"Anytype error": exc.message}, exc.status)
         except Exception as exc:
-            logger.exception(
-                f"Unhandled exception processing {request.method}, {request.url.path}"
+            logger.error(
+                f"Unhandled exception processing {request.method}, {request.url.path}. Issue: {exc}"
             )
-            tb = traceback.format_exc()
-            message = (
-                f"500 Internal Server Error\n"
-                f"Request: {request.method} {request.url.path}\n"
-                f"Error: {exc}\n\n"
-                f"Traceback:\n{tb}"
+
+            error_type = type(exc).__name__
+            content = (
+                f"Error type: {error_type}, "
+                f"Occured at: {request.method} {request.url.path}, "
+                f"suggested fix: {exc.args},"
             )
-            # self.pushover.send_message("500 Internal Server Error", message, priority=1)
-            raise HTTPException(
-                status_code=500, detail={"Misc error": "Internal Server Error"}
-            ) from exc
+            if self.send:
+                self.pushover.send_message(error_type, content, priority=1)
+            return JSONResponse(content, 500)

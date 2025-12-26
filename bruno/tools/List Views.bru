@@ -1,0 +1,21 @@
+meta {
+  name: List Views
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/list_views?space_name=adw&query_name=other
+  body: none
+  auth: inherit
+}
+
+params:query {
+  space_name: adw
+  query_name: other
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

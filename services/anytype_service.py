@@ -34,12 +34,18 @@ class AnytypeService:
         }
         self.data = Config.get()
 
-    def search(self, search_detail, search_request: dict):
+    def get_config_value(self, data):
+        try:
+            self.data.get(data)
+        except KeyError:
+            raise KeyError(f"Key not found at {data}")
+
+    def search(self, space_name, search_detail, search_request: dict):
         """
         Searches a specified space according to type and query
         Default to task type
         """
-        space_id = self.data["spaces"]["main"]
+        space_id = self.get_config_value(["spaces"][space_name])
         search_body = {}
         if search_request.get("types") is not None:
             search_body["types"] = search_request["types"]
@@ -115,9 +121,16 @@ class AnytypeService:
 
         return dt_next.strftime(DATETIME_FORMAT)
 
-    def view_list(self, list_id: str):
+    def view_list(self, space_name: str, query_name: str):
         """Formats view objects into consumable objects to add to this object"""
-        return self.anytype.get_views_list(list_id)
+        space_id = self.data["spaces"].get(space_name)
+        try:
+            query_id = self.data["queries"][query_name]["id"]
+        except KeyError:
+            raise KeyError(
+                "query not found in settings, check if space or query name and that query has automation checkbox ticked"
+            )
+        return self.anytype.get_views_list(space_id, query_id)
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
@@ -130,7 +143,7 @@ class AnytypeService:
     def overdue(self, dt_now):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["main"],
+            self.data["spaces"]["tasks"],
             self.data["queries"]["automation"]["id"],
             self.data["queries"]["automation"]["overdue"],
         )
@@ -141,7 +154,7 @@ class AnytypeService:
 
         dt_next = dt_now + datetime.timedelta(days=1)
 
-        if len(tasks_to_check) > 15:
+        if len(tasks_to_check) > 15 and self.data["settings"]["pushover"]:
             self.pushover.send_message(
                 "Loads of tasks incoming",
                 f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
@@ -163,7 +176,7 @@ class AnytypeService:
                     data["properties"].append(
                         {
                             "key": "status",
-                            "select": self.data["tags"]["main"]["status"]["review"],
+                            "select": self.data["tags"]["tasks"]["status"]["review"],
                         }
                     )
                     tasks_to_review.append(task["name"])
@@ -181,7 +194,7 @@ class AnytypeService:
     def reflection_updates(self, dt_now):
         """Updates dates of completed reflections"""
         objs_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["archive"],
+            self.data["spaces"]["journal"],
             self.data["queries"]["reflections"]["id"],
             self.data["queries"]["reflections"]["update"],
         )
@@ -205,7 +218,7 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["archive"]["status"]["review"],
+                        "select": self.data["tags"]["journal"]["status"]["review"],
                     },
                     {"key": "rate", "text": new_tag},
                     {"key": "due_date", "date": new_day},
@@ -218,10 +231,12 @@ class AnytypeService:
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        logger.info("Running overdue tasks")
-        self.overdue(dt_now)
-        logger.info("Updating Reflections")
-        self.reflection_updates(dt_now)
+        if self.data["settings"]["task_reset"]:
+            logger.info("Running overdue tasks")
+            self.overdue(dt_now)
+        if self.data["reflection_updates"]:
+            logger.info("Updating Reflections")
+            self.reflection_updates(dt_now)
         logger.info("Daily Rollover completed")
 
     async def scan_spaces(self, props: list[str] = None):
@@ -299,7 +314,7 @@ class AnytypeService:
         ]
 
         data["properties"] = props
-        self.anytype.create_object(self.data["archive"]["id"], task["name"], data)
+        self.anytype.create_object(self.data["journal"]["id"], task["name"], data)
 
     def task_status_reset(self, task, dt_now):
         """
@@ -312,7 +327,7 @@ class AnytypeService:
 
         if "Rate" not in task or task["Rate"] == "":
             self.anytype.delete_object(
-                self.data["spaces"]["main"], task["name"], task["id"]
+                self.data["spaces"]["tasks"], task["name"], task["id"]
             )
         else:
             update_data = {
@@ -327,19 +342,19 @@ class AnytypeService:
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": self.data["tags"]["main"]["status"]["repeating"],
+                        "select": self.data["tags"]["tasks"]["status"]["repeating"],
                     },
                 ]
             }
             self.anytype.update_object(
-                self.data["spaces"]["main"], task["name"], task["id"], update_data
+                self.data["spaces"]["tasks"], task["name"], task["id"], update_data
             )
 
     def recurrent_check(self):
         """Collect tasks for processing from completed view"""
         logger.info("Running completed task processing")
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["main"],
+            self.data["spaces"]["tasks"],
             self.data["queries"]["automation"]["id"],
             self.data["queries"]["automation"]["complete"],
         )
@@ -360,7 +375,7 @@ class AnytypeService:
     def other(self):
         """Temp endpoint for offhand tasks"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["main"],
+            self.data["spaces"]["tasks"],
             self.data["queries"]["automation"]["id"],
             self.data["queries"]["automation"]["other"],
         )
@@ -370,7 +385,7 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["main"]["status"]["repeating"],
+                        "select": self.data["tags"]["tasks"]["status"]["repeating"],
                     },
                 ]
             }

@@ -42,11 +42,12 @@ async def scan_spaces(properties: list[str] = None):
 
 @router.post("/list_views")
 async def list_views(
-    view_id: str = "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi",
+    space_name: str,
+    query_name: str,
 ):
     """Endpoint to fetch automation list view"""
     logger.info("View fetcher endpoint called")
-    return anytype_automation.view_list(view_id)
+    return anytype_automation.view_list(space_name, query_name)
 
 
 @router.get("/other_anytype")

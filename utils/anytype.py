@@ -4,6 +4,7 @@ from utils.api_tools import make_call
 from utils.logger import logger
 
 URL = "http://localhost:31009/v1/spaces/"
+OBJ = "/objects/"
 
 
 class AnyTypeUtils:
@@ -44,12 +45,12 @@ class AnyTypeUtils:
         space_id: str,
         list_id: str,
     ):
-        """Pull all views(queries) in the automation query object"""
+        """Pull all views in a query object"""
         views_url = URL + space_id
         views_url += "/lists/" + list_id
         views_url += "/views"
 
-        views = make_call("get", views_url, "get view list from automation query")
+        views = make_call("get", views_url, "get view list for query")
         views_formatted = []
 
         for view in views["data"] if views is not None else []:
@@ -105,7 +106,7 @@ class AnyTypeUtils:
     def get_object_by_id(self, space_id: str, object_id: str):
         """Pulls detailed object data by id"""
         object_url = URL + space_id
-        object_url += "/objects/" + object_id
+        object_url += OBJ + object_id
 
         object_obj = make_call("get", object_url, "get object by id")
 
@@ -123,7 +124,7 @@ class AnyTypeUtils:
     def update_object(self, space_id, object_name: str, object_id: str, data: dict):
         """Updates object with provided data"""
         object_url = URL + space_id
-        object_url += "/objects/" + object_id
+        object_url += OBJ + object_id
         return make_call(
             "patch", object_url, f"update object ({object_name}) by id", data
         )
@@ -139,7 +140,7 @@ class AnyTypeUtils:
     def delete_object(self, space_id, object_name: str, object_id: str):
         """Deletes object by id"""
         object_url = URL + space_id
-        object_url += "/objects/" + object_id
+        object_url += OBJ + object_id
         return make_call(
             "delete",
             object_url,
