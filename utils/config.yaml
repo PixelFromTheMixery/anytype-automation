@@ -1,34 +1,450 @@
-# config.yaml
-me: "_participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW"
-
-spaces:
-  tasks: "bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g"
-  journal: "bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"  
-
+me: _participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW
+queries:
+  automation:
+    all: 6872e16da7ace015b4a15bdc
+    complete: 5883719a-c62f-47fa-a95a-3b983bdec774
+    id: bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi
+    other: 1b0970ea-cb8a-4b7c-8b86-82ef264012bc
+    overdue: 7b42e161-589d-4eaa-a57b-4e1c6226830f
 settings:
+  prompts:
+    review: true
+  pushover: false
+  queries: true
+  reflection_updates: false
   task_logs: true
   task_reset: true
   task_review_threshold: 5
-  prompts:
-    review: true
-  queries: true
-  pushover: false
-  reflection_updates: false
-
-queries:
-  automation:
-    id: "bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi"
-    all: "6872e16da7ace015b4a15bdc"
-    complete: "5883719a-c62f-47fa-a95a-3b983bdec774"
-    overdue: "7b42e161-589d-4eaa-a57b-4e1c6226830f"
-    other: "1b0970ea-cb8a-4b7c-8b86-82ef264012bc"
-
-
+spaces:
+  journal: bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g
+  tasks: bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g
 tags:
+  journal:
+    AoC:
+      Care: bafyreidimm5b5k4mdj722op46opyjj2qehf3inkuh5km2zpmsduoru3xz4
+      Finance: bafyreiftm4ytwcaoqcq3q76663cvrjnxk5k563ucbt6xpcmbceu3rl2fky
+      Home: bafyreiapbroenq65pt5esxshcimqei7fell3xla7wrbchxa7a55avt2mye
+      Systems: bafyreigoonx6b3o3f3qoru4hjgsdrktdn3eumr7322gv3xajazvy7apdwu
+      Workshop: bafyreihbuvex4d6z5kncbdq5ljvbxg6vn3vyvsenl27hrxspovgi6bsube
+      format: select
+      id: bafyreiegnlh2imtomzl4ln77tuv7zncvkyqdw3kqmyn4eqe5ktbzehiiyu
+      key: ao_c
+    Aversion Vector:
+      format: multi_select
+      id: bafyreihpqshho2ssqvqff7fzkdk6pyq6fuwxdjxvvhkjgpygdxodokfrku
+      key: aversion_vector
+    Day Segment:
+      Afternoon: bafyreiful4o6d4lph4q7y6dk4wxlkl77n45au63wcrqtyui46czlyic5yu
+      Anytime: bafyreiadxnegr4xlzfj73xgco22tkorv4icwi6ba53jldk26ynnxm6sfq4
+      Evening: bafyreihtc55jlbuhgrs565chpxbewkfafvdzg2dm6ldryl4hjpvs6lkwha
+      Morning: bafyreicq3yslzhihwosse5qhrc5xljo26mr4bqzzjkwrz67mmggpl7vm2m
+      Night: bafyreic3hby4ivvegumvotocmck3wn5qfnbfsiaz7ufe4grfde2bb7nrti
+      Noon: bafyreiav2hsc4kxygytajdormind5pia3gllzcxxgl3yfo3xwktl7fxhny
+      format: select
+      id: bafyreihbyfftmjd2ol26caaqa4mjg7wcmlledhhin3smmvbcoshqop6tiq
+      key: day_segment
+    Description:
+      format: text
+      id: bafyreifog3fhsbj3zjxfgsapd3pdsxpvrgpoldm2vvnd6sr56c6lgyx2f4
+      key: description
+    DoD:
+      format: text
+      id: bafyreia24nahzotjxtbhy45evepheu7m7hsp6oljmrl5ukiig6q5fxyipu
+      key: do_d
+    Entry Type:
+      Day: bafyreie7kigctrzsxqv4eyxs6baqq4jhoxoybudoxxfrl6ojzfizzynv3q
+      Weekly: bafyreiflde54jjjycypvyhjpe2rj5zkjjukcarhphlv2hoonewr57wt72i
+      format: select
+      id: bafyreidwtuaerpua2tmatfagcpycestge4zki4l2s7zxuqfa3u2iv3z5gq
+      key: entry_type
+    File extension:
+      format: text
+      id: bafyreibzm4lsrsrflha5zsmh5pudttjs3gvqo7al7ynwlabw3n5zwn2rnm
+      key: file_ext
+    Function:
+      Adaptive: bafyreihldf2ueznvnticrar6s57es4qkozvs7456thocyimpx5qnfzbmrq
+      Collective: bafyreicyf3gybp43omqhypqstnymeqh3vgawvzgivlltrhb4t7tos4wniq
+      Corrective: bafyreig6glfdb7c2226s7llzfzbzjmeitmtf4zp7kza5uwbqbmnbhezlpi
+      Emergency: bafyreidl2quedsljfeynmce5ggtr4parly7iptwiniammbuc6d5jugqxs4
+      Exploratory: bafyreigramovhceenbdbyvaj2fkqdqc6wpsabonwsx2kfcm7taepeindwq
+      Generative: bafyreigh2ayuotnw6cnyweaq3njjzadet2r4ydrxnvubamgfypompulfua
+      Perfective: bafyreifjq6xbybn2rl45az3sms4msbrbn3c5tcvwbieazgquspoxd4snwe
+      Preventative: bafyreihvz6nthlb67yqoqfcvtdmhd4eo2lzy5657zfsyvggawgz3vs2ale
+      Reflective: bafyreieysc3u3sjv35vh3n6kmkcgb7y5slxsb54uqzt4pxaqzms7j2aore
+      TBD: bafyreihpjtsjprva42l6h5ldlospgpkvl4zvgfw4a2mnqwdnfz2x4vgkzi
+      format: select
+      id: bafyreib5dwuhlxsem46yj2hdymwo5zebmmuwgy72mqc6omprwqy4b2nnyy
+      key: function
+    Height:
+      format: number
+      id: bafyreig7znjsj46drpvndk72b4lb7vzr5dl6xchdpldhogjmaiy5bydtqq
+      key: height_in_pixels
+    Initial Cost:
+      Leaving the house: bafyreihg3zhw7ioan6x2z3oicy7frizyvyfzbg3fudfe5abno7mfxhaqf4
+      None: bafyreiesh4kpli6alsxo7dzer6tcjvu6dtrdf5awfdb2oxqk445s7nysfu
+      Physical Movement: bafyreiawjbo2ilc7dncqaidrfih333nwezt7efytkgg3geb4bmcbvhnrnq
+      Set up: bafyreiclvboeozayyhu56gy3arn6o5ofy3l22qxdlc5hly3fah7gcfl3ka
+      format: select
+      id: bafyreickcvny4g2jx3kikutsfcbxlzonii6btlxmulurkeia5pn34j7obm
+      key: initial_cost
+    Points:
+      format: number
+      id: bafyreidu3vzlue5645d3oy7kzi53nnywdrxj5ewpuonsykq4gp4luhwl2i
+      key: points
+    Pomodoro:
+      format: select
+      id: bafyreibmog622gtrmwhiy6i6sevtqastzt2r7kj545euayiystmkwgtaja
+      key: pomodoro
+      "\U0001F345": bafyreia43e2d24bgks5adx3g5b6j7u3vea3ihi3qu5clrqzrchkyekyb3i
+      "\U0001F349": bafyreic4xwk24ujdmgslkhclziyq6ov2ksnuoxhmxtodufylky6pmar2he
+      "\U0001F352": bafyreiat7maghcerwvgykgc2uwi2cartcnliy53onu5k57fynkxzijfvau
+    Project:
+      Anytype Automation: bafyreihltwyr5njhxihyyqjyfwmpyaajqafm7s3wsxhgntpbpgg3vzs46m
+      AuDHD Investigation: bafyreihznm7jmouokuyc5f4ok4v76y5bunfdjpqvhy3qbria4bjlra4kx4
+      Career: bafyreibc7mprc6f7pum4jagav3i24gsgxy43llsjyj3u2hwr6cypzkmy2e
+      Cleaning: bafyreiekzxqroutoko2xtmbahdq7zxzwhigcoeo77okkrkdprf5axm3gku
+      Crafts: bafyreihwzqm3qg2vf6rtffr5wp6e7766bte5owcc62l7g7mpus6snmrb7y
+      Deception Deck: bafyreic2i3yfcqyegn7up2qmj2x2xtviu5a5jnaqumldhlblvosymeustq
+      Home: bafyreifth4csyc2hlwcqhnv6kvckzxulfwreelae74ymhwpqk6jfq7jqfi
+      Magnetic Necklace: bafyreibvwpinaagxziknu6sck7r6shhw2xraz7iolelrmcmxddyntttphm
+      Maintenance: bafyreigbasq6usehkq5rrh63fkygnd2lmwwgkcud6tbpt7gdlqoj4uqte4
+      Migrate From Notion: bafyreiam3dfkktkqxfdpskuufm6tlybzudqjthyhue4uuuaus6jr2gjihq
+      Needs: bafyreidmk6dgfnlpy5qyqyft5p2yxe4uinn3iu2skce7trnmx7brwibq74
+      Owning a Home: bafyreiemd7ilxkken4kxfvgcjmaxynrgovruvhipgz7ebt5gv3iffyjvoi
+      Rats: bafyreig2frziylxykwphhg2ayi4sefzvlbq2tnxd633sppp5qtsh3q637e
+      Shopping: bafyreidm6wqj75l2xingm6gjyxpxc6klphponpwbou45r5pyqqv4ywnwwu
+      format: select
+      id: bafyreifd2g23kmyvq2oqeo6vnoqhfvegxy5rvzy2g2sqdj6imrw5rhtfym
+      key: project
+    Rate:
+      format: text
+      id: bafyreic7zp52ayt22c5yuvkjqablvfxr2evilt6vxszag525v6ylwdrpia
+      key: rate
+    Recovery:
+      Minimal: bafyreigpnbvgdjghj55usg3pdwvoa3ws2c7fnci2xdrq5o2ykded3vleaq
+      None: bafyreih3agfxbb3pf6nshqszyxs5fuqk3dtoqpbuvoqi3lwqkj7ulvndwm
+      Required: bafyreid62bpiz4s73uz3yya3cj56hh4xdq4fwtqnhsahrfusm7y74dddru
+      format: select
+      id: bafyreifg3nvkavzcvzrzakkdbczh4kuaxcg2zqqihiigommsyokad4ottm
+      key: recovery
+    Reference:
+      format: url
+      id: bafyreiecouxvehasozrzuod2q7m2l6ccitq3ibewqxxfr2me7peqsriwqq
+      key: reference
+    Reflection Type:
+      Discomfort: bafyreigshtrlotnzsknbksiljyjqdyoor3ler4ksg5qbzock3i5cqlkufq
+      format: select
+      id: bafyreicb77p5lswnso3dhedko7wpgcpgapzmmxd3733fq2zytga3tyso7i
+      key: reflection_type
+    Reset Count:
+      format: number
+      id: bafyreif7k3o7zuhehyeql5ryozscputu4wgqzkscvsqh2be46cjq2l6rhu
+      key: reset_count
+    Size:
+      format: number
+      id: bafyreigvl7tadqteexdvncsnvio26ncbjc6ccevc4a3xdrq5sll42ld23u
+      key: size_in_bytes
+    Source:
+      format: url
+      id: bafyreiehvo2qc4r6v7kxlkaqmtatem4mfnezh2lz5zwyyfxf2nhe6vmsmm
+      key: source
+    Status:
+      Done: bafyreief7i46soza2jarqm6rxxl4mq6lql2q436j2lijlw5yqcxpibfd7i
+      In Progress: bafyreia2miozhhcg3uup7xiww6tpjoqpp37w57cuyy2lef2yo6as2otq6q
+      To Do: bafyreighw3yfhkn67ybm7pgzzpz3rhm2ex3qozjkbwn3mw4ikwdefkuhxm
+      format: select
+      id: bafyreibymjhnz7wh6wmfliewl2hb2wikxhlnokk6hy4ihr6ummtygthtni
+      key: status
+    URL:
+      format: url
+      id: bafyreifkuhcgkssvhcj3uxrbxdlu4wdzcwrvkgbst2rn5rsyrzuealpuau
+      key: url
+    Width:
+      format: number
+      id: bafyreiccjmbslcdbkxzgar5h5drzasqoxb6tj2bqk62eqsyi2zzy7eokfq
+      key: width_in_pixels
   tasks:
-    status:
-      id: ""
-      repeating: "bafyreihfuqod6lpdxeybi45mbdduii6slrfbw6w5e4xmqll24dnclrxvwu"
-      review:    "bafyreihiiibe566qh7xgl4bd66h7fqh4tokaan623rzodst3hyfdycb5ie"
-
-  
+    AoC:
+      Care:
+        color: pink
+        id: bafyreiddu4u5x3aoqyla5e3r4tlf4okodfhp7hfrumww6ghyqkvj6nal6u
+        key: care
+      Finance:
+        color: orange
+        id: bafyreia7nj7ec3fxsur6gnwai25aolaimcqx2ktx2rh2tyyp445lofqniq
+        key: finance
+      Home:
+        color: lime
+        id: bafyreiczh6f7fkfcchh44z4v7vti4akiscptn24h5len4au6oyz4wsf3lu
+        key: home
+      Systems:
+        color: purple
+        id: bafyreicgzznmxdvi5umlfqxhbx7yfjq7izjwd52y5fhjhcanl3qy3o5tmy
+        key: systems
+      Workshop:
+        color: ice
+        id: bafyreihq6xakzoi3fusrs6v2lsa6wxmkmunje4vlhykfwdrjmfnfcpuoxm
+        key: workshop
+      format: select
+      id: bafyreiaaeiasbbyavynrr7cpf5ucyiqdiaeaz5dgqi3dk377rtbssz7bey
+      key: ao_c
+    Aversion Vector:
+      format: multi_select
+      id: bafyreidg7emunxcbcnhh3usxopq5i3nwyxbfxvmzrexrvutga2lxskgpiu
+      key: aversion_vector
+    Day Segment:
+      Afternoon:
+        color: ice
+        id: bafyreihut5b63dca25jkju77jt5yl5cnwdwtz6md6faxxi2i3z54jqqqyy
+        key: afternoon
+      Anytime:
+        color: pink
+        id: bafyreieslfdzdllmcjr2xs222gqsjngk3dhqvqynr25krfknubsvhtr2ki
+        key: anytime
+      Evening:
+        color: purple
+        id: bafyreiebftaszqbglu6uexhj3ba5p3htdknszmpftvsaafmp3feppnafae
+        key: evening
+      Morning:
+        color: orange
+        id: bafyreic75fxqy4ravkqztbbnh35xvdmj4coh7tmazrrv3qwgakuqqgcbfq
+        key: morning
+      Noon:
+        color: lime
+        id: bafyreid73ae75vvf4dneo2kfs4koh3wowvrklz5g5dq5jwse7if34qhc2a
+        key: noon
+      format: select
+      id: bafyreigdjuimbmuqlymqen4mndczp3qdvurv43qc47h7hq4kwsqjkeaoiq
+      key: day_segment
+    Description:
+      format: text
+      id: bafyreicvd7otjaaqktby6hv5erydcb4e6kdlgbybnw6bpncaf36qdccvau
+      key: description
+    DoD:
+      format: text
+      id: bafyreig7gdf6glqing2jiaa3tktuc72h4sui5lpw5prtwiidwedulrymvm
+      key: do_d
+    File extension:
+      format: text
+      id: bafyreiddxv63rgx46fflx3u7a3pgstupaym5jynbwj7kbyobjbef2pi6lm
+      key: file_ext
+    Function:
+      Adaptive:
+        color: yellow
+        id: bafyreiewarchzprywksgxjcni4xaiyo6v3dcqmbfv6iymintbzf66yfayq
+        key: adaptive
+      Collective:
+        color: grey
+        id: bafyreihi3aatn5uafyujsq4yedofeyqddkbcopdbrjpcrhky2duvsyrgtu
+        key: collective
+      Corrective:
+        color: red
+        id: bafyreidm567yqb2gmffqm4fkjyj3pay6pgkr2fg3hmoagzn3466yarjaua
+        key: corrective
+      Emergency:
+        color: grey
+        id: bafyreicadufdkvonugvvudukjmmqrkqdhabaiyiibfetq4jhwe6bjs37ye
+        key: emergency
+      Exploratory:
+        color: ice
+        id: bafyreibrd3ozkz6owh7wfe73andasmag7qjnd2xzs2gyd2fecn27t4gcx4
+        key: exploratory
+      Generative:
+        color: teal
+        id: bafyreievfjo2tiwxyd5kqp5x3bgah65ydg2uz6ebyered2m362kxozrr2y
+        key: generative
+      Perfective:
+        color: lime
+        id: bafyreiadl64ebxmp7yum2mbqc4lgbnx7p252pjbptokltb3e645xuzptnm
+        key: perfective
+      Preventative:
+        color: orange
+        id: bafyreid2pcffaf7xi3oiov5qcbmnivzn23uuw7x36iq2uqgr3axlgki6me
+        key: preventative
+      Reflective:
+        color: blue
+        id: bafyreiagsjd7luvfe6fcxupshh6kuarrihxn5a5g4cxk4icjrzjzwivpta
+        key: reflective
+      TBD:
+        color: pink
+        id: bafyreiejkzx2fptkybffgbdgobnjh2eyc2nuu3s2obimy3rigyh543aiwa
+        key: tbd
+      format: select
+      id: bafyreiedef5hvujs553qz5nuununyjx6xjvneumzqo6j5zp7f73cqugbcy
+      key: function
+    Height:
+      format: number
+      id: bafyreifaeiz4otrsyefljlt4qz4j3vgouh6oczzbzjkw2vyfmib75e2v3u
+      key: height_in_pixels
+    Initial Cost:
+      Leaving the house:
+        color: pink
+        id: bafyreicl6kijbsebkitfv7c65okeb5n7peszwy3ohqjcfehg5aluzzwgvi
+        key: leaving_the_house
+      None:
+        color: lime
+        id: bafyreihoqwilqbatwqdmb6bhotbj2kerlxbu6o2og7xswwsl2hkllxvjxu
+        key: none
+      Physical Movement:
+        color: blue
+        id: bafyreifdnpec3wgxqwrydapy7ltjrfqwjpnc4esv57rgeljuvdbyl4vutu
+        key: physical_movement
+      Set up:
+        color: orange
+        id: bafyreiht7crnplnfoe25bnbmfmwjmnftvwreyjymjwtno334pyo2omgt2i
+        key: set_up
+      format: select
+      id: bafyreif3zd36qe4bfkfho6qip2w65p5g2vx5qrtimxbtguz2clz67m2kwe
+      key: initial_cost
+    Pomodoro:
+      format: select
+      id: bafyreiavmzolhq4weue66h3fjbsklvl4h62mjub775k44xb7x2merodsxy
+      key: pomodoro
+      "\U0001F345":
+        color: purple
+        id: bafyreihpiyikrqbeuby3qppkgrzf4c5nerzihjoqjesvkmayfx3li2si7e
+        key: 694f2d147cd0e500431deeb9
+      "\U0001F349":
+        color: pink
+        id: bafyreiehn4uprvie6xb273oinf4djgjkl3u3jcuumst2mrhkdemsdten3u
+        key: 694f2cb67cd0e500431deeab
+      "\U0001F352":
+        color: blue
+        id: bafyreifwni4gf7hh4gq4fqtj2cobqyvlvcbyi7rk5pvzplu2orkdx6z6ci
+        key: 694f2d8b7cd0e500431deec6
+    Project:
+      Anytype Automation:
+        color: purple
+        id: bafyreihikrygfemuyeldc4kuqvxdjxz3pu2jddxetam5lr2wfbhguhytf4
+        key: anytype_automation
+      AuDHD Investigation:
+        color: pink
+        id: bafyreid6b24iuhzvhvaxxldltjkexml6a6zke5zipi57tfggmdjmoghqki
+        key: au_dhd_investigation
+      Career:
+        color: orange
+        id: bafyreid3hyklscpban4wtlrku4jdv3voklilqqtmw75z53hphidpz47n7q
+        key: career
+      Cleaning:
+        color: lime
+        id: bafyreifgg6jb5hu32qtsccczlaoyqnxepcxk5m6uhxbtfkue7zyyxmpffy
+        key: cleaning
+      Crafts:
+        color: ice
+        id: bafyreicelgbkfeprrxsekshy2der26azrbwcr3664yy6hyimtblsxoruyu
+        key: crafts
+      Deception Deck:
+        color: ice
+        id: bafyreieqokx77w57gtagbuen7ntvo4qi7xndkzrys6lnkng6yqxrrqgrgi
+        key: deception_deck
+      Home:
+        color: lime
+        id: bafyreigvsm4bui2jswnjelzsr5bqrra63pfnwskdl4shl26k2qa5vuud24
+        key: home
+      Magnetic Necklace:
+        color: ice
+        id: bafyreigwfbko2cto2rrpmqy6xlis3cxhhnfbvjr2xkfhkh7k2pmhuuovry
+        key: magnetic_necklace
+      Maintenance:
+        color: purple
+        id: bafyreibm2yot5srxorbea35clgzoxmu2xk3y3wfwjwpfpjp7l24myg4xkm
+        key: maintenance
+      Migrate From Notion:
+        color: purple
+        id: bafyreifa26z5sp4uxwnxtuaajqatq6fgor334c6yuj6jbxiemowyhek2gu
+        key: migrate_from_notion
+      Needs:
+        color: pink
+        id: bafyreig6yaf7hdotrrd4k25ng5ji4htytu5rpr3jiukcxrunsawmtwmpma
+        key: needs
+      Rats:
+        color: pink
+        id: bafyreidsrd75rhqyhcfa3ravj3jxirb37vsgqyjyaikbm7nasylkihelsq
+        key: rats
+      format: select
+      id: bafyreihxp67pwj2bxyk7gw5jwt6lapykifd63pduo7xvcv5v4mrlz2ywd4
+      key: project
+    Rate:
+      format: text
+      id: bafyreiei3c7zvpz6tdgqoc4spyt6ikddips4bvxlf6mk3mfbzjkyyrnez4
+      key: rate
+    Recovery:
+      Minimal:
+        color: yellow
+        id: bafyreib2xqr3qxu2jbozji2627dyn4spntm33fku6whpjtf7p5rqtlgxt4
+        key: decompression
+      None:
+        color: lime
+        id: bafyreiabtms4jp4owgtfki4lxgttecrg7mlkgkuup3doly5tvq3s77t5oe
+        key: none
+      Required:
+        color: red
+        id: bafyreiaxg4h3jzsadugj76g2ywe6odaopezh3jjsdqxp7nvntzz5ttj6lm
+        key: drainging
+      format: select
+      id: bafyreib54nsfzevozm4cdz6plbzxhxuatm4nhd2grw27lzmbkzvlqz42le
+      key: recovery
+    Reset Count:
+      format: number
+      id: bafyreifllpxixvfd634ch47w3v2zrvsxuar52qbqt3szcf3hrmfjnfbjhy
+      key: reset_count
+    Size:
+      format: number
+      id: bafyreifr54o44ckzbpnkeknawqp2lsrh47ic5gpm5jmjwidoh7m4dhzlaa
+      key: size_in_bytes
+    Source:
+      format: url
+      id: bafyreibbzte7ujq7ml4gparldqqvvrzvfzv3bnxvdpfch2cy6zojarksou
+      key: source
+    Status:
+      Blocked:
+        color: pink
+        id: bafyreie5mkivaovt247akwdlgo22bzt2a27padgdem5tuwdirzbxure7wy
+        key: blocked
+      Doing:
+        color: orange
+        id: bafyreibhnneegtussqryruh6w4ocg74tfcklfa2irtr2mh7vekvnv4aa7m
+        key: 63454af2c493f68e301890dc
+      Done:
+        color: lime
+        id: bafyreid6rf53d2gkfd562mxqmg7o5zufm4qfa3laf63gwaaj4vkvkhfcku
+        key: 63454af7c493f68e301890dd
+      Later:
+        color: red
+        id: bafyreiercsvv5k4l6jcl2rp67simzpqcqzoouqj4kviqr4ghaq4bphz7oy
+        key: later
+      New:
+        color: yellow
+        id: bafyreiarjet7mv72a37427cv7rw6uwfil6ryvgasi5yyyk6rnaht25rwqu
+        key: to_done
+      Persisting:
+        color: blue
+        id: bafyreibjj2fgc5ohezupqp5nclfuyvvf2xajwkrfljokptrv6mu7njjm7e
+        key: 6864d712a7ace016b08ab2e2
+      Ready:
+        color: orange
+        id: bafyreigcc5xnfvgjppuzdcamoa6vo7h3ptmi5xlkyh5nierr4opkjuo5xm
+        key: ready
+      Repeating:
+        color: yellow
+        id: bafyreihfuqod6lpdxeybi45mbdduii6slrfbw6w5e4xmqll24dnclrxvwu
+        key: repeating
+      Review:
+        color: teal
+        id: bafyreihiiibe566qh7xgl4bd66h7fqh4tokaan623rzodst3hyfdycb5ie
+        key: review
+      Timer:
+        color: ice
+        id: bafyreiatr6zpgw5wccp6xvsowjvd25nz2ac7iiyrt75yneo3uqocqko54y
+        key: timer
+      format: select
+      id: bafyreicuswtnsqujbi2q7fmwvpszhnrkhvmb7puu6r3pg3pbflcqfve7ay
+      key: status
+    URL:
+      format: url
+      id: bafyreiclwy4vhuc2qlasmjkvjkrq6goqeboj62s2gigjk5yntvhfaqjyza
+      key: url
+    Width:
+      format: number
+      id: bafyreibemq3utqfy4qtydchg7v3qpvs63h3sxmw75u5jsvxhah2t2unvna
+      key: width_in_pixels

@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 
+from models.scan_request import ScanSpacesRequest
 from models.search_request import SearchRequest
 from services.anytype_service import AnytypeService
 from utils.logger import logger
@@ -34,10 +35,10 @@ async def search(search_detail, search_request: SearchRequest):
 
 
 @router.post("/scan_spaces", tags=["tools"])
-async def scan_spaces(properties: list[str] = None):
+async def scan_spaces(scan_request: ScanSpacesRequest):
     """Endpoint for scanning spaces for altering configuration file"""
     logger.info("Space scanner endpoint called")
-    return anytype_automation.scan_spaces(properties)
+    return anytype_automation.scan_spaces(ScanSpacesRequest.model_dump(scan_request))
 
 
 @router.post("/list_views")

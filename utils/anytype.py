@@ -5,6 +5,7 @@ from utils.logger import logger
 
 URL = "http://localhost:31009/v1/spaces/"
 OBJ = "/objects/"
+PROPS = "/properties/"
 
 
 class AnyTypeUtils:
@@ -16,9 +17,8 @@ class AnyTypeUtils:
 
     def test(self, data):
         """Play area for momentary tasks"""
-        url = URL + data
-        url += "/types"
-        return make_call("get", url, "getting test data")
+        test = self.get_tags_from_prop(data["space"], data["prop"])
+        return test
 
     def search(
         self,
@@ -147,27 +147,35 @@ class AnyTypeUtils:
             f"delete object ({object_name}) by id",
         )
 
-    def get_tag_from_list(self, space_id: str, prop_id: str, tag_name: str):
+    def get_property_list(self, space_id):
+        """Returns a list of all the properties of a space and their properties"""
+        prop_url = URL + space_id
+        prop_url += PROPS
+        props = make_call("get", prop_url, f"get props from space {space_id}")
+        return props["data"] if props is not None else []
+
+    def get_tags_from_prop(self, space_id: str, prop_id: str):
         """Returns the tag and name from the provided list"""
         tag_url = URL + space_id
-        tag_url += "/properties/" + prop_id
+        tag_url += PROPS + prop_id
         tag_url += "/tags"
         tags = make_call("get", tag_url, "get tags from property")
-        tags = tags["data"] if tags is not None else []
-        for tag in tags:
-            if tag["name"] == tag_name:
-                return tag["id"]
+        return tags["data"] if tags is not None else []
 
     def add_tag_to_select_property(self, space_id: str, data: dict):
         """Adds option to provided property"""
         prop_url = URL + space_id
-        prop_url += "/properties/" + data["prop_id"]
+        prop_url += PROPS + data["prop_id"]
         prop_url += "/tags"
-        tag_data = {"color": "grey", "key": data["tag_key"], "name": data["tag_name"]}
+        tag_data = {
+            "color": "grey" if "color" not in data else data["color"],
+            "key": data["tag_key"],
+            "name": data["tag_name"],
+        }
         new_tag = make_call(
             "post",
             prop_url,
-            f"add {data["tag_name"]} to {data["prop_key"]} property",
+            f"add {data["tag_name"]} to {data["prop_name"]} property",
             tag_data,
         )
         return new_tag["tag"]["id"] if new_tag is not None else None

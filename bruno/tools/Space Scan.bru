@@ -1,0 +1,23 @@
+meta {
+  name: Space Scan
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/scan_spaces
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "source_space_name": "tasks",
+    "target_space_name": "journal"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

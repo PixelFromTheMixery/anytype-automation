@@ -74,7 +74,7 @@ class AnytypeService:
     def date_eligibility(self, unit, modifier=None):
         """Returns list of eligible values for days of the week"""
 
-        if unit in ["month", "quarter", "year"]:
+        if unit in ["day", "week", "month", "quarter", "year"]:
             allowed = [0, 1, 2, 3, 4, 5, 6]
         elif unit == "week" and modifier:
             allowed = [self.converter[d] for d in modifier.split(",")]
@@ -239,9 +239,94 @@ class AnytypeService:
             self.reflection_updates(dt_now)
         logger.info("Daily Rollover completed")
 
-    async def scan_spaces(self, props: list[str] = None):
+    def update_config_tag_data(
+        self, tags: dict, space_name: str, props: list, source: bool = True
+    ):
+        """Updates Config file tag data"""
+        if space_name not in tags:
+            tags[space_name] = {}
+
+        for prop in props:
+            if prop["format"] in ["date", "checkbox", "objects"]:
+                continue
+
+            tags[space_name][prop["name"]] = {
+                "key": prop["key"],
+                "id": prop["id"],
+                "format": prop["format"],
+            }
+            if prop["format"] in ["select", "mulit_select"]:
+                prop_tags = self.anytype.get_tags_from_prop(
+                    self.data["spaces"].get(space_name), prop["id"]
+                )
+                for tag in prop_tags:
+                    if source:
+                        tags[space_name][prop["name"]][tag["name"]] = {
+                            "id": tag["id"],
+                            "key": tag["key"],
+                            "color": tag["color"],
+                        }
+                    else:
+                        tags[space_name][prop["name"]][tag["name"]] = tag["id"]
+        return tags
+
+    def option_matching(self, tags: dict, source: str, target: str):
+        """Ensures that status fields have matching current tags"""
+        for tag in tags[source]:
+            if tag == "Status" or tags[source][tag]["format"] not in [
+                "select",
+                "multi_select",
+            ]:
+                continue
+            options_to_create = tags[source][tag].keys() - tags[target][tag].keys()
+            for option in options_to_create:
+                tag_info = tags[source][tag][option]
+                data = {
+                    "prop_name": tag,
+                    "prop_id": tags[target][tag]["id"],
+                    "color": tag_info["color"],
+                    "tag_key": tag_info["key"],
+                    "tag_name": option,
+                }
+
+                tags[target][tag][option] = self.anytype.add_tag_to_select_property(
+                    self.data["spaces"][target], data
+                )
+        return tags
+
+    def scan_spaces(self, scan_data):
         """Scan spaces and update self file"""
-        pass
+        tags = {}
+        source_name = scan_data["source_space_name"]
+        source_select = self.anytype.get_property_list(
+            self.data["spaces"].get(source_name)
+        )
+        tags = self.update_config_tag_data(tags, source_name, source_select)
+
+        target_name = scan_data["target_space_name"]
+        target_select = self.anytype.get_property_list(
+            self.data["spaces"].get(target_name)
+        )
+        tags = self.update_config_tag_data(tags, target_name, target_select, False)
+
+        props_to_create = tags[source_name].keys() - tags[target_name].keys()
+        for prop in props_to_create:
+            data = {
+                "format": tags[source_name][prop]["format"],
+                "prop_key": tags[source_name][prop]["key"],
+                "prop_name": prop,
+            }
+            tags[source_name][prop] = self.anytype.add_property(
+                self.data["spaces"].get(target_name), data
+            )
+
+        tags = self.option_matching(tags, source_name, target_name)
+
+        self.data["tags"] = tags
+
+        self.data = Config.save()
+
+        return None
 
     def get_or_create_property(self, space_name, data):
         """Get or create a property in a given space."""
@@ -257,15 +342,6 @@ class AnytypeService:
         try:
             return self.data["tags"][space_name][data["prop_key"]][data["tag_key"]]
         except KeyError:
-            self.get_or_create_property(
-                space_name,
-                {
-                    "format": data["format"],
-                    "key": data["prop_key"],
-                    "name": data["prop_name"],
-                },
-            )
-        except IndexError:
             tag_id = self.anytype.add_tag_to_select_property(
                 self.data["spaces"][space_name],
                 data["prop_key"],
@@ -277,53 +353,41 @@ class AnytypeService:
 
             return tag_id
 
-    def log_task_in_archive(self, task):
+    def log_task_in_archive(self, task, accepted_props):
         """
         Define log object for archival
-        Currently supported properties:
-        - Defintion of Done (Text)
-        - Function (Select)
-        - Points (Number)
-        - Day Segment (Select)
-        - Project (Select)
-        - Area of Concern (Select)
-
         """
-        # TODO Fix me
-        data = {}
-        data["type_key"] = "log"
-        data["name"] = task["name"]
-        props = [
-            {"key": "do_d", "text": task["DoD"]},
-            {
-                "key": "function",
-                "select": self.get_or_create_tag("Function", task["Function"]),
-            },
-            {
-                "key": "points",
-                "number": task["Points"],
-            },
-            {
-                "key": "day_segment",
-                "select": self.get_or_create_tag("Day Segment", task["Day Segment"]),
-            },
-            {
-                "key": "project",
-                "select": self.get_or_create_tag("Project", task["Project"][0]["name"]),
-            },
-        ]
+        data = {"type_key": "log", "properties": []}
+        for prop in task:
+            if prop in accepted_props:
+                prop_details = self.data["tags"]["journal"][prop]
+                prop_data = {"key": prop_details["key"]}
+                if prop_details["format"] == "select":
+                    prop_data[prop_details["format"]] = prop_details[task[prop]]
+                else:
+                    prop_data[prop_details["format"]] = task[prop]
 
-        data["properties"] = props
-        self.anytype.create_object(self.data["journal"]["id"], task["name"], data)
+                data["properties"].append(prop_data)
+        try:
+            self.anytype.create_object(
+                self.data["spaces"]["journal"], task["name"], data
+            )
 
-    def task_status_reset(self, task, dt_now):
+        finally:
+            scan_data = {"source_space_name": "tasks", "target_space_name": "journal"}
+            self.scan_spaces(scan_data)
+            self.anytype.create_object(
+                self.data["spaces"]["journal"], task["name"], data
+            )
+
+    def task_status_reset(self, task, accepted_props, dt_now):
         """
         Delete tasks that occur once
         Reset tasks that recur
         Update task based on reset count
         """
         if self.data["settings"]["task_logs"]:
-            self.log_task_in_archive(task)
+            self.log_task_in_archive(task, accepted_props)
 
         if "Rate" not in task or task["Rate"] == "":
             self.anytype.delete_object(
@@ -342,7 +406,9 @@ class AnytypeService:
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": self.data["tags"]["tasks"]["status"]["repeating"],
+                        "select": self.data["tags"]["tasks"]["Status"]["Repeating"][
+                            "id"
+                        ],
                     },
                 ]
             }
@@ -364,13 +430,21 @@ class AnytypeService:
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
+        accepted_props = self.data["tags"]["journal"].keys()
 
         for task in tasks_to_check:
-            self.task_status_reset(task, dt_now)
+
+            self.task_status_reset(task, accepted_props, dt_now)
 
     def test(self):
         """Temp endpoint for testing"""
-        return self.anytype.test()
+        data = {
+            "space": self.data["spaces"]["journal"],
+            "prop": self.data["tags"]["journal"]["AoC"]["id"],
+        }
+        return self.anytype.get_tags_from_prop(
+            self.data["spaces"]["journal"], self.data["tags"]["journal"]["AoC"]["id"]
+        )
 
     def other(self):
         """Temp endpoint for offhand tasks"""
