@@ -4,11 +4,11 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 
-from services.anytype_service import AnytypeAutomation
-from services.pushover_service import Pushover
+from services.anytype_service import AnytypeService
+from services.pushover_service import PushoverService
 
-anytype_automation = AnytypeAutomation()
-pushover = Pushover()
+anytype_automation = AnytypeService()
+pushover = PushoverService()
 
 scheduler = AsyncIOScheduler()
 

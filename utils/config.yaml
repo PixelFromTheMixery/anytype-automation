@@ -9,7 +9,7 @@ queries:
 settings:
   prompts:
     review: true
-  pushover: false
+  pushover: true
   queries: true
   reflection_updates: false
   task_logs: true

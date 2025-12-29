@@ -181,7 +181,9 @@ class AnytypeService:
                     )
                     tasks_to_review.append(task["name"])
 
-            self.anytype.update_object(task["name"], task["id"], data)
+            self.anytype.update_object(
+                self.data["spaces"]["tasks"], task["name"], task["id"], data
+            )
 
         if tasks_to_review and self.data["settings"]["pushover"]:
             message = "The following tasks have been reset 5 times, please review:"
@@ -357,7 +359,11 @@ class AnytypeService:
         """
         Define log object for archival
         """
-        data = {"type_key": "log", "properties": []}
+        data = {
+            "type_key": "log",
+            "name": task["name"],
+            "properties": [],
+        }
         for prop in task:
             if prop in accepted_props:
                 prop_details = self.data["tags"]["journal"][prop]
@@ -373,7 +379,7 @@ class AnytypeService:
                 self.data["spaces"]["journal"], task["name"], data
             )
 
-        finally:
+        except:
             scan_data = {"source_space_name": "tasks", "target_space_name": "journal"}
             self.scan_spaces(scan_data)
             self.anytype.create_object(
