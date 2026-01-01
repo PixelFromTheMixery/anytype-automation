@@ -74,7 +74,7 @@ class AnyTypeUtils:
         objs_to_check = []
 
         if main_obj and "data" in main_obj:
-            logger.info(f"Found {len(main_obj["data"])} objects")
+            logger.info(f"Found {len(main_obj['data'])} objects")
 
             for obj in main_obj["data"]:
                 objs_to_check.append(self.get_object_by_id(space_id, obj["id"]))
@@ -175,7 +175,7 @@ class AnyTypeUtils:
         new_tag = make_call(
             "post",
             prop_url,
-            f"add {data["tag_name"]} to {data["prop_name"]} property",
+            f"add {data['tag_name']} to {data['prop_name']} property",
             tag_data,
         )
         return new_tag["tag"]["id"] if new_tag is not None else None
@@ -190,6 +190,6 @@ class AnyTypeUtils:
             "name": data["prop_name"],
         }
         new_prop = make_call(
-            "post", prop_url, f"add property '{data["prop_name"]}' to space", prop_data
+            "post", prop_url, f"add property '{data['prop_name']}' to space", prop_data
         )
         return new_prop["property"]["id"] if new_prop is not None else None
