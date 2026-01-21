@@ -176,7 +176,7 @@ class AnytypeService:
                     data["properties"].append(
                         {
                             "key": "status",
-                            "select": self.data["tags"]["tasks"]["status"]["review"],
+                            "select": self.data["tags"]["tasks"]["Status"]["Review"],
                         }
                     )
                     tasks_to_review.append(task["name"])
@@ -220,7 +220,7 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["journal"]["status"]["review"],
+                        "select": self.data["tags"]["journal"]["Status"]["Review"],
                     },
                     {"key": "rate", "text": new_tag},
                     {"key": "due_date", "date": new_day},
