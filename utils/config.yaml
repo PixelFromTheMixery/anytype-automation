@@ -140,6 +140,10 @@ tags:
       format: number
       id: bafyreif7k3o7zuhehyeql5ryozscputu4wgqzkscvsqh2be46cjq2l6rhu
       key: reset_count
+    Score:
+      format: number
+      id: bafyreibmjskbneom3tpv4gfubf7l2g3fy6ksjzhx6xdqakjqhdvcgvr5em
+      key: score
     Size:
       format: number
       id: bafyreigvl7tadqteexdvncsnvio26ncbjc6ccevc4a3xdrq5sll42ld23u
