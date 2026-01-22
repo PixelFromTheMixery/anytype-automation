@@ -83,11 +83,14 @@ class PushoverService:
 
         self.pushover.send_message(title, message)
 
-    def pushover_test(self):
+    def pushover_test(self, test_option:int = 0):
         """Testing notification service"""
         link = "https://object.any.coop/bafyreihpmajq4tyclweganwy4djfwl4cvh3kcj6pzbw7ereivnaay4be5u?spaceId=bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
-        # link = "https://object.any.coop/bafyreigwthrmmn6mhvwdcjhi2g4z2zvb2t4aj763xaaxubyg4ljjmmx6se?spaceId=bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g"
-        title = "Pushover Test"
-        message = "This is a test message from Anytype Automation."
-        message += f"<a href= '{link}'>Link to Anytype object</a>"
+        
+        url = "https://api.pushover.net/1/messages.json"
+
+        if test_option == 0:
+            title = "Pushover Test"
+            message = "This is a test message from Anytype Automation."
+            message += f"<a href= '{link}'>Link to Anytype object</a>"
         self.pushover.send_message(title, message)

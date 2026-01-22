@@ -3,6 +3,7 @@
 import json
 import os
 import time
+import urllib
 import requests
 from dotenv import load_dotenv
 
@@ -23,7 +24,7 @@ RESPONSE_MAP = {
 }
 
 
-def request_builder(url):
+def request_builder(url, data=None):
     """Builds request scaffolding for API calls"""
     headers = {}
 
@@ -33,7 +34,14 @@ def request_builder(url):
             "Content-Type": "application/json",
             "Anytype-Version": "2025-11-08",
         }
-    return headers
+        data = json.dumps(data) if data else None
+
+    else:
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        data = urllib.parse.urlencode(data)
+    return headers, data
 
 
 def exception_handler(e, result, attempt):
@@ -56,9 +64,9 @@ def make_call(
     data: dict | str | None = None,
 ):
     """Makes web request with retry and some error handling"""
-    headers = request_builder(url)
+    
+    headers, data = request_builder(url, data)
 
-    data = json.dumps(data)
 
     for attempt in range(1, RETRIES + 1):
         result = None
