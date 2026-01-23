@@ -1,0 +1,36 @@
+meta {
+  name: Anytype Direct
+  type: http
+  seq: 5
+}
+
+patch {
+  url: http://127.0.0.1:31009/v1/spaces/:space_id/types/:type_id/templates
+  body: json
+  auth: bearer
+}
+
+params:path {
+  space_id: bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g
+  type_id: bafyreihodsahhocpfbwrga6lxbrwun5352wh5wlutw56e2yzaggc7lkcti
+}
+
+headers {
+  Content-Type: application/json
+  Anytype-Version: 2025-11-08
+}
+
+auth:bearer {
+  token: {{anytype-token}}
+}
+
+body:json {
+  {
+    "key": "entry"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

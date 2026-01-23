@@ -21,7 +21,7 @@ class PushoverUtils:
 
     def make_deeplink(self, object_id, space_id: str):
         """Builds deeplinks for link purposes"""
-        return f"anytype://object?objectId={object_id}&spaceId={space_id}"
+        return f"https://object.any.coop/{object_id}?spaceId={space_id}"
 
     def send_message(self, title: str, message: str, priority: int = 0, timestamp=None):
         """Send a message via Pushover."""
@@ -29,6 +29,7 @@ class PushoverUtils:
         data["title"] = title
         data["priority"] = priority
         data["message"] = message
+        data["ttl"] = 86400
         if priority == 2:
             data["sound"] = "siren"
             data["retry"] = 30

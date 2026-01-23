@@ -8,7 +8,8 @@ class FilterCondition(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    space: str
+    search_name: str
+    space_name: str
     types: Optional[list[str]] = None
     query: Optional[str] = None
     filters: Optional[list[FilterCondition]] = None

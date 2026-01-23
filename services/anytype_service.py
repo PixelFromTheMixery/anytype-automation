@@ -40,12 +40,12 @@ class AnytypeService:
         except KeyError:
             raise KeyError(f"Key not found at {data}")
 
-    def search(self, space_name, search_detail, search_request: dict):
+    def search(self, search_request: dict):
         """
         Searches a specified space according to type and query
         Default to task type
         """
-        space_id = self.get_config_value(["spaces"][space_name])
+        space_id = self.data["spaces"].get(search_request["space_name"])
         search_body = {}
         if search_request.get("types") is not None:
             search_body["types"] = search_request["types"]
@@ -69,7 +69,18 @@ class AnytypeService:
                             }
                         )
         """
-        return self.anytype.search(space_id, search_detail, search_body)
+        return self.anytype.search(space_id, search_request["search_name"], search_body)
+
+    def fetch_data(self, data):
+        space_id = self.data["spaces"].get(data["space_name"])
+        if data["category"] == "types":
+            fetched = self.anytype.get_types(space_id)
+        if data["category"] == "templates":
+
+            fetched = self.anytype.get_templates(space_id, 
+                self.data["types"][data["space_name"]][data["type_name"]]
+            )
+        return fetched
 
     def date_eligibility(self, unit, modifier=None):
         """Returns list of eligible values for days of the week"""
@@ -128,7 +139,7 @@ class AnytypeService:
             query_id = self.data["queries"][query_name]["id"]
         except KeyError:
             raise KeyError(
-                "query not found in settings, check if space or query name and that query has automation checkbox ticked"
+                "query not found in config, check if space or query name and that query has automation checkbox ticked"
             )
         return self.anytype.get_views_list(space_id, query_id)
 
@@ -154,7 +165,7 @@ class AnytypeService:
 
         dt_next = dt_now + datetime.timedelta(days=1)
 
-        if len(tasks_to_check) > 15 and self.data["settings"]["pushover"]:
+        if len(tasks_to_check) > 15 and self.data["config"]["pushover"]:
             self.pushover.send_message(
                 "Loads of tasks incoming",
                 f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
@@ -170,9 +181,9 @@ class AnytypeService:
                 {"key": "due_date", "date": dt_next.strftime(DATETIME_FORMAT)}
             )
 
-            if self.data["settings"]["task_review_threshold"] > 0:
+            if self.data["config"]["task_review_threshold"] > 0:
                 data = self.task_review_cleanup(task, data)
-                if task["Reset Count"] > self.data["settings"]["task_review_threshold"]:
+                if task["Reset Count"] > self.data["config"]["task_review_threshold"]:
                     data["properties"].append(
                         {
                             "key": "status",
@@ -185,7 +196,7 @@ class AnytypeService:
                 self.data["spaces"]["tasks"], task["name"], task["id"], data
             )
 
-        if tasks_to_review and self.data["settings"]["pushover"]:
+        if tasks_to_review and self.data["config"]["pushover"]:
             message = "The following tasks have been reset 5 times, please review:"
             for task in tasks_to_review:
                 message += "<br>" + task
@@ -233,7 +244,7 @@ class AnytypeService:
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        if self.data["settings"]["task_reset"]:
+        if self.data["config"]["task_reset"]:
             logger.info("Running overdue tasks")
             self.overdue(dt_now)
         if self.data["reflection_updates"]:
@@ -392,7 +403,7 @@ class AnytypeService:
         Reset tasks that recur
         Update task based on reset count
         """
-        if self.data["settings"]["task_logs"]:
+        if self.data["config"]["task_logs"]:
             self.log_task_in_archive(task, accepted_props)
 
         if "Rate" not in task or task["Rate"] == "":

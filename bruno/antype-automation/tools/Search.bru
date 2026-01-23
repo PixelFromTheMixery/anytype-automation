@@ -5,19 +5,16 @@ meta {
 }
 
 post {
-  url: {{host}}/search?search_detail=Automation
+  url: {{host}}/search
   body: json
   auth: inherit
 }
 
-params:query {
-  search_detail: Automation
-}
-
 body:json {
   {
-    "space": "tasks",
-    "query": "auto"
+    "search_name": "journal template",
+    "space_name": "journal",
+    "query": " - "
   }
 }
 

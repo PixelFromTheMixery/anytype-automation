@@ -23,13 +23,13 @@ class AnyTypeUtils:
     def search(
         self,
         space_id,
-        search_detail: str,
+        search_name,
         search_body: dict,
     ):
         """Returns all objects by type"""
         url = URL + space_id
         url += "/search"
-        objects = make_call("post", url, f"searching for {search_detail}", search_body)
+        objects = make_call("post", url, f"searching for {search_name}", search_body)
 
         if objects is not None and objects["data"] is None:
             return "No objects found"
@@ -39,6 +39,33 @@ class AnyTypeUtils:
             formatted_objects[obj["name"]] = obj["id"]
 
         return formatted_objects
+
+    def get_types(self, space_id):
+        types_url = URL + space_id
+        types_url += "/types"
+
+        types = make_call("get", types_url, "get types from space")
+        types_formatted = []
+
+        for type_obj in types["data"] if types is not None else []:
+            types_formatted.append(
+                {"name": type_obj["name"], "id": type_obj["id"], "key": type_obj["key"]}
+            )
+
+        return types_formatted
+
+    def get_templates(
+        self,
+        space_id,
+        type_id,
+    ):
+        templates_url = URL + space_id
+        templates_url += "/types/" + type_id
+        templates_url += "/templates"
+
+        templates = make_call("get", templates_url, "get templates from type")
+
+        return templates
 
     def get_views_list(
         self,

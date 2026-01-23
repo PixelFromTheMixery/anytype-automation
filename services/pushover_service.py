@@ -20,21 +20,23 @@ class PushoverService:
         type_name: str,
         template: str,
         suffix: str,
-        space_id: str,
+        target_space: str,
     ):
         """Create objects and link via pushover"""
         dt_now = datetime.datetime.now()
         date_str = dt_now.strftime("%d/%m/%y")
 
+        space_id = Config.data["spaces"][target_space]
+
         data = {"type_key": type_name, "name": date_str + suffix}
 
         new_obj = self.anytype.create_object(space_id, type_name, data)
         obj_url = self.pushover.make_deeplink(
-            new_obj["object"]["id"], Config.data["spaces"]["journal"]
+            new_obj["object"]["id"], space_id
         )
 
         title = ""
-        if type_name == "ritual":
+        if type_name == "entry":
             title = f"{template.capitalize()} Routine"
         elif type_name == "planning_log":
             title = "Daily Planning"

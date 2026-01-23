@@ -13,7 +13,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         self.pushover = PushoverUtils()
-        self.send = Config.get()["settings"]["pushover"]
+        self.local = Config.get()["config"]["local"]
 
     async def dispatch(self, request, call_next):
         try:
@@ -33,6 +33,6 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 f"Occured at: {request.method} {request.url.path}, "
                 f"suggested fix: {exc.args},"
             )
-            if self.send:
+            if not self.local:
                 self.pushover.send_message(error_type, content, priority=1)
             return JSONResponse(content, 500)

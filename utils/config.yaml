@@ -1,12 +1,5 @@
-me: _participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW
-queries:
-  automation:
-    all: 6872e16da7ace015b4a15bdc
-    complete: 5883719a-c62f-47fa-a95a-3b983bdec774
-    id: bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi
-    other: 1b0970ea-cb8a-4b7c-8b86-82ef264012bc
-    overdue: 7b42e161-589d-4eaa-a57b-4e1c6226830f
-settings:
+config:
+  local: true
   prompts:
     review: true
   pushover: true
@@ -15,6 +8,14 @@ settings:
   task_logs: true
   task_reset: true
   task_review_threshold: 5
+me: _participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW
+queries:
+  automation:
+    all: 6872e16da7ace015b4a15bdc
+    complete: 5883719a-c62f-47fa-a95a-3b983bdec774
+    id: bafyreibhhlelfjv2kmtomcbgsprj3xjjx4xtw3oqh4qtvwfyquyg4gcbbi
+    other: 1b0970ea-cb8a-4b7c-8b86-82ef264012bc
+    overdue: 7b42e161-589d-4eaa-a57b-4e1c6226830f
 spaces:
   journal: bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g
   tasks: bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a.2bx9tjqqte21g
@@ -452,3 +453,13 @@ tags:
       format: number
       id: bafyreibemq3utqfy4qtydchg7v3qpvs63h3sxmw75u5jsvxhah2t2unvna
       key: width_in_pixels
+templates:
+  jounral:
+    entry: 
+      Day: bafyreibftkf34iod7ufkawsyxq5f4gqwc6xrzv7gpt2udlzysnlyfdfmcy
+      Weekly - Focus: "bafyreicta4tsfuvoxls7yueq3oacj7op55s7htv6q74zptttk5fzy43jji
+      
+types:
+  journal:
+    Prompt: bafyreifo2ypf4ahoy3iz2azhnmq4naalrdealrnxtnfkaolm2vgjgi4isq
+    Entry: bafyreihodsahhocpfbwrga6lxbrwun5352wh5wlutw56e2yzaggc7lkcti
