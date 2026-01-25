@@ -77,8 +77,8 @@ class AnytypeService:
             fetched = self.anytype.get_types(space_id)
         if data["category"] == "templates":
 
-            fetched = self.anytype.get_templates(space_id, 
-                self.data["types"][data["space_name"]][data["type_name"]]
+            fetched = self.anytype.get_templates(
+                space_id, self.data["types"][data["space_name"]][data["type_name"]]
             )
         return fetched
 
@@ -183,11 +183,16 @@ class AnytypeService:
 
             if self.data["config"]["task_review_threshold"] > 0:
                 data = self.task_review_cleanup(task, data)
-                if task["Reset Count"] > self.data["config"]["task_review_threshold"]:
+                if (
+                    task["Reset Count"]
+                    > self.data["config"]["task_review_threshold"] - 1
+                ):
                     data["properties"].append(
                         {
                             "key": "status",
-                            "select": self.data["tags"]["tasks"]["Status"]["Review"],
+                            "select": self.data["tags"]["tasks"]["Status"]["Review"][
+                                "id"
+                            ],
                         }
                     )
                     tasks_to_review.append(task["name"])
@@ -231,7 +236,9 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["journal"]["Status"]["Review"],
+                        "select": self.data["tags"]["journal"]["Status"]["Review"][
+                            "id"
+                        ],
                     },
                     {"key": "rate", "text": new_tag},
                     {"key": "due_date", "date": new_day},
@@ -247,7 +254,7 @@ class AnytypeService:
         if self.data["config"]["task_reset"]:
             logger.info("Running overdue tasks")
             self.overdue(dt_now)
-        if self.data["reflection_updates"]:
+        if self.data["config"]["reflection_updates"]:
             logger.info("Updating Reflections")
             self.reflection_updates(dt_now)
         logger.info("Daily Rollover completed")
@@ -476,7 +483,9 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["tasks"]["status"]["repeating"],
+                        "select": self.data["tags"]["tasks"]["status"]["repeating"][
+                            "id"
+                        ],
                     },
                 ]
             }
