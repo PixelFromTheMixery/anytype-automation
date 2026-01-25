@@ -3,7 +3,7 @@
 import datetime
 
 from utils.anytype import AnyTypeUtils
-from utils.config import Config
+from utils.config import Data
 
 from utils.pushover import PushoverUtils
 
@@ -26,14 +26,12 @@ class PushoverService:
         dt_now = datetime.datetime.now()
         date_str = dt_now.strftime("%d/%m/%y")
 
-        space_id = Config.data["spaces"][target_space]
+        space_id = Data.data["spaces"][target_space]
 
         data = {"type_key": type_name, "name": date_str + suffix}
 
         new_obj = self.anytype.create_object(space_id, type_name, data)
-        obj_url = self.pushover.make_deeplink(
-            new_obj["object"]["id"], space_id
-        )
+        obj_url = self.pushover.make_deeplink(new_obj["object"]["id"], space_id)
 
         title = ""
         if type_name == "entry":
@@ -50,7 +48,7 @@ class PushoverService:
         dt_now = datetime.datetime.now()
         hour = dt_now.hour
         segment = ""
-        task_segments = Config.data["queries"]["task_by_day"]
+        task_segments = Data.data["queries"]["task_by_day"]
 
         if hour == 6:
             segment = "morning"
@@ -66,7 +64,7 @@ class PushoverService:
         title = f"Good {segment}!"
 
         tasks = self.anytype.get_list_view_objects(
-            task_segments[segment], "simple", Config["queries"]["task_by_day"]
+            task_segments[segment], "simple", Data["queries"]["task_by_day"]
         )
         if len(tasks) == 0:
             return None
@@ -75,7 +73,7 @@ class PushoverService:
             message += "s"
         message += "<br>"
         link = self.pushover.make_deeplink(
-            Config.data["queries"]["task_by_day"], Config.data["spaces"]["journal"]
+            Data.data["queries"]["task_by_day"], Data.data["spaces"]["journal"]
         )
 
         message += f"<a href='{link}'>Here's the link.<a/> And here is the list:"
@@ -85,10 +83,10 @@ class PushoverService:
 
         self.pushover.send_message(title, message)
 
-    def pushover_test(self, test_option:int = 0):
+    def pushover_test(self, test_option: int = 0):
         """Testing notification service"""
         link = "https://object.any.coop/bafyreihpmajq4tyclweganwy4djfwl4cvh3kcj6pzbw7ereivnaay4be5u?spaceId=bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
-        
+
         url = "https://api.pushover.net/1/messages.json"
 
         if test_option == 0:

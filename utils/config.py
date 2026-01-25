@@ -6,6 +6,7 @@ CONFIG_PATH = "utils/config.yaml"
 
 
 class Config:
+    path
     _data = None
 
     @classmethod
@@ -28,3 +29,13 @@ class Config:
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             yaml.safe_dump(cls._data, f)
         return cls.reload()
+
+
+class Config(YamlManager):
+    _path = "yaml/config.yaml"
+    _data = None
+
+
+class Data(YamlManager):
+    _path = "yaml/data.yaml"
+    _data = None

@@ -1,13 +1,3 @@
-config:
-  local: true
-  prompts:
-    review: true
-  pushover: true
-  queries: true
-  reflection_updates: false
-  task_logs: true
-  task_reset: true
-  task_review_threshold: 5
 me: _participant_bafyreihydnqhxtkwiv55kqafoxyfk3puf7fm54n6txjo34iafbjujbbo2a_2bx9tjqqte21g_ABDuEvCxWRjgHiuX1XL2384JN95jYnEPYvnmxFYQTg4zfLzW
 queries:
   automation:
@@ -454,11 +444,10 @@ tags:
       id: bafyreibemq3utqfy4qtydchg7v3qpvs63h3sxmw75u5jsvxhah2t2unvna
       key: width_in_pixels
 templates:
-  jounral:
+  journal:
     entry: 
       Day: bafyreibftkf34iod7ufkawsyxq5f4gqwc6xrzv7gpt2udlzysnlyfdfmcy
-      Weekly - Focus: "bafyreicta4tsfuvoxls7yueq3oacj7op55s7htv6q74zptttk5fzy43jji
-      
+      Weekly - Focus: bafyreicta4tsfuvoxls7yueq3oacj7op55s7htv6q74zptttk5fzy43jji
 types:
   journal:
     Prompt: bafyreifo2ypf4ahoy3iz2azhnmq4naalrdealrnxtnfkaolm2vgjgi4isq

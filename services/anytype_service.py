@@ -4,7 +4,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 from utils.anytype import AnyTypeUtils
-from utils.config import Config
+from utils.config import Config, Data
 from utils.logger import logger
 from utils.pushover import PushoverUtils
 
@@ -32,13 +32,19 @@ class AnytypeService:
             "sat": 5,
             "sun": 6,
         }
-        self.data = Config.get()
 
-    def get_config_value(self, data):
-        try:
-            self.data.get(data)
-        except KeyError:
-            raise KeyError(f"Key not found at {data}")
+    def get_setting(self, key, default=None):
+        """Safely fetch a config setting without crashing."""
+        return Config.get().get(key, default)
+
+    def get_data(self, key):
+        """Safely fetch a data value without crashing."""
+        return Data._data.get()
+
+    def update_data(self, key, value):
+        """Update data and immediately commit to disk."""
+        Data._data.get(key, default)
+        Data.save()
 
     def search(self, search_request: dict):
         """
@@ -72,13 +78,14 @@ class AnytypeService:
         return self.anytype.search(space_id, search_request["search_name"], search_body)
 
     def fetch_data(self, data):
-        space_id = self.data["spaces"].get(data["space_name"])
+        space_id = self.get_data(["spaces"][data["space_name"]])
         if data["category"] == "types":
             fetched = self.anytype.get_types(space_id)
         if data["category"] == "templates":
 
-            fetched = self.anytype.get_templates(space_id, 
-                self.data["types"][data["space_name"]][data["type_name"]]
+            fetched = self.anytype.get_templates(
+                space_id,
+                self.get_data(["types"][data["space_name"]][data["type_name"]]),
             )
         return fetched
 

@@ -13,7 +13,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         self.pushover = PushoverUtils()
-        self.local = Config.get()["config"]["local"]
+        self.local = Config._data.get()["local"]
 
     async def dispatch(self, request, call_next):
         try:
