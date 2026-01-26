@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from utils.anytype import AnyTypeUtils
 from utils.config import Config
+from utils.helper import make_deeplink
 from utils.logger import logger
 from utils.pushover import PushoverUtils
 
@@ -165,13 +166,6 @@ class AnytypeService:
 
         dt_next = dt_now + datetime.timedelta(days=1)
 
-        if len(tasks_to_check) > 15 and self.data["config"]["pushover"]:
-            self.pushover.send_message(
-                "Loads of tasks incoming",
-                f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
-                1,
-            )
-
         tasks_to_review = []
 
         for task in tasks_to_check:
@@ -187,6 +181,23 @@ class AnytypeService:
                     task["Reset Count"]
                     > self.data["config"]["task_review_threshold"] - 1
                 ):
+                    journal_space = self.data["spaces"]["journal"]
+                    self.anytype.create_object(
+                        journal_space,
+                        {
+                            "template_id": self.data["templates"]["journal"]["prompt"][
+                                "Task Review"
+                            ],
+                            "name": task["name"],
+                            "type_key": "prompt",
+                            "properties": [
+                                {
+                                    "key": "url",
+                                    "url": make_deeplink(journal_space, task["id"]),
+                                }
+                            ],
+                        },
+                    )
                     data["properties"].append(
                         {
                             "key": "status",
@@ -201,10 +212,26 @@ class AnytypeService:
                 self.data["spaces"]["tasks"], task["name"], task["id"], data
             )
 
+        if (
+            len(tasks_to_check) - len(tasks_to_review) > 15
+            and self.data["config"]["pushover"]
+        ):
+            self.pushover.send_message(
+                "Loads of tasks incoming",
+                f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
+                1,
+            )
+
         if tasks_to_review and self.data["config"]["pushover"]:
-            message = "The following tasks have been reset 5 times, please review:"
-            for task in tasks_to_review:
-                message += "<br>" + task
+            message = (
+                f"{len(tasks_to_review)} tasks have been reset 5 times. Please review "
+            )
+            message += "<a href="
+            message += make_deeplink(
+                self.data["spaces"]["journal"],
+                "bafyreifo2ypf4ahoy3iz2azhnmq4naalrdealrnxtnfkaolm2vgjgi4isq",
+            )
+            message += ">your Journal space.<a/>"
             self.pushover.send_message("Task reset threshold reached", message, 1)
 
         return f"{len(tasks_to_check)} tasks with dates updated"
@@ -393,16 +420,12 @@ class AnytypeService:
 
                 data["properties"].append(prop_data)
         try:
-            self.anytype.create_object(
-                self.data["spaces"]["journal"], task["name"], data
-            )
+            self.anytype.create_object(self.data["spaces"]["journal"], data)
 
-        except:
+        except Exception:
             scan_data = {"source_space_name": "tasks", "target_space_name": "journal"}
             self.scan_spaces(scan_data)
-            self.anytype.create_object(
-                self.data["spaces"]["journal"], task["name"], data
-            )
+            self.anytype.create_object(self.data["spaces"]["journal"], data)
 
     def task_status_reset(self, task, accepted_props, dt_now):
         """

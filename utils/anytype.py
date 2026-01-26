@@ -156,12 +156,15 @@ class AnyTypeUtils:
             "patch", object_url, f"update object ({object_name}) by id", data
         )
 
-    def create_object(self, space_id: str, type_name: str, data: dict):
+    def create_object(self, space_id: str, data: dict):
         """Creates object with provided data"""
         object_url = URL + space_id
         object_url += "/objects"
         return make_call(
-            "post", object_url, f"create object with {type_name} data", data
+            "post",
+            object_url,
+            f"create object {data['name']} with {data['type_key']} data",
+            data,
         )
 
     def delete_object(self, space_id, object_name: str, object_id: str):

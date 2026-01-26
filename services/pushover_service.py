@@ -5,6 +5,7 @@ import datetime
 from utils.anytype import AnyTypeUtils
 from utils.config import Config
 
+from utils.helper import make_deeplink
 from utils.pushover import PushoverUtils
 
 
@@ -30,10 +31,8 @@ class PushoverService:
 
         data = {"type_key": type_name, "name": date_str + suffix}
 
-        new_obj = self.anytype.create_object(space_id, type_name, data)
-        obj_url = self.pushover.make_deeplink(
-            new_obj["object"]["id"], space_id
-        )
+        new_obj = self.anytype.create_object(space_id, data)
+        obj_url = make_deeplink(space_id, new_obj["object"]["id"], False)
 
         title = ""
         if type_name == "entry":
@@ -74,8 +73,10 @@ class PushoverService:
         if len(tasks) > 1:
             message += "s"
         message += "<br>"
-        link = self.pushover.make_deeplink(
-            Config.data["queries"]["task_by_day"], Config.data["spaces"]["journal"]
+        link = make_deeplink(
+            Config.data["spaces"]["journal"],
+            Config.data["queries"]["task_by_day"],
+            False,
         )
 
         message += f"<a href='{link}'>Here's the link.<a/> And here is the list:"
@@ -85,10 +86,10 @@ class PushoverService:
 
         self.pushover.send_message(title, message)
 
-    def pushover_test(self, test_option:int = 0):
+    def pushover_test(self, test_option: int = 0):
         """Testing notification service"""
         link = "https://object.any.coop/bafyreihpmajq4tyclweganwy4djfwl4cvh3kcj6pzbw7ereivnaay4be5u?spaceId=bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
-        
+
         url = "https://api.pushover.net/1/messages.json"
 
         if test_option == 0:
