@@ -181,9 +181,8 @@ class AnytypeService:
                     task["Reset Count"]
                     > self.data["config"]["task_review_threshold"] - 1
                 ):
-                    journal_space = self.data["spaces"]["journal"]
                     self.anytype.create_object(
-                        journal_space,
+                        self.data["spaces"]["journal"],
                         {
                             "template_id": self.data["templates"]["journal"]["prompt"][
                                 "Task Review"
@@ -193,7 +192,9 @@ class AnytypeService:
                             "properties": [
                                 {
                                     "key": "url",
-                                    "url": make_deeplink(journal_space, task["id"]),
+                                    "url": make_deeplink(
+                                        self.data["spaces"]["tasks"], task["id"]
+                                    ),
                                 }
                             ],
                         },
