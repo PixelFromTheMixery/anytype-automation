@@ -1,9 +1,0 @@
-local: true
-prompts:
-  review: true
-pushover: true
-queries: true
-reflection_updates: false
-task_logs: true
-task_reset: true
-task_review_threshold: 5
