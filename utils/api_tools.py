@@ -64,9 +64,8 @@ def make_call(
     data: dict | str | None = None,
 ):
     """Makes web request with retry and some error handling"""
-    
-    headers, data = request_builder(url, data)
 
+    headers, data = request_builder(url, data)
 
     for attempt in range(1, RETRIES + 1):
         result = None

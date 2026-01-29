@@ -30,9 +30,8 @@ async def recurrent_check():
 async def search(search_request: SearchRequest):
     """Endpoint for searching objects"""
     logger.info("Search endpoint called")
-    return anytype_automation.search(
-        SearchRequest.model_dump(search_request)
-    )
+    return anytype_automation.search(SearchRequest.model_dump(search_request))
+
 
 @router.post("/scan_spaces", tags=["tools"])
 async def scan_spaces(scan_request: ScanSpacesRequest):
@@ -40,11 +39,13 @@ async def scan_spaces(scan_request: ScanSpacesRequest):
     logger.info("Space scanner endpoint called")
     return anytype_automation.scan_spaces(ScanSpacesRequest.model_dump(scan_request))
 
+
 @router.post("/data")
 async def list_types(data_request: DataRequest):
     """Endpoint for getting various data"""
-    logger.info(f"Data fetch endpoint called")
+    logger.info("Data fetch endpoint called")
     return anytype_automation.fetch_data(DataRequest.model_dump(data_request))
+
 
 @router.post("/list_views")
 async def list_views(

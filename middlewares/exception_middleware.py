@@ -1,3 +1,5 @@
+"""Exception Middleware for managing errors"""
+
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -13,7 +15,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         self.pushover = PushoverUtils()
-        self.local = Config.get()["config"]["local"]
+        self.local = Config.data["local"]
 
     async def dispatch(self, request, call_next):
         try:

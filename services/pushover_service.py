@@ -90,8 +90,6 @@ class PushoverService:
         """Testing notification service"""
         link = "https://object.any.coop/bafyreihpmajq4tyclweganwy4djfwl4cvh3kcj6pzbw7ereivnaay4be5u?spaceId=bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
 
-        url = "https://api.pushover.net/1/messages.json"
-
         if test_option == 0:
             title = "Pushover Test"
             message = "This is a test message from Anytype Automation."

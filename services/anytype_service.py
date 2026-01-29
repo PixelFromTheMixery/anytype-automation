@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from utils.anytype import AnyTypeUtils
 from utils.config import Config
+from utils.data import DataManager
 from utils.helper import make_deeplink
 from utils.logger import logger
 from utils.pushover import PushoverUtils
@@ -12,6 +13,7 @@ from utils.pushover import PushoverUtils
 
 DATETIME_FORMAT = r"%Y-%m-%dT%H:%M:%SZ"
 NO_TASKS = "No tasks to update"
+DATA = DataManager.get()
 
 
 class AnytypeService:
@@ -33,20 +35,13 @@ class AnytypeService:
             "sat": 5,
             "sun": 6,
         }
-        self.data = Config.get()
-
-    def get_config_value(self, data):
-        try:
-            self.data.get(data)
-        except KeyError:
-            raise KeyError(f"Key not found at {data}")
 
     def search(self, search_request: dict):
         """
         Searches a specified space according to type and query
         Default to task type
         """
-        space_id = self.data["spaces"].get(search_request["space_name"])
+        space_id = DATA["spaces"].get(search_request["space_name"])
         search_body = {}
         if search_request.get("types") is not None:
             search_body["types"] = search_request["types"]
@@ -73,13 +68,13 @@ class AnytypeService:
         return self.anytype.search(space_id, search_request["search_name"], search_body)
 
     def fetch_data(self, data):
-        space_id = self.data["spaces"].get(data["space_name"])
+        space_id = DATA["spaces"].get(data["space_name"])
         if data["category"] == "types":
             fetched = self.anytype.get_types(space_id)
         if data["category"] == "templates":
 
             fetched = self.anytype.get_templates(
-                space_id, self.data["types"][data["space_name"]][data["type_name"]]
+                space_id, DATA["types"][data["space_name"]][data["type_name"]]
             )
         return fetched
 
@@ -135,13 +130,14 @@ class AnytypeService:
 
     def view_list(self, space_name: str, query_name: str):
         """Formats view objects into consumable objects to add to this object"""
-        space_id = self.data["spaces"].get(space_name)
+        space_id = DATA["spaces"].get(space_name)
         try:
-            query_id = self.data["queries"][query_name]["id"]
-        except KeyError:
+            query_id = DATA["queries"][query_name]["id"]
+        except KeyError as exc:
             raise KeyError(
-                "query not found in config, check if space or query name and that query has automation checkbox ticked"
-            )
+                "query not found in config, "
+                "check if space or query name and that query has automation checkbox ticked"
+            ) from exc
         return self.anytype.get_views_list(space_id, query_id)
 
     def task_review_cleanup(self, task, data):
@@ -155,9 +151,9 @@ class AnytypeService:
     def overdue(self, dt_now):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["tasks"],
-            self.data["queries"]["automation"]["id"],
-            self.data["queries"]["automation"]["overdue"],
+            DATA["spaces"]["tasks"],
+            DATA["queries"]["automation"]["id"],
+            DATA["queries"]["automation"]["overdue"],
         )
         if tasks_to_check is None:
             return "raise exception"
@@ -175,16 +171,13 @@ class AnytypeService:
                 {"key": "due_date", "date": dt_next.strftime(DATETIME_FORMAT)}
             )
 
-            if self.data["config"]["task_review_threshold"] > 0:
+            if DATA["config"]["task_review_threshold"] > 0:
                 data = self.task_review_cleanup(task, data)
-                if (
-                    task["Reset Count"]
-                    > self.data["config"]["task_review_threshold"] - 1
-                ):
+                if task["Reset Count"] > DATA["config"]["task_review_threshold"] - 1:
                     self.anytype.create_object(
-                        self.data["spaces"]["journal"],
+                        DATA["spaces"]["journal"],
                         {
-                            "template_id": self.data["templates"]["journal"]["prompt"][
+                            "template_id": DATA["templates"]["journal"]["prompt"][
                                 "Task Review"
                             ],
                             "name": task["name"],
@@ -193,7 +186,7 @@ class AnytypeService:
                                 {
                                     "key": "url",
                                     "url": make_deeplink(
-                                        self.data["spaces"]["tasks"], task["id"]
+                                        DATA["spaces"]["tasks"], task["id"]
                                     ),
                                 }
                             ],
@@ -202,34 +195,29 @@ class AnytypeService:
                     data["properties"].append(
                         {
                             "key": "status",
-                            "select": self.data["tags"]["tasks"]["Status"]["Review"][
-                                "id"
-                            ],
+                            "select": DATA["tags"]["tasks"]["Status"]["Review"]["id"],
                         }
                     )
                     tasks_to_review.append(task["name"])
 
             self.anytype.update_object(
-                self.data["spaces"]["tasks"], task["name"], task["id"], data
+                DATA["spaces"]["tasks"], task["name"], task["id"], data
             )
 
-        if (
-            len(tasks_to_check) - len(tasks_to_review) > 15
-            and self.data["config"]["pushover"]
-        ):
+        if len(tasks_to_check) - len(tasks_to_review) > 15 and Config.data["pushover"]:
             self.pushover.send_message(
                 "Loads of tasks incoming",
                 f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
                 1,
             )
 
-        if tasks_to_review and self.data["config"]["pushover"]:
+        if tasks_to_review and Config.data["pushover"]:
             message = (
                 f"{len(tasks_to_review)} tasks have been reset 5 times. Please review "
             )
             message += "<a href="
             message += make_deeplink(
-                self.data["spaces"]["journal"],
+                DATA["spaces"]["journal"],
                 "bafyreifo2ypf4ahoy3iz2azhnmq4naalrdealrnxtnfkaolm2vgjgi4isq",
             )
             message += ">your Journal space.<a/>"
@@ -240,9 +228,9 @@ class AnytypeService:
     def reflection_updates(self, dt_now):
         """Updates dates of completed reflections"""
         objs_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["journal"],
-            self.data["queries"]["reflections"]["id"],
-            self.data["queries"]["reflections"]["update"],
+            DATA["spaces"]["journal"],
+            DATA["queries"]["reflections"]["id"],
+            DATA["queries"]["reflections"]["update"],
         )
         for obj in objs_to_check:
             today_day = dt_now
@@ -264,25 +252,23 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["journal"]["Status"]["Review"][
-                            "id"
-                        ],
+                        "select": DATA["tags"]["journal"]["Status"]["Review"]["id"],
                     },
                     {"key": "rate", "text": new_tag},
                     {"key": "due_date", "date": new_day},
                 ]
             }
-            self.anytype.update_object(obj["name"], obj["id"], data)
+            # self.anytype.update_object(obj["name"], obj["id"], data)
 
     def daily_rollover(self):
         """Daily automation script"""
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        if self.data["config"]["task_reset"]:
+        if Config.data["task_reset"]:
             logger.info("Running overdue tasks")
             self.overdue(dt_now)
-        if self.data["config"]["reflection_updates"]:
+        if Config.data["reflection_updates"]:
             logger.info("Updating Reflections")
             self.reflection_updates(dt_now)
         logger.info("Daily Rollover completed")
@@ -305,7 +291,7 @@ class AnytypeService:
             }
             if prop["format"] in ["select", "mulit_select"]:
                 prop_tags = self.anytype.get_tags_from_prop(
-                    self.data["spaces"].get(space_name), prop["id"]
+                    DATA["spaces"].get(space_name), prop["id"]
                 )
                 for tag in prop_tags:
                     if source:
@@ -338,7 +324,7 @@ class AnytypeService:
                 }
 
                 tags[target][tag][option] = self.anytype.add_tag_to_select_property(
-                    self.data["spaces"][target], data
+                    DATA["spaces"][target], data
                 )
         return tags
 
@@ -346,15 +332,11 @@ class AnytypeService:
         """Scan spaces and update self file"""
         tags = {}
         source_name = scan_data["source_space_name"]
-        source_select = self.anytype.get_property_list(
-            self.data["spaces"].get(source_name)
-        )
+        source_select = self.anytype.get_property_list(DATA["spaces"].get(source_name))
         tags = self.update_config_tag_data(tags, source_name, source_select)
 
         target_name = scan_data["target_space_name"]
-        target_select = self.anytype.get_property_list(
-            self.data["spaces"].get(target_name)
-        )
+        target_select = self.anytype.get_property_list(DATA["spaces"].get(target_name))
         tags = self.update_config_tag_data(tags, target_name, target_select, False)
 
         props_to_create = tags[source_name].keys() - tags[target_name].keys()
@@ -365,39 +347,39 @@ class AnytypeService:
                 "prop_name": prop,
             }
             tags[source_name][prop] = self.anytype.add_property(
-                self.data["spaces"].get(target_name), data
+                DATA["spaces"].get(target_name), data
             )
 
         tags = self.option_matching(tags, source_name, target_name)
 
-        self.data["tags"] = tags
+        DATA["tags"] = tags
 
-        self.data = Config.save()
+        DataManager().update()
 
         return None
 
     def get_or_create_property(self, space_name, data):
         """Get or create a property in a given space."""
         try:
-            return self.data["tags"][space_name][data["prop_key"]]
+            return DATA["tags"][space_name][data["prop_key"]]
         except IndexError:
-            prop_id = self.anytype.add_property(self.data["spaces"][space_name], data)
-            self.data["tags"][space_name][data["prop_key"]]["id"] = prop_id
-            self.data = Config.save()
+            prop_id = self.anytype.add_property(DATA["spaces"][space_name], data)
+            DATA["tags"][space_name][data["prop_key"]]["id"] = prop_id
+            DataManager().update()
 
     def get_or_create_tag(self, space_name, data):
         """Get or create a tag for a given property in archive."""
         try:
-            return self.data["tags"][space_name][data["prop_key"]][data["tag_key"]]
+            return DATA["tags"][space_name][data["prop_key"]][data["tag_key"]]
         except KeyError:
             tag_id = self.anytype.add_tag_to_select_property(
-                self.data["spaces"][space_name],
+                DATA["spaces"][space_name],
                 data["prop_key"],
                 data["tag_key"],
                 data["value"],
             )
-            self.data["tags"][space_name][data["prop_key"]][data["tag_key"]] = tag_id
-            self.data = Config.save()
+            DATA["tags"][space_name][data["prop_key"]][data["tag_key"]] = tag_id
+            DataManager().update()
 
             return tag_id
 
@@ -412,7 +394,7 @@ class AnytypeService:
         }
         for prop in task:
             if prop in accepted_props:
-                prop_details = self.data["tags"]["journal"][prop]
+                prop_details = DATA["tags"]["journal"][prop]
                 prop_data = {"key": prop_details["key"]}
                 if prop_details["format"] == "select":
                     prop_data[prop_details["format"]] = prop_details[task[prop]]
@@ -421,12 +403,12 @@ class AnytypeService:
 
                 data["properties"].append(prop_data)
         try:
-            self.anytype.create_object(self.data["spaces"]["journal"], data)
+            self.anytype.create_object(DATA["spaces"]["journal"], data)
 
         except Exception:
             scan_data = {"source_space_name": "tasks", "target_space_name": "journal"}
             self.scan_spaces(scan_data)
-            self.anytype.create_object(self.data["spaces"]["journal"], data)
+            self.anytype.create_object(DATA["spaces"]["journal"], data)
 
     def task_status_reset(self, task, accepted_props, dt_now):
         """
@@ -434,12 +416,12 @@ class AnytypeService:
         Reset tasks that recur
         Update task based on reset count
         """
-        if self.data["config"]["task_logs"]:
+        if Config.data["task_logs"]:
             self.log_task_in_archive(task, accepted_props)
 
         if "Rate" not in task or task["Rate"] == "":
             self.anytype.delete_object(
-                self.data["spaces"]["tasks"], task["name"], task["id"]
+                DATA["spaces"]["tasks"], task["name"], task["id"]
             )
         else:
             update_data = {
@@ -454,23 +436,21 @@ class AnytypeService:
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": self.data["tags"]["tasks"]["Status"]["Repeating"][
-                            "id"
-                        ],
+                        "select": DATA["tags"]["tasks"]["Status"]["Repeating"]["id"],
                     },
                 ]
             }
             self.anytype.update_object(
-                self.data["spaces"]["tasks"], task["name"], task["id"], update_data
+                DATA["spaces"]["tasks"], task["name"], task["id"], update_data
             )
 
     def recurrent_check(self):
         """Collect tasks for processing from completed view"""
         logger.info("Running completed task processing")
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["tasks"],
-            self.data["queries"]["automation"]["id"],
-            self.data["queries"]["automation"]["complete"],
+            DATA["spaces"]["tasks"],
+            DATA["queries"]["automation"]["id"],
+            DATA["queries"]["automation"]["complete"],
         )
         if not tasks_to_check:
             return NO_TASKS
@@ -478,7 +458,7 @@ class AnytypeService:
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        accepted_props = self.data["tags"]["journal"].keys()
+        accepted_props = DATA["tags"]["journal"].keys()
 
         for task in tasks_to_check:
 
@@ -486,20 +466,16 @@ class AnytypeService:
 
     def test(self):
         """Temp endpoint for testing"""
-        data = {
-            "space": self.data["spaces"]["journal"],
-            "prop": self.data["tags"]["journal"]["AoC"]["id"],
-        }
         return self.anytype.get_tags_from_prop(
-            self.data["spaces"]["journal"], self.data["tags"]["journal"]["AoC"]["id"]
+            DATA["spaces"]["journal"], DATA["tags"]["journal"]["AoC"]["id"]
         )
 
     def other(self):
         """Temp endpoint for offhand tasks"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["spaces"]["tasks"],
-            self.data["queries"]["automation"]["id"],
-            self.data["queries"]["automation"]["other"],
+            DATA["spaces"]["tasks"],
+            DATA["queries"]["automation"]["id"],
+            DATA["queries"]["automation"]["other"],
         )
 
         for task in tasks_to_check:
@@ -507,9 +483,7 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": self.data["tags"]["tasks"]["status"]["repeating"][
-                            "id"
-                        ],
+                        "select": DATA["tags"]["tasks"]["status"]["repeating"]["id"],
                     },
                 ]
             }

@@ -4,15 +4,15 @@ meta {
   seq: 5
 }
 
-patch {
-  url: http://127.0.0.1:31009/v1/spaces/:space_id/types/:type_id/templates
+get {
+  url: http://127.0.0.1:31009/v1/spaces/:space_id/objects/:object_id
   body: json
   auth: bearer
 }
 
 params:path {
+  object_id: bafyreickhqath2lc5rwayclybimuxhjpuvllbcrfsx3ot2ddeenuz2lr2a
   space_id: bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g
-  type_id: bafyreihodsahhocpfbwrga6lxbrwun5352wh5wlutw56e2yzaggc7lkcti
 }
 
 headers {
