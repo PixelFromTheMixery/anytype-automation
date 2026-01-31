@@ -464,6 +464,52 @@ class AnytypeService:
 
             self.task_status_reset(task, accepted_props, dt_now)
 
+    def find_or_create_day_journal(self):
+        """Searches for or creates a journal for the day"""
+
+        dt_now = datetime.datetime.now()
+
+        date_str = ""
+
+        if dt_now.hour >= 21:
+            dt_now.day += 1
+
+        date_str = dt_now.strftime(r"%d.%m.%y")
+
+        entry = self.anytype.search(
+            DATA["spaces"]["journal"], "looking for journal object", {"query": date_str}
+        )
+
+        if not entry:
+
+            data = {
+                "name": date_str,
+                "type_key": "entry",
+                "template_id": DATA["templates"]["journal"]["entry"]["Day"],
+            }
+
+            # Matching output of search
+            entry = {
+                date_str: self.anytype.create_object(DATA["spaces"]["journal"], data)[
+                    "object"
+                ]["id"]
+            }
+
+        message = ""
+
+        if dt_now.hour <= 6:
+            message = "Good morning! Start your day right with "
+        elif dt_now.hour == 20:
+            message = "Good evening! Take a look back on your day with "
+        elif dt_now.hour > 20:
+            message = "Good evening! Plan your tomorrow with "
+        else:
+            message = "Hey, hey, please take a moment to check in with "
+
+        link = f"<a href={make_deeplink(DATA["spaces"]["journal"], entry[date_str], False)}>this</a>!"
+
+        self.pushover.send_message("Check in", message + link)
+
     def test(self):
         """Temp endpoint for testing"""
         return self.anytype.get_tags_from_prop(

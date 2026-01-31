@@ -21,6 +21,12 @@ async def lifespan(_app: FastAPI):
         anytype_automation.recurrent_check, "cron", hour="7-21", minute="*/30"
     )
     scheduler.add_job(anytype_automation.daily_rollover, "cron", hour="23")
+    ## Journal
+    scheduler.add_job(anytype_automation.find_or_create_day_journal, "cron", hour="6")
+    scheduler.add_job(anytype_automation.find_or_create_day_journal, "cron", hour="10")
+    scheduler.add_job(anytype_automation.find_or_create_day_journal, "cron", hour="16")
+    scheduler.add_job(anytype_automation.find_or_create_day_journal, "cron", hour="20")
+    scheduler.add_job(anytype_automation.find_or_create_day_journal, "cron", hour="21")
 
     # Pushover
     ## Day Segment
@@ -28,26 +34,6 @@ async def lifespan(_app: FastAPI):
     # scheduler.add_job(pushover.task_notify, "cron", hour="10")
     # scheduler.add_job(pushover.task_notify, "cron", hour="14")
     # scheduler.add_job(pushover.task_notify, "cron", hour="18")
-    ## Rituals
-    # scheduler.add_job(
-    #     pushover.create_object_and_notify,
-    #     "cron",
-    #     args=("ritual", "morning", " - Morning"),
-    #     hour="5",
-    #     minute="55",
-    # )
-    # scheduler.add_job(
-    #     pushover.create_object_and_notify,
-    #     "cron",
-    #     args=("ritual", "evening", " - Evening"),
-    #     hour="20",
-    # )
-    # scheduler.add_job(
-    #     pushover.create_object_and_notify,
-    #     "cron",
-    #     args=("planning_log", "planning"),
-    #     hour="21",
-    # )
     scheduler.start()
     yield
     scheduler.shutdown(wait=False)

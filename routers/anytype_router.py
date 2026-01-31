@@ -26,6 +26,13 @@ async def recurrent_check():
     return anytype_automation.recurrent_check()
 
 
+@router.get("/day_journal", tags=["scheduled"])
+async def day_journal():
+    """Endpoint to fetch or create day jounal instance id"""
+    logger.info("Day Journal endpoint called")
+    return anytype_automation.find_or_create_day_journal()
+
+
 @router.post("/search", tags=["tools"])
 async def search(search_request: SearchRequest):
     """Endpoint for searching objects"""

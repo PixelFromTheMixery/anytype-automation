@@ -1,0 +1,16 @@
+meta {
+  name: Day Journal
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/day_journal
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
