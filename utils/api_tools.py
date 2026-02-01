@@ -2,6 +2,7 @@
 
 import json
 import os
+import random
 import time
 import urllib
 import requests
@@ -67,10 +68,11 @@ def make_call(
 
     headers, data = request_builder(url, data)
 
-    for attempt in range(1, RETRIES + 1):
-        result = None
+    attempt = 0
+    while True:
+        attempt += 1
         try:
-            logger.info(f"Attempt to {info}. {attempt} of {RETRIES}")
+            logger.info(f"Attempt to {info}: {attempt} of {RETRIES}")
 
             response = (
                 RESPONSE_MAP[category](url, headers, data)
@@ -78,10 +80,17 @@ def make_call(
                 else RESPONSE_MAP[category](url, headers)
             )
 
-            result = response.json()
             response.raise_for_status()
+            return response.json()
 
-            return result
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            wait_time = 60 + random.uniform(0, 5)
+            logger.warning(
+                f"Connection refused/timed out. Retrying in {wait_time:.1f}s..."
+            )
+            time.sleep(wait_time)
 
         except requests.exceptions.RequestException as e:
-            attempt = exception_handler(e, result, attempt)
+            attempt = exception_handler(e, locals().get("result", {}), attempt)
+            if attempt >= RETRIES:
+                raise
