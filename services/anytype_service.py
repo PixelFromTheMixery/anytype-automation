@@ -171,9 +171,9 @@ class AnytypeService:
                 {"key": "due_date", "date": dt_next.strftime(DATETIME_FORMAT)}
             )
 
-            if DATA["config"]["task_review_threshold"] > 0:
+            if Config.data["task_review_threshold"] > 0:
                 data = self.task_review_cleanup(task, data)
-                if task["Reset Count"] > DATA["config"]["task_review_threshold"] - 1:
+                if task["Reset Count"] > Config.data["task_review_threshold"] - 1:
                     self.anytype.create_object(
                         DATA["spaces"]["journal"],
                         {
@@ -472,7 +472,7 @@ class AnytypeService:
         date_str = ""
 
         if dt_now.hour >= 21:
-            dt_now.day += 1
+            dt_now = dt_now + datetime.timedelta(days=1)
 
         date_str = dt_now.strftime(r"%d.%m.%y")
 
