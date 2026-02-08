@@ -2,6 +2,7 @@
 
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+import requests
 
 from utils.config import Config
 from utils.exception import AnytypeException
@@ -25,16 +26,27 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
             logger.error(exc)
             return JSONResponse({"Anytype error": exc.message}, exc.status)
         except Exception as exc:
-            logger.error(
-                f"Unhandled exception processing {request.method}, {request.url.path}. Issue: {exc}"
-            )
-
             error_type = type(exc).__name__
-            content = (
-                f"Error type: {error_type}, "
-                f"Occured at: {request.method} {request.url.path}, "
-                f"suggested fix: {exc.args},"
-            )
+            detail = str(exc)
+
+            if isinstance(exc, requests.exceptions.HTTPError):
+                try:
+                    detail = exc.response.json().get("message", detail)
+                except Exception:
+                    detail = exc.response.text[:100]
+
+            logger.error(f"Unhandled exception at {request.url.path}: {detail}")
+
+            content = {
+                "status": "error",
+                "type": error_type,
+                "message": detail,
+                "path": f"{request.method} {request.url.path}",
+            }
+
             if not self.local:
-                self.pushover.send_message(error_type, content, priority=1)
+                self.pushover.send_message(
+                    f"API Error: {error_type}", detail, priority=1
+                )
+
             return JSONResponse(content, 500)

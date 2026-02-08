@@ -3,9 +3,11 @@
 from fastapi import APIRouter
 
 from models.data_request import DataRequest
-from models.scan_request import ScanSpacesRequest
+from models.migrate_request import MigrateRequest
+from models.space_sync_request import SpaceSyncRequest
 from models.search_request import SearchRequest
 from services.anytype_service import AnytypeService
+from utils.data import DataManager
 from utils.logger import logger
 
 router = APIRouter()
@@ -41,10 +43,25 @@ async def search(search_request: SearchRequest):
 
 
 @router.post("/scan_spaces", tags=["tools"])
-async def scan_spaces(scan_request: ScanSpacesRequest):
+async def scan_spaces(sync_request: SpaceSyncRequest):
     """Endpoint for scanning spaces for altering configuration file"""
     logger.info("Space scanner endpoint called")
-    return anytype_automation.scan_spaces(ScanSpacesRequest.model_dump(scan_request))
+    return anytype_automation.scan_spaces(SpaceSyncRequest.model_dump(sync_request))
+
+
+@router.get("/reload", tags=["tools"])
+async def reload():
+    """Endpoint for Reloading local DATA"""
+    logger.info("Reload DATA endpoint called")
+    DataManager.reload()
+    return DataManager.data
+
+
+@router.post("/migrate")
+async def migrate(migrate_request: MigrateRequest):
+    """Endpoint for copying types and their from one space to another"""
+    logger.info("Migration Endpoint called")
+    return anytype_automation.migrate_spaces(MigrateRequest.model_dump(migrate_request))
 
 
 @router.post("/data")

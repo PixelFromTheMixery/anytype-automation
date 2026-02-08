@@ -36,6 +36,7 @@ def request_builder(url, data=None):
             "Anytype-Version": "2025-11-08",
         }
         data = json.dumps(data) if data else None
+        logger.info(data)
 
     else:
         headers = {
@@ -46,16 +47,11 @@ def request_builder(url, data=None):
 
 
 def exception_handler(e, result, attempt):
-    if result and result.get("status") == 429:
-        if attempt < RETRIES:
-            time.sleep(DELAY)
-            return attempt + 1
-    else:
-        print(f"RequestException on attempt {attempt}: {e}")
-        message = result.get("message") if result else None
-        if message:
-            print(f"json response: {message}")
-        return RETRIES + 1
+    print(f"RequestException on attempt {attempt}: {e}")
+    message = result.get("message") if result else None
+    if message:
+        print(f"json response: {message}")
+    return RETRIES + 1
 
 
 def make_call(
@@ -66,16 +62,15 @@ def make_call(
 ):
     """Makes web request with retry and some error handling"""
 
-    headers, data = request_builder(url, data)
+    headers, json_data = request_builder(url, data)
 
     attempt = 0
     while True:
-        attempt += 1
         try:
             logger.info(f"Attempt to {info}: {attempt} of {RETRIES}")
 
             response = (
-                RESPONSE_MAP[category](url, headers, data)
+                RESPONSE_MAP[category](url, headers, json_data)
                 if category in ["patch", "post", "put"]
                 else RESPONSE_MAP[category](url, headers)
             )
@@ -83,14 +78,32 @@ def make_call(
             response.raise_for_status()
             return response.json()
 
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
             wait_time = 60 + random.uniform(0, 5)
             logger.warning(
-                f"Connection refused/timed out. Retrying in {wait_time:.1f}s..."
+                f"Network issue ({e}). Retrying infinitely... Next try in {wait_time:.1f}s"
             )
             time.sleep(wait_time)
+            continue  # Restarts the 'while True' loop immediately
+
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 429:
+                attempt += 1
+                if attempt <= RETRIES:
+                    logger.warning(
+                        f"429 limit hit. Retry {attempt}/{RETRIES} in {DELAY}s..."
+                    )
+                    time.sleep(DELAY)
+                    continue
+
+            # If it's not a 429, or we ran out of 429 retries, handle normally
+            attempt = exception_handler(e, response.json(), attempt)
+            if attempt > RETRIES:
+                raise
 
         except requests.exceptions.RequestException as e:
-            attempt = exception_handler(e, locals().get("result", {}), attempt)
-            if attempt >= RETRIES:
+            # Catch-all for other request issues (DNS, etc.)
+            attempt += 1
+            if attempt > RETRIES:
                 raise
+            time.sleep(DELAY)

@@ -1,0 +1,25 @@
+meta {
+  name: Migrate
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{host}}/migrate
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "source_space_name": "tasks",
+    "target_space_name": "new_tasks",
+    "target_space_id": "bafyreibyrslzehvfvhiwgralzlybf6i2jc53b5ufmshvqakfolvincnzwi.2bx9tjqqte21g",
+    "stages": ["clear", "props", "types", "objects"]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

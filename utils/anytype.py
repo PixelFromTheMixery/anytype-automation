@@ -28,7 +28,7 @@ class AnyTypeUtils:
     ):
         """Returns all objects by type"""
         url = URL + space_id
-        url += "/search"
+        url += "/search?limit=999"
         objects = make_call("post", url, f"searching for {search_name}", search_body)
 
         if objects is not None and objects["data"] is None:
@@ -40,17 +40,30 @@ class AnyTypeUtils:
 
         return formatted_objects
 
-    def get_types(self, space_id):
+    def get_types(self, space_id, props: bool = False):
         types_url = URL + space_id
         types_url += "/types"
 
         types = make_call("get", types_url, "get types from space")
-        types_formatted = []
+        types_formatted = {}
 
         for type_obj in types["data"] if types is not None else []:
-            types_formatted.append(
-                {"name": type_obj["name"], "id": type_obj["id"], "key": type_obj["key"]}
-            )
+            type_dict = {"key": type_obj["key"], "id": type_obj["id"]}
+            if props:
+                type_dict["plural_name"] = type_obj["plural_name"]
+                type_dict["layout"] = type_obj["layout"]
+                type_dict["name"] = type_obj["name"]
+                type_dict["icon"] = type_obj["icon"]
+                type_dict["properties"] = []
+                for prop in type_obj["properties"]:
+                    type_dict["properties"].append(
+                        {
+                            "key": prop["key"],
+                            "name": prop["name"],
+                            "format": prop["format"],
+                        }
+                    )
+            types_formatted[type_obj["name"]] = type_dict
 
         return types_formatted
 
@@ -108,6 +121,20 @@ class AnyTypeUtils:
 
         return objs_to_check
 
+    def create_type(self, space_id, type_dict: dict):
+        """Creates a type with the provided data"""
+        type_url = URL + space_id
+        type_url += "/types"
+
+        make_call("post", type_url, f"create type {type_dict["name"]}", type_dict)
+
+    def delete_type(self, space_id, type_dict: dict):
+        """Creates a type with the provided data"""
+        type_url = URL + space_id
+        type_url += "/types/" + type_dict["id"]
+
+        make_call("delete", type_url, f'delete type {type_dict["key"]}')
+
     def unpack_object(self, object_obj: dict, sub_objects: bool = True):
         """Pulls out name, id, and properties for use"""
         object_dict = {
@@ -130,7 +157,7 @@ class AnyTypeUtils:
 
         return object_dict
 
-    def get_object_by_id(self, space_id: str, object_id: str):
+    def get_object_by_id(self, space_id: str, object_id: str, simple: bool = True):
         """Pulls detailed object data by id"""
         object_url = URL + space_id
         object_url += OBJ + object_id
@@ -145,8 +172,11 @@ class AnyTypeUtils:
         if isinstance(object_obj, str):
             return {"Clear me": object_obj}
 
-        object_formatted = self.unpack_object(object_obj, False)
-        return object_formatted
+        if simple:
+            object_formatted = self.unpack_object(object_obj, False)
+            return object_formatted
+
+        return object_obj
 
     def update_object(self, space_id, object_name: str, object_id: str, data: dict):
         """Updates object with provided data"""
@@ -182,7 +212,21 @@ class AnyTypeUtils:
         prop_url = URL + space_id
         prop_url += PROPS
         props = make_call("get", prop_url, f"get props from space {space_id}")
-        return props["data"] if props is not None else []
+        formatted_props = {}
+        if props["data"]:
+            for prop in props["data"]:
+                formatted_props[prop["name"]] = {
+                    "id": prop["id"],
+                    "key": prop["key"],
+                    "name": prop["name"],
+                    "format": prop["format"],
+                }
+                if prop["format"] in ["select", "multiselect"]:
+                    formatted_props[prop["name"]]["options"] = self.get_tags_from_prop(
+                        space_id, prop["id"]
+                    )
+            return formatted_props
+        return []
 
     def get_tags_from_prop(self, space_id: str, prop_id: str):
         """Returns the tag and name from the provided list"""
@@ -190,36 +234,59 @@ class AnyTypeUtils:
         tag_url += PROPS + prop_id
         tag_url += "/tags"
         tags = make_call("get", tag_url, "get tags from property")
-        return tags["data"] if tags is not None else []
+        formatted_tags = {}
+        if tags["data"]:
+            for tag in tags["data"]:
+                formatted_tags[tag["name"]] = {
+                    "id": tag["id"],
+                    "key": tag["key"],
+                    "name": tag["name"],
+                    "color": tag["color"],
+                }
+            return formatted_tags
+        return {}
 
-    def add_tag_to_select_property(self, space_id: str, data: dict):
+    def add_tag_to_select_property(self, space_id: str, prop_id: str, data: dict):
         """Adds option to provided property"""
         prop_url = URL + space_id
-        prop_url += PROPS + data["prop_id"]
+        prop_url += PROPS + prop_id
         prop_url += "/tags"
-        tag_data = {
-            "color": "grey" if "color" not in data else data["color"],
-            "key": data["tag_key"],
-            "name": data["tag_name"],
-        }
         new_tag = make_call(
             "post",
             prop_url,
-            f"add {data['tag_name']} to {data['prop_name']} property",
-            tag_data,
+            f"add {data['name']} to property",
+            data,
         )
-        return new_tag["tag"]["id"] if new_tag is not None else None
+        formatted_tag = {}
+        if new_tag["tag"]:
+            formatted_tag[new_tag["tag"]["name"]] = {
+                "id": new_tag["tag"]["id"],
+                "key": new_tag["tag"]["key"],
+                "name": new_tag["tag"]["name"],
+                "color": new_tag["tag"]["color"],
+            }
+        return formatted_tag
 
-    def add_property(self, space_id: str, data: dict):
+    def create_property(self, space_id: str, data: dict):
         """Adds property to space"""
         prop_url = URL + space_id
         prop_url += "/properties"
         prop_data = {
             "format": data["format"],
-            "key": data["prop_key"],
-            "name": data["prop_name"],
+            "key": data["key"],
+            "name": data["name"],
         }
         new_prop = make_call(
-            "post", prop_url, f"add property '{data['prop_name']}' to space", prop_data
+            "post", prop_url, f"add property '{data['name']}' to space", prop_data
         )
         return new_prop["property"]["id"] if new_prop is not None else None
+
+    def delete_property(self, space_id, prop_dict):
+        """Removes property from space"""
+        prop_url = URL + space_id
+        prop_url += "/properties/" + prop_dict["id"]
+        prop_url = make_call(
+            "delete",
+            prop_url,
+            f"delete property {prop_dict["name"]}",
+        )

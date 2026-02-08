@@ -7,5 +7,6 @@
     "sonarlint.connectedMode.project": {
         "connectionId": "pixelfromthemixery",
         "projectKey": "PixelFromTheMixery_anytype-automation"
-    }
+    },
+    "python.REPL.enableREPLSmartSend": false
 }

@@ -14,6 +14,42 @@ from utils.pushover import PushoverUtils
 DATETIME_FORMAT = r"%Y-%m-%dT%H:%M:%SZ"
 NO_TASKS = "No tasks to update"
 DATA = DataManager.get()
+DEFAULT_PROPS = [
+    "Added date",
+    "Backlinks",
+    "Created by",
+    "Creation date",
+    "Description",
+    "Done",
+    "File extension",
+    "Height",
+    "Import Type",
+    "Last message date",
+    "Last modified by",
+    "Last modified date",
+    "Last opened date",
+    "Links",
+    "Object type",
+    "Origin",
+    "Size",
+    "Source",
+    "Source object",
+    "Width",
+]
+
+DEFAULT_TYPES = [
+    "Audio",
+    "Bookmark",
+    "Chat",
+    "Collection",
+    "File",
+    "Image",
+    "Page",
+    "Query",
+    "Space member",
+    "Template",
+    "Video",
+]
 
 
 class AnytypeService:
@@ -67,10 +103,10 @@ class AnytypeService:
         """
         return self.anytype.search(space_id, search_request["search_name"], search_body)
 
-    def fetch_data(self, data):
+    def fetch_data(self, data, props: bool = False):
         space_id = DATA["spaces"].get(data["space_name"])
         if data["category"] == "types":
-            fetched = self.anytype.get_types(space_id)
+            fetched = self.anytype.get_types(space_id, props)
         if data["category"] == "templates":
 
             fetched = self.anytype.get_templates(
@@ -274,7 +310,7 @@ class AnytypeService:
         logger.info("Daily Rollover completed")
 
     def update_config_tag_data(
-        self, tags: dict, space_name: str, props: list, source: bool = True
+        self, tags: dict, space_name: str, props: list, details: bool = True
     ):
         """Updates Config file tag data"""
         if space_name not in tags:
@@ -294,7 +330,7 @@ class AnytypeService:
                     DATA["spaces"].get(space_name), prop["id"]
                 )
                 for tag in prop_tags:
-                    if source:
+                    if details:
                         tags[space_name][prop["name"]][tag["name"]] = {
                             "id": tag["id"],
                             "key": tag["key"],
@@ -304,66 +340,75 @@ class AnytypeService:
                         tags[space_name][prop["name"]][tag["name"]] = tag["id"]
         return tags
 
-    def option_matching(self, tags: dict, source: str, target: str):
-        """Ensures that status fields have matching current tags"""
-        for tag in tags[source]:
-            if tag == "Status" or tags[source][tag]["format"] not in [
+    def option_matching(self, props: dict, source: str, target: str):
+        """Ensures that select and multiselect fields have matching current options"""
+        for prop in props[source]:
+            if props[source][prop]["format"] not in [
                 "select",
                 "multi_select",
             ]:
                 continue
-            options_to_create = tags[source][tag].keys() - tags[target][tag].keys()
+
+            if props[target][prop]["options"] == []:
+                options_to_create = props[source][prop]["options"].keys()
+            else:
+                options_to_create = list(
+                    props[source][prop]["options"].keys()
+                    - props[target][prop]["options"].keys()
+                )
             for option in options_to_create:
-                tag_info = tags[source][tag][option]
+                tag_info = props[source][prop]["options"][option]
                 data = {
-                    "prop_name": tag,
-                    "prop_id": tags[target][tag]["id"],
                     "color": tag_info["color"],
-                    "tag_key": tag_info["key"],
-                    "tag_name": option,
+                    "key": tag_info["key"],
+                    "name": option,
                 }
 
-                tags[target][tag][option] = self.anytype.add_tag_to_select_property(
-                    DATA["spaces"][target], data
+                props[target][prop]["options"][option] = (
+                    self.anytype.add_tag_to_select_property(
+                        DATA["spaces"][target], props[target][prop]["id"], data
+                    )
                 )
-        return tags
+        return props
 
-    def scan_spaces(self, scan_data):
+    def scan_spaces(self, scan_data, details: bool = False):
         """Scan spaces and update self file"""
-        tags = {}
         source_name = scan_data["source_space_name"]
-        source_select = self.anytype.get_property_list(DATA["spaces"].get(source_name))
-        tags = self.update_config_tag_data(tags, source_name, source_select)
+        source_props = self.anytype.get_property_list(DATA["spaces"].get(source_name))
 
         target_name = scan_data["target_space_name"]
-        target_select = self.anytype.get_property_list(DATA["spaces"].get(target_name))
-        tags = self.update_config_tag_data(tags, target_name, target_select, False)
+        target_props = self.anytype.get_property_list(DATA["spaces"].get(target_name))
 
-        props_to_create = tags[source_name].keys() - tags[target_name].keys()
+        props_to_create = list(source_props.keys() - target_props.keys())
         for prop in props_to_create:
             data = {
-                "format": tags[source_name][prop]["format"],
-                "prop_key": tags[source_name][prop]["key"],
-                "prop_name": prop,
+                "format": source_props[prop]["format"],
+                "key": source_props[prop]["key"],
+                "name": prop,
             }
-            tags[source_name][prop] = self.anytype.add_property(
-                DATA["spaces"].get(target_name), data
-            )
+            self.anytype.create_property(DATA["spaces"].get(target_name), data)
 
-        tags = self.option_matching(tags, source_name, target_name)
-
-        DATA["tags"] = tags
+        DATA["tags"][source_name] = self.anytype.get_property_list(
+            DATA["spaces"].get(source_name)
+        )
+        DATA["tags"][target_name] = self.anytype.get_property_list(
+            DATA["spaces"].get(target_name)
+        )
 
         DataManager().update()
 
-        return None
+        DATA["tags"] = self.option_matching(DATA["tags"], source_name, target_name)
+
+        DataManager().update()
+
+        return DATA["tags"]
 
     def get_or_create_property(self, space_name, data):
         """Get or create a property in a given space."""
         try:
             return DATA["tags"][space_name][data["prop_key"]]
         except IndexError:
-            prop_id = self.anytype.add_property(DATA["spaces"][space_name], data)
+            prop_id = self.anytype.create_property(DATA["spaces"][space_name], data)
             DATA["tags"][space_name][data["prop_key"]]["id"] = prop_id
             DataManager().update()
 
@@ -506,9 +551,130 @@ class AnytypeService:
         else:
             message = "Hey, hey, please take a moment to check in with "
 
-        link = f"<a href={make_deeplink(DATA["spaces"]["journal"], entry[date_str], False)}>this</a>!"
+        link = f"<a href={make_deeplink(DATA["spaces"]["journal"], 
+        entry[date_str], False)}>this</a>!"
 
         self.pushover.send_message("Check in", message + link)
+
+    def clear_space(self, target_name, target_id):
+        clear_types = self.fetch_data(
+            {
+                "space_name": target_name,
+                "category": "types",
+            }
+        )
+
+        for type_obj in clear_types:
+            if type_obj not in DEFAULT_TYPES:
+                self.anytype.delete_type(target_id, clear_types[type_obj])
+        clear_props = self.anytype.get_property_list(target_id)
+        for prop in clear_props:
+            if clear_props[prop]["name"] not in DEFAULT_PROPS:
+                self.anytype.delete_property(target_id, clear_props[prop])
+            if clear_props[prop]["name"] == "Status":
+                self.anytype.delete_property(target_id, clear_props[prop])
+
+    def copy_types(self, source_name, target_id):
+        source_types = self.fetch_data(
+            {
+                "space_name": source_name,
+                "category": "types",
+            },
+            True,
+        )
+
+        created_types = {}
+        for type_obj in source_types:
+            if source_types[type_obj]["name"] in DEFAULT_TYPES:
+                continue
+            type_copy = source_types[type_obj].copy()
+            type_copy.pop("id", None)
+            try:
+                self.anytype.create_type(target_id, type_copy)
+                created_types[type_obj] = source_types[type_obj]
+            except:
+                logger.error("")
+        return created_types
+
+    def copy_objects(self, types_to_create, source_name, target_id):
+        objects_created = []
+        for obj_type in types_to_create.keys():
+            objects_to_create = self.search(
+                {
+                    "search_name": f"Collecting all objects of type {obj_type}",
+                    "space_name": source_name,
+                    "types": [types_to_create[obj_type]["id"]],
+                }
+            )
+
+            for object_name in objects_to_create:
+                object_dict = self.anytype.get_object_by_id(
+                    DATA["spaces"][source_name], objects_to_create[object_name], False
+                )["object"]
+                obj_data = {
+                    "name": object_dict["name"],
+                    "type_key": object_dict["type"]["key"],
+                    "properties": [],
+                    "body": object_dict["markdown"],
+                }
+                for prop in object_dict["properties"]:
+
+                    if prop["name"] in DEFAULT_PROPS or prop["format"] == "date":
+                        continue
+                    prop_data = {
+                        "key": prop["key"],
+                    }
+
+                    if prop["format"] == "select":
+                        prop_data[prop["format"]] = prop[prop["format"]]["key"]
+                    else:
+                        prop_data[prop["format"]] = prop[prop["format"]]
+
+                    obj_data["properties"].append(prop_data)
+
+                self.anytype.create_object(target_id, obj_data)
+                objects_created.append(object_dict["name"])
+        return objects_created
+
+    def migrate_spaces(self, migrate_request: dict):
+        """Copy types and copy objects of that type to new space"""
+        source_name = migrate_request["source_space_name"]
+        target_id = migrate_request["target_space_id"]
+        target_name = migrate_request["target_space_name"]
+
+        DATA["spaces"][target_name] = migrate_request["target_space_id"]
+
+        return_data = {}
+
+        if "clear" in migrate_request["stages"]:
+            self.clear_space(target_name, target_id)
+            return_data["clear"] = True
+
+        if "props" in migrate_request["stages"]:
+            props_to_create = self.scan_spaces(
+                {
+                    "source_space_name": source_name,
+                    "target_space_name": target_name,
+                },
+                True,
+            )
+            return_data["props"] = props_to_create[target_name]
+
+        types_to_create = {}
+
+        if "types" in migrate_request["stages"]:
+            types_to_create = self.copy_types(
+                source_name,
+                target_id,
+            )
+            return_data["types"] = types_to_create
+
+        if "objects" in migrate_request["stages"]:
+            return_data["objects"] = self.copy_objects(
+                types_to_create, source_name, target_id
+            )
+
+        return return_data
 
     def test(self):
         """Temp endpoint for testing"""
