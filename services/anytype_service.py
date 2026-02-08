@@ -481,7 +481,9 @@ class AnytypeService:
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": DATA["tags"]["tasks"]["Status"]["Repeating"]["id"],
+                        "select": DATA["tags"]["tasks"]["Status"]["options"][
+                            "Repeating"
+                        ]["id"],
                     },
                 ]
             }
