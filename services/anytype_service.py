@@ -178,6 +178,8 @@ class AnytypeService:
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
+        if "Reset Count" not in task.keys():
+            task["Reset Count"] = 0
         if task["Status"] not in ["Blocked", "Review", "Later"]:
             new_count = task["Reset Count"] + 1
         data["properties"].append({"key": "reset_count", "number": new_count})
@@ -209,6 +211,7 @@ class AnytypeService:
 
             if Config.data["task_review_threshold"] > 0:
                 data = self.task_review_cleanup(task, data)
+
                 if task["Reset Count"] > Config.data["task_review_threshold"] - 1:
                     self.anytype.create_object(
                         DATA["spaces"]["journal"],

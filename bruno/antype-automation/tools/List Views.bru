@@ -5,14 +5,16 @@ meta {
 }
 
 post {
-  url: {{host}}/list_views?space_name=adw&query_name=other
-  body: none
+  url: {{host}}/list_views
+  body: json
   auth: inherit
 }
 
-params:query {
-  space_name: adw
-  query_name: other
+body:json {
+  {
+    "space_name": "tasks",
+    "query_name": "automation"
+  }
 }
 
 settings {
