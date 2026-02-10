@@ -126,7 +126,7 @@ class AnyTypeUtils:
         type_url = URL + space_id
         type_url += "/types"
 
-        make_call("post", type_url, f"create type {type_dict["name"]}", type_dict)
+        make_call("post", type_url, f'create type {type_dict["name"]}', type_dict)
 
     def delete_type(self, space_id, type_dict: dict):
         """Creates a type with the provided data"""
