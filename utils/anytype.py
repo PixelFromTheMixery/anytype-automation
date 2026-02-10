@@ -285,8 +285,4 @@ class AnyTypeUtils:
         """Removes property from space"""
         prop_url = URL + space_id
         prop_url += "/properties/" + prop_dict["id"]
-        prop_url = make_call(
-            "delete",
-            prop_url,
-            f"delete property {prop_dict["name"]}",
-        )
+        prop_url = make_call("delete", prop_url, f'delete property {prop_dict["name"]}')
