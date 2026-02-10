@@ -257,7 +257,7 @@ class AnytypeService:
             message += "<a href="
             message += make_deeplink(
                 DATA["spaces"]["journal"],
-                "bafyreifo2ypf4ahoy3iz2azhnmq4naalrdealrnxtnfkaolm2vgjgi4isq",
+                "bafyreigcem27rencgalo2mtmkvxaet5cdrq6yagyin32cjpyy4ttkufcde",
             )
             message += ">your Journal space.<a/>"
             self.pushover.send_message("Task reset threshold reached", message, 1)
@@ -556,8 +556,8 @@ class AnytypeService:
         else:
             message = "Hey, hey, please take a moment to check in with "
 
-        link = f"<a href={make_deeplink(DATA["spaces"]["journal"], 
-        entry[date_str], False)}>this</a>!"
+        link = f'<a href={make_deeplink(DATA["spaces"]["journal"], 
+        entry[date_str], False)}>this</a>!'
 
         self.pushover.send_message("Check in", message + link)
 
