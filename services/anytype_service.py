@@ -556,8 +556,7 @@ class AnytypeService:
         else:
             message = "Hey, hey, please take a moment to check in with "
 
-        link = f'<a href={make_deeplink(DATA["spaces"]["journal"], 
-        entry[date_str], False)}>this</a>!'
+        link = f'<a href={make_deeplink(DATA["spaces"]["journal"], entry[date_str], False)}>this</a>!'
 
         self.pushover.send_message("Check in", message + link)
 
