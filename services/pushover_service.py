@@ -32,7 +32,7 @@ class PushoverService:
         data = {"type_key": type_name, "name": date_str + suffix}
 
         new_obj = self.anytype.create_object(space_id, data)
-        obj_url = make_deeplink(space_id, new_obj["object"]["id"], False)
+        obj_url = make_deeplink(space_id, new_obj["object"]["id"])
 
         title = ""
         if type_name == "entry":
@@ -76,7 +76,6 @@ class PushoverService:
         link = make_deeplink(
             Config.data["spaces"]["journal"],
             Config.data["queries"]["task_by_day"],
-            False,
         )
 
         message += f"<a href='{link}'>Here's the link.<a/> And here is the list:"

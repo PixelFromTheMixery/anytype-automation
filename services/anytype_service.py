@@ -556,11 +556,12 @@ class AnytypeService:
         else:
             message = "Hey, hey, please take a moment to check in with "
 
-        link = f'<a href={make_deeplink(DATA["spaces"]["journal"], entry[date_str], False)}>this</a>!'
+        link = f'<a href={make_deeplink(DATA["spaces"]["journal"], entry[date_str])}>this</a>!'
 
         self.pushover.send_message("Check in", message + link)
 
     def clear_space(self, target_name, target_id):
+        """Removes basic types and props, Status and Due Date prop must be removed manually"""
         clear_types = self.fetch_data(
             {
                 "space_name": target_name,
@@ -579,6 +580,7 @@ class AnytypeService:
                 self.anytype.delete_property(target_id, clear_props[prop])
 
     def copy_types(self, source_name, target_id):
+        """Copy types from one space to another and adds coresponding props"""
         source_types = self.fetch_data(
             {
                 "space_name": source_name,
