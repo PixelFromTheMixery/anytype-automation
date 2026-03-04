@@ -1,5 +1,7 @@
 """Module for handling automation behaviour"""
 
+import json
+
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -431,7 +433,7 @@ class AnytypeService:
 
             return tag_id
 
-    def log_task_in_archive(self, task, accepted_props):
+    def log_task_in_archive(self, task):
         """
         Define log object for archival
         """
@@ -440,32 +442,25 @@ class AnytypeService:
             "name": task["name"],
             "properties": [],
         }
+
+        metadata_dict = {}
+        sorting = Config.data["task_log_props"]
         for prop in task:
-            if prop in accepted_props:
-                prop_details = DATA["tags"]["journal"][prop]
-                prop_data = {"key": prop_details["key"]}
-                if prop_details["format"] == "select":
-                    prop_data[prop_details["format"]] = prop_details[task[prop]]
-                else:
-                    prop_data[prop_details["format"]] = task[prop]
+            if prop not in sorting:
+                continue
+            metadata_dict[prop] = task[prop]
+        sorted_data = {k: metadata_dict[k] for k in sorting}
+        data["properties"].append({"key": "metadata", "text": json.dumps(sorted_data)})
+        self.anytype.create_object(DATA["spaces"]["journal"], data)
 
-                data["properties"].append(prop_data)
-        try:
-            self.anytype.create_object(DATA["spaces"]["journal"], data)
-
-        except Exception:
-            scan_data = {"source_space_name": "tasks", "target_space_name": "journal"}
-            self.scan_spaces(scan_data)
-            self.anytype.create_object(DATA["spaces"]["journal"], data)
-
-    def task_status_reset(self, task, accepted_props, dt_now):
+    def task_status_reset(self, task, dt_now):
         """
         Delete tasks that occur once
         Reset tasks that recur
         Update task based on reset count
         """
         if Config.data["task_logs"]:
-            self.log_task_in_archive(task, accepted_props)
+            self.log_task_in_archive(task)
 
         if "Rate" not in task or task["Rate"] == "":
             self.anytype.delete_object(
@@ -508,11 +503,11 @@ class AnytypeService:
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        accepted_props = DATA["tags"]["journal"].keys()
 
         for task in tasks_to_check:
 
-            self.task_status_reset(task, accepted_props, dt_now)
+            self.task_status_reset(task, dt_now)
+        return "Completed"
 
     def find_or_create_day_journal(self):
         """Searches for or creates a journal for the day"""
