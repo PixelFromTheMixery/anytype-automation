@@ -3,7 +3,7 @@
 from utils.api_tools import make_call
 from utils.logger import logger
 
-URL = "http://localhost:31009/v1/spaces/"
+URL = "/v1/spaces/"
 OBJ = "/objects/"
 PROPS = "/properties/"
 

@@ -37,5 +37,6 @@ class PushoverUtils:
             "post",
             self.url,
             "send message via pushover",
-            data
+            data,
+            "pushover"
         )

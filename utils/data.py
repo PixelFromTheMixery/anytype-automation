@@ -7,8 +7,7 @@ from utils.api_tools import make_call
 
 
 ID_OBJECT_URL = (
-    "http://localhost:31009/v1"
-    "/spaces/bafyreicbskqmtyxcinkpqr4nininlxmz6yu7qshm3wkbwhcxrfuyqnzhy4.2bx9tjqqte21g"
+    "/v1/spaces/bafyreicbskqmtyxcinkpqr4nininlxmz6yu7qshm3wkbwhcxrfuyqnzhy4.2bx9tjqqte21g"
     "/objects/bafyreickhqath2lc5rwayclybimuxhjpuvllbcrfsx3ot2ddeenuz2lr2a"
 )
 

@@ -9,6 +9,7 @@ import requests
 from dotenv import load_dotenv
 
 from utils.logger import logger
+from utils.config import Config
 
 load_dotenv()
 
@@ -25,11 +26,11 @@ RESPONSE_MAP = {
 }
 
 
-def request_builder(url, data=None):
+def request_builder(url: str, data: dict = None, target: str = "anytype"):
     """Builds request scaffolding for API calls"""
     headers = {}
 
-    if "localhost" in url:
+    if target == "anytype":
         headers = {
             "Authorization": f'Bearer {os.getenv("ANYTYPE_KEY")}',
             "Content-Type": "application/json",
@@ -37,13 +38,14 @@ def request_builder(url, data=None):
         }
         data = json.dumps(data) if data else None
         logger.info(data)
+        url = "http://localhost:" + Config.data["api_port"] + url
 
     else:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = urllib.parse.urlencode(data)
-    return headers, data
+    return url, headers, data
 
 
 def exception_handler(e, result, attempt):
@@ -59,10 +61,11 @@ def make_call(
     url: str,
     info: str,
     data: dict | str | None = None,
+    target: str = "anytype",
 ):
     """Makes web request with retry and some error handling"""
 
-    headers, json_data = request_builder(url, data)
+    url, headers, json_data = request_builder(url, data, target)
 
     attempt = 0
     while True:
