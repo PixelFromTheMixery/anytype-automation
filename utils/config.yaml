@@ -1,0 +1,11 @@
+local: true
+api_port: "31009"
+prompts:
+  review: false
+pushover: false
+queries: false
+reflection_updates: false
+task_logs: false
+task_log_props: []
+task_reset: false
+task_review_threshold: 5
