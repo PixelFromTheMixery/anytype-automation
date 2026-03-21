@@ -40,7 +40,7 @@ class AnyTypeUtils:
 
         return formatted_objects
 
-    def get_types(self, space_id, props: bool = False):
+    def get_types(self, space_id, system_types=None, props: bool = False):
         types_url = URL + space_id
         types_url += "/types"
 
@@ -48,6 +48,8 @@ class AnyTypeUtils:
         types_formatted = {}
 
         for type_obj in types["data"] if types is not None else []:
+            if type_obj["name"] in system_types:
+                continue
             type_dict = {"key": type_obj["key"], "id": type_obj["id"]}
             if props:
                 type_dict["plural_name"] = type_obj["plural_name"]
@@ -63,6 +65,11 @@ class AnyTypeUtils:
                             "format": prop["format"],
                         }
                     )
+            type_templates = self.get_templates(space_id, type_dict["id"])
+            if type_templates is not None:
+                type_dict["templates"] = {}
+            for template in type_templates["data"]:
+                type_dict["templates"][template["name"]] = template["id"]
             types_formatted[type_obj["name"]] = type_dict
 
         return types_formatted
@@ -79,6 +86,17 @@ class AnyTypeUtils:
         templates = make_call("get", templates_url, "get templates from type")
 
         return templates
+
+    def get_lists(self, space_id, query_type_id):
+        list_ids = self.search(space_id, "collect queries", {"types": [query_type_id]})
+
+        query_dict = {}
+        for list_id in list_ids:
+            query_dict[list_id] = {"id": list_ids[list_id]}
+            view_list = self.get_views_list(space_id, list_ids[list_id])
+            for view in view_list:
+                query_dict[list_id][view["name"]] = view["id"]
+        return query_dict
 
     def get_views_list(
         self,
@@ -207,7 +225,7 @@ class AnyTypeUtils:
             f"delete object ({object_name}) by id",
         )
 
-    def get_property_list(self, space_id):
+    def get_property_list(self, space_id, system_props=None):
         """Returns a list of all the properties of a space and their properties"""
         prop_url = URL + space_id
         prop_url += PROPS
@@ -215,6 +233,8 @@ class AnyTypeUtils:
         formatted_props = {}
         if props["data"]:
             for prop in props["data"]:
+                if prop["name"] in system_props:
+                    continue
                 formatted_props[prop["name"]] = {
                     "id": prop["id"],
                     "key": prop["key"],

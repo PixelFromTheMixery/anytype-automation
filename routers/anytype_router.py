@@ -30,7 +30,7 @@ async def recurrent_check():
 
 @router.get("/day_journal", tags=["scheduled"])
 async def day_journal():
-    """Endpoint to fetch or create day jounal instance id"""
+    """Endpoint to fetch or create day journal instance id"""
     logger.info("Day Journal endpoint called")
     return anytype_automation.find_or_create_day_journal()
 
@@ -42,11 +42,18 @@ async def search(search_request: SearchRequest):
     return anytype_automation.search(SearchRequest.model_dump(search_request))
 
 
-@router.post("/scan_spaces", tags=["tools"])
+@router.post("/sync_spaces", tags=["tools"])
 async def scan_spaces(sync_request: SpaceSyncRequest):
     """Endpoint for scanning spaces for altering configuration file"""
+    logger.info("Space syncer endpoint called")
+    return anytype_automation.sync_spaces(SpaceSyncRequest.model_dump(sync_request))
+
+
+@router.get("/scan_space/{space_name}")
+async def scan_space(space_name):
+    """Endpoint to populate Data with space data"""
     logger.info("Space scanner endpoint called")
-    return anytype_automation.scan_spaces(SpaceSyncRequest.model_dump(sync_request))
+    return anytype_automation.scan_space(space_name)
 
 
 @router.get("/reload", tags=["tools"])

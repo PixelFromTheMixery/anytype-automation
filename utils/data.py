@@ -4,11 +4,14 @@ import threading
 import yaml
 
 from utils.api_tools import make_call
+from utils.config import Config
 
+DATA_ID = "bafyreickhqath2lc5rwayclybimuxhjpuvllbcrfsx3ot2ddeenuz2lr2a"
+TEST_DATA_ID = "bafyreidlqnenmanyxemvlw56ahjgwtjzhdrluykrqf4yqmulbkzvjadnwu"
 
 ID_OBJECT_URL = (
     "/v1/spaces/bafyreicbskqmtyxcinkpqr4nininlxmz6yu7qshm3wkbwhcxrfuyqnzhy4.2bx9tjqqte21g"
-    "/objects/bafyreickhqath2lc5rwayclybimuxhjpuvllbcrfsx3ot2ddeenuz2lr2a"
+    "/objects/"
 )
 
 
@@ -17,6 +20,8 @@ class DataManager:
 
     data = {}
     lock = threading.Lock()
+    url = ID_OBJECT_URL
+    url += TEST_DATA_ID if Config.data["local"] else DATA_ID
 
     @classmethod
     def get(cls):
@@ -38,7 +43,7 @@ class DataManager:
     @classmethod
     def perform_reload(cls):
         """Reload config from object."""
-        markdown = make_call("get", ID_OBJECT_URL, "collecting ID Data from Anytype")[
+        markdown = make_call("get", cls.url, "collecting ID Data from Anytype")[
             "object"
         ]["markdown"]
 
@@ -52,17 +57,17 @@ class DataManager:
     @classmethod
     def update(cls):
         """Save current config to object."""
-        new_data = yaml.safe_dump(cls.data)
+        new_data = yaml.safe_dump(cls.data, sort_keys=False)
         new_data_formatted = "```yaml\n" + new_data + "```\n"
 
         make_call(
             "patch",
-            ID_OBJECT_URL,
+            cls.url,
             "Update ID Data from Anytype",
             {"markdown": new_data_formatted},
         )
 
-        markdown = make_call("get", ID_OBJECT_URL, "collecting ID Data from Anytype")[
+        markdown = make_call("get", cls.url, "collecting ID Data from Anytype")[
             "object"
         ]["markdown"]
 

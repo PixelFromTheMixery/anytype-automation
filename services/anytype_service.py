@@ -79,7 +79,7 @@ class AnytypeService:
         Searches a specified space according to type and query
         Default to task type
         """
-        space_id = DATA["spaces"].get(search_request["space_name"])
+        space_id = DATA[search_request["space_name"]["id"]]
         search_body = {}
         if search_request.get("types") is not None:
             search_body["types"] = search_request["types"]
@@ -106,13 +106,17 @@ class AnytypeService:
         return self.anytype.search(space_id, search_request["search_name"], search_body)
 
     def fetch_data(self, data, props: bool = False):
-        space_id = DATA["spaces"].get(data["space_name"])
+        """Fetch object based on data"""
+        # TODO: ???
+        space_id = DATA[data["space_name"]]["id"]
+        fetched = {}
         if data["category"] == "types":
             fetched = self.anytype.get_types(space_id, props)
         if data["category"] == "templates":
 
             fetched = self.anytype.get_templates(
-                space_id, DATA["types"][data["space_name"]][data["type_name"]]
+                space_id,
+                DATA[data["space_name"]]["types"][data["type_name"]],
             )
         return fetched
 
@@ -168,18 +172,16 @@ class AnytypeService:
 
     def view_list(self, space_name: str, query_name: str):
         """Formats view objects into consumable objects to add to this object"""
-        space_id = DATA["spaces"].get(space_name)
+        space_id = DATA[space_name]["id"]
         try:
-            query_id = DATA["queries"][query_name]["id"]
+            query_id = DATA[space_name]["queries"][query_name]
         except KeyError as exc:
-            raise KeyError(
-                "query not found in config, "
-                "check if space or query name and that query has automation checkbox ticked"
-            ) from exc
+            raise KeyError("query not found in local data, ") from exc
         return self.anytype.get_views_list(space_id, query_id)
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
+        new_count = 0
         if "Reset Count" not in task.keys():
             task["Reset Count"] = 0
         if task["Status"] not in ["Blocked", "Review", "Later"]:
@@ -191,9 +193,9 @@ class AnytypeService:
     def overdue(self, dt_now):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            DATA["spaces"]["tasks"],
-            DATA["queries"]["automation"]["id"],
-            DATA["queries"]["automation"]["overdue"],
+            DATA["tasks"]["id"],
+            DATA["tasks"]["queries"]["Automation"]["id"],
+            DATA["tasks"]["queries"]["Automation"]["Overdue"],
         )
         if tasks_to_check is None:
             return "raise exception"
@@ -216,18 +218,17 @@ class AnytypeService:
 
                 if task["Reset Count"] > Config.data["task_review_threshold"] - 1:
                     self.anytype.create_object(
-                        DATA["spaces"]["journal"],
+                        DATA["journal"]["id"],
                         {
-                            "template_id": DATA["templates"]["journal"]["prompt"][
-                                "Task Review"
-                            ],
+                            # fmt: off
+                            "template_id": DATA["journal"]["types"]["Prompt"]["templates"]["Task Review"],
                             "name": task["name"],
                             "type_key": "prompt",
                             "properties": [
                                 {
                                     "key": "url",
                                     "url": make_deeplink(
-                                        DATA["spaces"]["tasks"], task["id"]
+                                        DATA["tasks"]["id"], task["id"]
                                     ),
                                 }
                             ],
@@ -236,13 +237,14 @@ class AnytypeService:
                     data["properties"].append(
                         {
                             "key": "status",
-                            "select": DATA["tags"]["tasks"]["Status"]["Review"]["id"],
+                            # fmt: off
+                            "select": DATA["tasks"]["props"]["Status"]["options"]["Review"]["id"],
                         }
                     )
                     tasks_to_review.append(task["name"])
 
             self.anytype.update_object(
-                DATA["spaces"]["tasks"], task["name"], task["id"], data
+                DATA["tasks"]["id"], task["name"], task["id"], data
             )
 
         if len(tasks_to_check) - len(tasks_to_review) > 15 and Config.data["pushover"]:
@@ -258,7 +260,7 @@ class AnytypeService:
             )
             message += "<a href="
             message += make_deeplink(
-                DATA["spaces"]["journal"],
+                DATA["journal"]["id"],
                 "bafyreigcem27rencgalo2mtmkvxaet5cdrq6yagyin32cjpyy4ttkufcde",
             )
             message += ">your Journal space.<a/>"
@@ -268,10 +270,11 @@ class AnytypeService:
 
     def reflection_updates(self, dt_now):
         """Updates dates of completed reflections"""
+        # TODO: Not in use, refine
         objs_to_check = self.anytype.get_list_view_objects(
-            DATA["spaces"]["journal"],
-            DATA["queries"]["reflections"]["id"],
-            DATA["queries"]["reflections"]["update"],
+            DATA["journal"]["id"],
+            DATA["journal"]["queries"]["reflections"]["id"],
+            DATA["journal"]["queries"]["reflections"]["update"],
         )
         for obj in objs_to_check:
             today_day = dt_now
@@ -293,7 +296,9 @@ class AnytypeService:
                 "properties": [
                     {
                         "key": "status",
-                        "select": DATA["tags"]["journal"]["Status"]["Review"]["id"],
+                        "select": DATA["tags"]["journal"]["Status"]["options"][
+                            "Review"
+                        ]["id"],
                     },
                     {"key": "rate", "text": new_tag},
                     {"key": "due_date", "date": new_day},
@@ -306,47 +311,17 @@ class AnytypeService:
         dt_now = datetime.datetime.now().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        if Config.data["task_reset"]:
+        if Config.data.get("task_reset"):
             logger.info("Running overdue tasks")
             self.overdue(dt_now)
-        if Config.data["reflection_updates"]:
+        if Config.data.get("reflection_updates"):
             logger.info("Updating Reflections")
             self.reflection_updates(dt_now)
         logger.info("Daily Rollover completed")
 
-    def update_config_tag_data(
-        self, tags: dict, space_name: str, props: list, details: bool = True
-    ):
-        """Updates Config file tag data"""
-        if space_name not in tags:
-            tags[space_name] = {}
-
-        for prop in props:
-            if prop["format"] in ["date", "checkbox", "objects"]:
-                continue
-
-            tags[space_name][prop["name"]] = {
-                "key": prop["key"],
-                "id": prop["id"],
-                "format": prop["format"],
-            }
-            if prop["format"] in ["select", "mulit_select"]:
-                prop_tags = self.anytype.get_tags_from_prop(
-                    DATA["spaces"].get(space_name), prop["id"]
-                )
-                for tag in prop_tags:
-                    if details:
-                        tags[space_name][prop["name"]][tag["name"]] = {
-                            "id": tag["id"],
-                            "key": tag["key"],
-                            "color": tag["color"],
-                        }
-                    else:
-                        tags[space_name][prop["name"]][tag["name"]] = tag["id"]
-        return tags
-
     def option_matching(self, props: dict, source: str, target: str):
         """Ensures that select and multiselect fields have matching current options"""
+        # TODO: Refine
         for prop in props[source]:
             if props[source][prop]["format"] not in [
                 "select",
@@ -371,18 +346,40 @@ class AnytypeService:
 
                 props[target][prop]["options"][option] = (
                     self.anytype.add_tag_to_select_property(
-                        DATA["spaces"][target], props[target][prop]["id"], data
+                        DATA[target], props[target][prop]["id"], data
                     )
                 )
         return props
 
-    def scan_spaces(self, scan_data, details: bool = False):
-        """Scan spaces and update self file"""
-        source_name = scan_data["source_space_name"]
-        source_props = self.anytype.get_property_list(DATA["spaces"].get(source_name))
+    def scan_space(self, space_name):
+        """
+        Scans a space and collect:
+        - custom (+ Query,) types and their templates
+        - properties and their options
+        """
+        data_types = [t for t in DEFAULT_TYPES if t != "Query"]
+        DATA[space_name]["types"] = self.anytype.get_types(
+            DATA[space_name]["id"], system_types=data_types
+        )
+        DATA[space_name]["queries"] = self.anytype.get_lists(
+            DATA[space_name]["id"], DATA[space_name]["types"]["Query"]["id"]
+        )
+        DATA[space_name]["props"] = self.anytype.get_property_list(
+            DATA[space_name]["id"], system_props=DEFAULT_PROPS
+        )
+        DataManager.update()
+        return DATA[space_name]
 
-        target_name = scan_data["target_space_name"]
-        target_props = self.anytype.get_property_list(DATA["spaces"].get(target_name))
+    # TODO: Update to dictionary access if appropriate, rework for new reference structure
+    def sync_spaces(self, sync_data):
+        """Syncs spaces and update self file"""
+        source_name = sync_data["source_space_name"]
+        source_id = DATA[source_name]["id"]
+        source_props = self.anytype.get_property_list(source_id)
+
+        target_name = sync_data["target_space_name"]
+        target_id = DATA[target_name]["id"]
+        target_props = self.anytype.get_property_list(target_id)
 
         props_to_create = list(source_props.keys() - target_props.keys())
         for prop in props_to_create:
@@ -391,39 +388,37 @@ class AnytypeService:
                 "key": source_props[prop]["key"],
                 "name": prop,
             }
-            self.anytype.create_property(DATA["spaces"].get(target_name), data)
+            self.anytype.create_property(target_id, data)
 
-        DATA["tags"][source_name] = self.anytype.get_property_list(
-            DATA["spaces"].get(source_name)
-        )
-        DATA["tags"][target_name] = self.anytype.get_property_list(
-            DATA["spaces"].get(target_name)
-        )
+        DATA[source_name]["props"] = self.anytype.get_property_list(source_id)
+        DATA[target_name]["props"] = self.anytype.get_property_list(target_id)
 
         DataManager().update()
 
-        DATA["tags"] = self.option_matching(DATA["tags"], source_name, target_name)
+        # TODO: defunct
+        # self.option_matching(DATA["tags"], source_name, target_name)
 
         DataManager().update()
 
-        return DATA["tags"]
+        return DATA
 
     def get_or_create_property(self, space_name, data):
         """Get or create a property in a given space."""
         try:
-            return DATA["tags"][space_name][data["prop_key"]]
+            return DATA[space_name]["props"][data["prop_name"]]
         except IndexError:
-            prop_id = self.anytype.create_property(DATA["spaces"][space_name], data)
-            DATA["tags"][space_name][data["prop_key"]]["id"] = prop_id
+            prop_id = self.anytype.create_property(DATA[space_name]["id"], data)
+            DATA[space_name]["props"][data["prop_name"]]["id"] = prop_id
             DataManager().update()
 
     def get_or_create_tag(self, space_name, data):
         """Get or create a tag for a given property in archive."""
+        # TODO: ???
         try:
             return DATA["tags"][space_name][data["prop_key"]][data["tag_key"]]
         except KeyError:
             tag_id = self.anytype.add_tag_to_select_property(
-                DATA["spaces"][space_name],
+                DATA[space_name],
                 data["prop_key"],
                 data["tag_key"],
                 data["value"],
@@ -451,7 +446,7 @@ class AnytypeService:
             metadata_dict[prop] = task[prop]
         sorted_data = {k: metadata_dict[k] for k in sorting}
         data["properties"].append({"key": "metadata", "text": json.dumps(sorted_data)})
-        self.anytype.create_object(DATA["spaces"]["journal"], data)
+        self.anytype.create_object(DATA["journal"]["id"], data)
 
     def task_status_reset(self, task, dt_now):
         """
@@ -463,9 +458,7 @@ class AnytypeService:
             self.log_task_in_archive(task)
 
         if "Rate" not in task or task["Rate"] == "":
-            self.anytype.delete_object(
-                DATA["spaces"]["tasks"], task["name"], task["id"]
-            )
+            self.anytype.delete_object(DATA["tasks"]["id"], task["name"], task["id"])
         else:
             update_data = {
                 "properties": [
@@ -479,23 +472,22 @@ class AnytypeService:
                     {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        "select": DATA["tags"]["tasks"]["Status"]["options"][
-                            "Repeating"
-                        ]["id"],
+                        # fmt: off
+                        "select": DATA["tasks"]["props"]["Status"]["options"]["Repeating"]["id"],
                     },
                 ]
             }
             self.anytype.update_object(
-                DATA["spaces"]["tasks"], task["name"], task["id"], update_data
+                DATA["tasks"]["id"], task["name"], task["id"], update_data
             )
 
     def recurrent_check(self):
         """Collect tasks for processing from completed view"""
         logger.info("Running completed task processing")
         tasks_to_check = self.anytype.get_list_view_objects(
-            DATA["spaces"]["tasks"],
-            DATA["queries"]["automation"]["id"],
-            DATA["queries"]["automation"]["complete"],
+            DATA["tasks"]["id"],
+            DATA["tasks"]["queries"]["Automation"]["id"],
+            DATA["tasks"]["queries"]["Automation"]["Done"],
         )
         if not tasks_to_check:
             return NO_TASKS
@@ -522,7 +514,7 @@ class AnytypeService:
         date_str = dt_now.strftime(r"%d.%m.%y")
 
         entry = self.anytype.search(
-            DATA["spaces"]["journal"], "looking for journal object", {"query": date_str}
+            DATA["journal"]["id"], "looking for journal object", {"query": date_str}
         )
 
         if not entry:
@@ -530,14 +522,15 @@ class AnytypeService:
             data = {
                 "name": date_str,
                 "type_key": "entry",
-                "template_id": DATA["templates"]["journal"]["entry"]["Day"],
+                "template_id": DATA["journal"]["types"]["Entry"]["templates"]["Day"],
             }
 
             # Matching output of search
             entry = {
-                date_str: self.anytype.create_object(DATA["spaces"]["journal"], data)[
-                    "object"
-                ]["id"]
+                # fmt: off
+                date_str: self.anytype.create_object(
+                    DATA["journal"]["id"], data
+                )["object"]["id"]
             }
 
         message = ""
@@ -551,7 +544,9 @@ class AnytypeService:
         else:
             message = "Hey, hey, please take a moment to check in with "
 
-        link = f'<a href={make_deeplink(DATA["spaces"]["journal"], entry[date_str])}>this</a>!'
+        link = (
+            f'<a href={make_deeplink(DATA["journal"]["id"], entry[date_str])}>this</a>!'
+        )
 
         self.pushover.send_message("Check in", message + link)
 
@@ -575,7 +570,7 @@ class AnytypeService:
                 self.anytype.delete_property(target_id, clear_props[prop])
 
     def copy_types(self, source_name, target_id):
-        """Copy types from one space to another and adds coresponding props"""
+        """Copy types from one space to another and adds corresponding props"""
         source_types = self.fetch_data(
             {
                 "space_name": source_name,
@@ -610,7 +605,7 @@ class AnytypeService:
 
             for object_name in objects_to_create:
                 object_dict = self.anytype.get_object_by_id(
-                    DATA["spaces"][source_name], objects_to_create[object_name], False
+                    DATA[source_name]["id"], objects_to_create[object_name], False
                 )["object"]
                 obj_data = {
                     "name": object_dict["name"],
@@ -643,7 +638,7 @@ class AnytypeService:
         target_id = migrate_request["target_space_id"]
         target_name = migrate_request["target_space_name"]
 
-        DATA["spaces"][target_name] = migrate_request["target_space_id"]
+        DATA[target_name] = {"id": migrate_request["target_space_id"]}
 
         return_data = {}
 
@@ -652,12 +647,11 @@ class AnytypeService:
             return_data["clear"] = True
 
         if "props" in migrate_request["stages"]:
-            props_to_create = self.scan_spaces(
+            props_to_create = self.sync_spaces(
                 {
                     "source_space_name": source_name,
                     "target_space_name": target_name,
                 },
-                True,
             )
             return_data["props"] = props_to_create[target_name]
 
@@ -679,27 +673,8 @@ class AnytypeService:
 
     def test(self):
         """Temp endpoint for testing"""
-        return self.anytype.get_tags_from_prop(
-            DATA["spaces"]["journal"], DATA["tags"]["journal"]["AoC"]["id"]
-        )
+        return None
 
     def other(self):
         """Temp endpoint for offhand tasks"""
-        tasks_to_check = self.anytype.get_list_view_objects(
-            DATA["spaces"]["tasks"],
-            DATA["queries"]["automation"]["id"],
-            DATA["queries"]["automation"]["other"],
-        )
-
-        for task in tasks_to_check:
-            update_data = {
-                "properties": [
-                    {
-                        "key": "status",
-                        "select": DATA["tags"]["tasks"]["status"]["repeating"]["id"],
-                    },
-                ]
-            }
-
-            self.anytype.update_object(task["name"], task["id"], update_data)
-        return "Completed with no issue"
+        return None
