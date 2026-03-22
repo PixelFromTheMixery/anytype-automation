@@ -1,3 +1,5 @@
+"""Module for managing non-specific methods"""
+
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -63,8 +65,9 @@ class Helper:
             "quarter": lambda d, n: d + relativedelta(months=n * 3),
             "year": lambda d, n: d + relativedelta(years=n),
         }
+
         dt_next = delta_map.get(unit, lambda d, n: d + relativedelta(days=n))(
-            self.get_today, n
+            self.get_today(), n
         )
 
         while dt_next.weekday() not in allowed:
@@ -72,8 +75,11 @@ class Helper:
 
         return dt_next.strftime(DATETIME_FORMAT)
 
-    def get_today(self):
+    def get_today(self, midnight=True):
         """gets midnight today"""
-        return datetime.datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        now = datetime.datetime.now().replace(minute=0, second=0, microsecond=0)
+
+        if midnight:
+            now.replace(hour=0)
+
+        return now

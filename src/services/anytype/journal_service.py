@@ -12,13 +12,15 @@ class JournalService:
         self.helper = Helper()
         self.pushover = PushoverUtils()
 
-    def find_or_create_day_journal(self, dt_hour, dt_day_str, dt_tmw_str):
+    def find_or_create_day_journal(self):
         """Searches for or creates a journal for the day"""
-
-        date_str = dt_day_str if dt_hour >= 21 else dt_tmw_str
+        dt_now = self.helper.get_today(False)
+        date_str = dt_now.strftime(r"%d.%m.%y")
 
         entry = self.anytype.search(
-            DATA["journal"]["id"], "looking for journal object", {"query": date_str}
+            DATA.root["journal"].id,
+            "looking for journal object",
+            {"query": date_str},
         )
 
         if not entry:
@@ -26,18 +28,20 @@ class JournalService:
             data = {
                 "name": date_str,
                 "type_key": "entry",
-                "template_id": DATA["journal"]["types"]["Entry"]["templates"]["Day"],
+                "template_id": DATA.root["journal"].types["Entry"].templates["Day"],
             }
 
             # Matching output of search
             entry = {
                 # fmt: off
                 date_str: self.anytype.create_object(
-                    DATA["journal"]["id"], data
+                    DATA.root["journal"].id, data
                 )["object"]["id"]
             }
 
         message = ""
+
+        dt_hour = dt_now.hour
 
         if dt_hour <= 6:
             message = "Good morning! Start your day right with "
@@ -49,7 +53,7 @@ class JournalService:
             message = "Hey, hey, please take a moment to check in with "
 
         link = f"""<a href={self.helper.make_deeplink(
-            DATA["journal"]["id"], entry[date_str]
+            DATA.root["journal"].id, entry[date_str]
         )}>this</a>!"""
 
         self.pushover.send_message("Check in", message + link)
@@ -58,9 +62,9 @@ class JournalService:
     #     """Updates dates of completed reflections"""
     #     # TODO: Not in use, refine
     #     objs_to_check = self.anytype.get_list_view_objects(
-    #         DATA["journal"]["id"],
-    #         DATA["journal"]["queries"]["reflections"]["id"],
-    #         DATA["journal"]["queries"]["reflections"]["update"],
+    #         DATA.root["journal"]["id"],
+    #         DATA.root["journal"]["queries"]["reflections"]["id"],
+    #         DATA.root["journal"]["queries"]["reflections"]["update"],
     #     )
     #     for obj in objs_to_check:
     #         today_day = dt_now
@@ -82,7 +86,7 @@ class JournalService:
     #             "properties": [
     #                 {
     #                     "key": "status",
-    #                     "select": DATA["tags"]["journal"]["Status"]["options"][
+    #                     "select": DATA.root["tags"]["journal"]["Status"]["options"][
     #                         "Review"
     #                     ]["id"],
     #                 },

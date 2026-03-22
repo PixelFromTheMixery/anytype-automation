@@ -6,6 +6,7 @@ from utils.anytype import AnyTypeUtils
 from utils.config import Config
 from utils.data import DataManager
 from utils.helper import Helper
+from utils.logger import logger
 from utils.pushover import PushoverUtils
 
 DATA = DataManager.get()
@@ -13,17 +14,39 @@ RESET = "Reset Count"
 
 
 class TaskService:
+    """For managing"""
+
     def __init__(self):
         self.anytype = AnyTypeUtils()
         self.pushover = PushoverUtils()
         self.helper = Helper()
 
+    def recurrent_check(self):
+        """Collect tasks for processing from completed view"""
+        logger.info("Running completed task processing")
+        tasks_to_check = self.anytype.get_list_view_objects(
+            DATA.root["tasks"].id,
+            DATA.root["tasks"].queries["Automation"].id,
+            DATA.root["tasks"].queries["Automation"].Done,
+        )
+        if not tasks_to_check:
+            return "No tasks to update"
+
+        for task in tasks_to_check:
+
+            next_date = (
+                self.helper.next_date(task["Rate"]) if "Rate" in task.keys() else None
+            )
+
+            self.task_status_reset(task, next_date)
+        return "Completed"
+
     def overdue(self, dt_next_str):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            DATA["tasks"]["id"],
-            DATA["tasks"]["queries"]["Automation"]["id"],
-            DATA["tasks"]["queries"]["Automation"]["Overdue"],
+            DATA.root["tasks"].id,
+            DATA.root["tasks"].queries["Automation"].id,
+            DATA.root["tasks"].queries["Automation"].Overdue,
         )
         if tasks_to_check is None:
             return "raise exception"
@@ -42,11 +65,11 @@ class TaskService:
 
                 if task[RESET] > Config.data["task_review_threshold"] - 1:
                     self.anytype.create_object(
-                        DATA["journal"]["id"],
+                        DATA.root["journal"].id,
                         {
                             # fmt: off
-                            "template_id": DATA[
-                                "journal"]["types"]["Prompt"]["templates"]["Task Review"
+                            "template_id": DATA.root[
+                                "journal"].types["Prompt"].templates["Task Review"
                             ],
                             "name": task["name"],
                             "type_key": "prompt",
@@ -54,7 +77,7 @@ class TaskService:
                                 {
                                     "key": "url",
                                     "url": self.helper.make_deeplink(
-                                        DATA["tasks"]["id"], task["id"]
+                                        DATA.root["tasks"].id, task["id"]
                                     ),
                                 }
                             ],
@@ -64,13 +87,13 @@ class TaskService:
                         {
                             "key": "status",
                             # fmt: off
-                            "select": DATA["tasks"]["props"]["Status"]["options"]["Review"]["id"],
+                            "select": DATA.root["tasks"].props["Status"].options["Review"].id,
                         }
                     )
                     tasks_to_review.append(task["name"])
 
             self.anytype.update_object(
-                DATA["tasks"]["id"], task["name"], task["id"], data
+                DATA.root["tasks"].id, task["name"], task["id"], data
             )
 
         if len(tasks_to_check) - len(tasks_to_review) > 15 and Config.data["pushover"]:
@@ -86,7 +109,7 @@ class TaskService:
             )
             message += "<a href="
             message += self.helper.make_deeplink(
-                DATA["journal"]["id"],
+                DATA.root["journal"].id,
                 "bafyreigcem27rencgalo2mtmkvxaet5cdrq6yagyin32cjpyy4ttkufcde",
             )
             message += ">your Journal space.<a/>"
@@ -112,7 +135,7 @@ class TaskService:
             metadata_dict[prop] = task[prop]
         sorted_data = {k: metadata_dict[k] for k in sorting}
         data["properties"].append({"key": "metadata", "text": json.dumps(sorted_data)})
-        self.anytype.create_object(DATA["journal"]["id"], data)
+        self.anytype.create_object(DATA.root["journal"].id, data)
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
@@ -134,8 +157,8 @@ class TaskService:
         if Config.data["task_logs"]:
             self.log_task_in_archive(task)
 
-        if "Rate" not in task or task["Rate"] == "":
-            self.anytype.delete_object(DATA["tasks"]["id"], task["name"], task["id"])
+        if next_date is None:
+            self.anytype.delete_object(DATA.root["tasks"].id, task["name"], task["id"])
         else:
             update_data = {
                 "properties": [
@@ -144,10 +167,10 @@ class TaskService:
                     {
                         "key": "status",
                         # fmt: off
-                        "select": DATA["tasks"]["props"]["Status"]["options"]["Repeating"]["id"],
+                        "select": DATA.root["tasks"].props["Status"].options["Repeating"].id,
                     },
                 ]
             }
             self.anytype.update_object(
-                DATA["tasks"]["id"], task["name"], task["id"], update_data
+                DATA.root["tasks"].id, task["name"], task["id"], update_data
             )

@@ -1,7 +1,5 @@
 """Module for handling automation behaviour"""
 
-import datetime
-
 from services.anytype.task_service import TaskService
 from services.anytype.space_service import SpaceService
 
@@ -36,7 +34,7 @@ class AnytypeService:
         Searches a specified space according to type and query
         Default to task type
         """
-        space_id = DATA[search_request["space_name"]["id"]]
+        space_id = DATA.root[search_request["space_name"].id]
         search_body = {}
         if search_request.get("types") is not None:
             search_body["types"] = search_request["types"]
@@ -65,7 +63,7 @@ class AnytypeService:
     def fetch_data(self, data, props: bool = False):
         """Fetch object based on data"""
         # TODO: ???
-        space_id = DATA[data["space_name"]]["id"]
+        space_id = DATA.root[data["space_name"]].id
         fetched = {}
         if data["category"] == "types":
             fetched = self.anytype.get_types(space_id, props)
@@ -73,58 +71,35 @@ class AnytypeService:
 
             fetched = self.anytype.get_templates(
                 space_id,
-                DATA[data["space_name"]]["types"][data["type_name"]],
+                DATA.root[data["space_name"]].types[data["type_name"]],
             )
         return fetched
 
     def view_list(self, space_name: str, query_name: str):
         """Formats view objects into consumable objects to add to this object"""
-        space_id = DATA[space_name]["id"]
+        space_id = DATA.root[space_name].id
         try:
-            query_id = DATA[space_name]["queries"][query_name]
+            query_id = DATA.root[space_name].queries[query_name]
         except KeyError as exc:
             raise KeyError("query not found in local data, ") from exc
         return self.anytype.get_views_list(space_id, query_id)
 
     def daily_rollover(self):
         """Daily automation script"""
-        dt_now = datetime.datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        dt_next = dt_now + datetime.timedelta(days=1)
+        dt_tmw_str = self.helper.next_date("1@day")
         if Config.data.get("task_reset"):
             logger.info("Running overdue tasks")
-            self.task.overdue(dt_now)
+            self.task.overdue(dt_tmw_str)
         logger.info("Daily Rollover completed")
-
-    def recurrent_check(self):
-        """Collect tasks for processing from completed view"""
-        logger.info("Running completed task processing")
-        tasks_to_check = self.anytype.get_list_view_objects(
-            DATA["tasks"].id,
-            DATA["tasks"].queries["Automation"].id,
-            DATA["tasks"].queries["Automation"].Done,
-        )
-        if not tasks_to_check:
-            return "No tasks to update"
-
-        for task in tasks_to_check:
-            next_date = (
-                self.helper.next_date(
-                    task["Rate"],
-                ),
-            )
-
-            self.task.task_status_reset(task, next_date)
-        return "Completed"
 
     def migrate_spaces(self, migrate_request: dict):
         """Copy types and copy objects of that type to new space"""
+        # TODO: rework with data model
         source_name = migrate_request["source_space_name"]
         target_id = migrate_request["target_space_id"]
         target_name = migrate_request["target_space_name"]
 
-        DATA[target_name] = {"id": migrate_request["target_space_id"]}
+        DATA.root[target_name] = {"id": migrate_request["target_space_id"]}
 
         return_data = {}
 

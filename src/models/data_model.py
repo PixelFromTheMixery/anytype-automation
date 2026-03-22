@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from pydantic import BaseModel, ConfigDict, Field, model_validator, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
 class QueryData(BaseModel):
@@ -46,27 +46,7 @@ class SpaceData(BaseModel):
     props: Dict[str, PropData] = Field(default_factory=dict)
 
 
-class ReferenceData(BaseModel):
-    """converts top level keys into entries. E.g. tasks, journal..."""
+class ReferenceData(RootModel):
+    """Top-level keys map to Dict[str, SpaceData]. E.g. tasks, journal..."""
 
-    model_config = ConfigDict(extra="allow")
-
-    @model_validator(mode="after")
-    def validate_extra_spaces(self) -> "ReferenceData":
-        space_adapter = TypeAdapter(SpaceData)
-
-        if self.__pydantic_extra__:
-            validated_extra = {}
-            for key, value in self.__pydantic_extra__.items():
-                validated_extra[key] = space_adapter.validate_python(value)
-
-            self.__dict__.update(validated_extra)
-            self.__pydantic_extra__.update(validated_extra)
-
-        return self
-
-    def __getitem__(self, item: str) -> SpaceData:
-        """Allows ref['tasks'] syntax"""
-        if self.__pydantic_extra__ and item in self.__pydantic_extra__:
-            return self.__pydantic_extra__[item]
-        return getattr(self, item)
+    root: Dict[str, SpaceData]

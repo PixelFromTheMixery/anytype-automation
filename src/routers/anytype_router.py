@@ -6,6 +6,9 @@ from utils.data import DataManager
 from utils.logger import logger
 
 from services.anytype.core_service import AnytypeService
+from services.anytype.journal_service import JournalService
+from services.anytype.task_service import TaskService
+
 
 from models.data_request import DataRequest
 from models.migrate_request import MigrateRequest
@@ -14,6 +17,8 @@ from models.search_request import SearchRequest
 
 router = APIRouter()
 anytype_automation = AnytypeService()
+anytype_tasks = TaskService()
+anytype_journal = JournalService()
 
 
 @router.get("/daily_rollover", tags=["scheduled"])
@@ -27,14 +32,14 @@ async def task_status_reset():
 async def recurrent_check():
     """Endpoint for task maintenance"""
     logger.info("Recurrent check endpoint called")
-    return anytype_automation.recurrent_check()
+    return anytype_tasks.recurrent_check()
 
 
 @router.get("/day_journal", tags=["scheduled"])
 async def day_journal():
     """Endpoint to fetch or create day journal instance id"""
     logger.info("Day Journal endpoint called")
-    return anytype_automation.find_or_create_day_journal()
+    return anytype_journal.find_or_create_day_journal()
 
 
 @router.post("/search", tags=["tools"])

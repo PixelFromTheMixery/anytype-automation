@@ -1,3 +1,5 @@
+from models.data_model import QueryData, PropData, TypeData
+
 from utils.anytype import AnyTypeUtils
 from utils.data import DataManager
 from utils.helper import Helper
@@ -76,7 +78,7 @@ class SpaceService:
 
                 props[target][prop]["options"][option] = (
                     self.anytype.add_tag_to_select_property(
-                        DATA[target], props[target][prop]["id"], data
+                        DATA.root[target], props[target][prop]["id"], data
                     )
                 )
         return props
@@ -87,28 +89,29 @@ class SpaceService:
         - custom (+ Query,) types and their templates
         - properties and their options
         """
+        # TODO: Rework for data model
         data_types = [t for t in DEFAULT_TYPES if t != "Query"]
-        DATA[space_name]["types"] = self.anytype.get_types(
-            DATA[space_name]["id"], system_types=data_types
+        DATA.root[space_name].types = self.anytype.get_types(
+            DATA.root[space_name].id, system_types=data_types
         )
-        DATA[space_name]["queries"] = self.anytype.get_lists(
-            DATA[space_name]["id"], DATA[space_name]["types"]["Query"]["id"]
+        DATA.root[space_name].queries = self.anytype.get_lists(
+            DATA.root[space_name].id, DATA.root[space_name].types["Query"].id
         )
-        DATA[space_name]["props"] = self.anytype.get_property_list(
-            DATA[space_name]["id"], system_props=DEFAULT_PROPS
+        DATA.root[space_name].props = self.anytype.get_property_list(
+            DATA.root[space_name].id, system_props=DEFAULT_PROPS
         )
         DataManager.update()
-        return DATA[space_name]
+        return DATA.root[space_name]
 
     # TODO: Update to dictionary access if appropriate, rework for new reference structure
     def sync_spaces(self, sync_data):
         """Syncs spaces and update self file"""
         source_name = sync_data["source_space_name"]
-        source_id = DATA[source_name]["id"]
+        source_id = DATA.root[source_name].id
         source_props = self.anytype.get_property_list(source_id)
 
         target_name = sync_data["target_space_name"]
-        target_id = DATA[target_name]["id"]
+        target_id = DATA.root[target_name].id
         target_props = self.anytype.get_property_list(target_id)
 
         props_to_create = list(source_props.keys() - target_props.keys())
@@ -120,13 +123,13 @@ class SpaceService:
             }
             self.anytype.create_property(target_id, data)
 
-        DATA[source_name]["props"] = self.anytype.get_property_list(source_id)
-        DATA[target_name]["props"] = self.anytype.get_property_list(target_id)
+        DATA.root[source_name].props = self.anytype.get_property_list(source_id)
+        DATA.root[target_name].props = self.anytype.get_property_list(target_id)
 
         DataManager().update()
 
         # TODO: defunct
-        # self.option_matching(DATA["tags"], source_name, target_name)
+        # self.option_matching(DATA.root["tags"], source_name, target_name)
 
         DataManager().update()
 
@@ -164,7 +167,7 @@ class SpaceService:
 
         for object_name in objects_to_create:
             object_dict = self.anytype.get_object_by_id(
-                DATA[source_name]["id"], objects_to_create[object_name], False
+                DATA.root[source_name].id, objects_to_create[object_name], False
             )["object"]
             obj_data = {
                 "name": object_dict["name"],
@@ -194,25 +197,25 @@ class SpaceService:
     def get_or_create_property(self, space_name, data):
         """Get or create a property in a given space."""
         try:
-            return DATA[space_name]["props"][data["prop_name"]]
+            return DATA.root[space_name].props[data["prop_name"]]
         except IndexError:
-            prop_id = self.anytype.create_property(DATA[space_name]["id"], data)
-            DATA[space_name]["props"][data["prop_name"]]["id"] = prop_id
+            prop_id = self.anytype.create_property(DATA.root[space_name].id, data)
+            DATA.root[space_name].props[data["prop_name"]].id = prop_id
             DataManager().update()
 
     # def get_or_create_tag(self, space_name, data):
     #     """Get or create a tag for a given property in archive."""
     #     # TODO: ???
     #     try:
-    #         return DATA["tags"][space_name][data["prop_key"]][data["tag_key"]]
+    #         return DATA.root["tags"][space_name][data["prop_key"]][data["tag_key"]]
     #     except KeyError:
     #         tag_id = self.anytype.add_tag_to_select_property(
-    #             DATA[space_name],
+    #             DATA.root[space_name],
     #             data["prop_key"],
     #             data["tag_key"],
     #             data["value"],
     #         )
-    #         DATA["tags"][space_name][data["prop_key"]][data["tag_key"]] = tag_id
+    #         DATA.root["tags"][space_name][data["prop_key"]][data["tag_key"]] = tag_id
     #         DataManager().update()
 
     #         return tag_id
