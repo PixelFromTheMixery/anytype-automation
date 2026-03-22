@@ -6,6 +6,8 @@ import yaml
 from utils.api_tools import make_call
 from utils.config import Config
 
+from models.data_model import ReferenceData
+
 DATA_ID = "bafyreickhqath2lc5rwayclybimuxhjpuvllbcrfsx3ot2ddeenuz2lr2a"
 TEST_DATA_ID = "bafyreidlqnenmanyxemvlw56ahjgwtjzhdrluykrqf4yqmulbkzvjadnwu"
 
@@ -18,7 +20,7 @@ ID_OBJECT_URL = (
 class DataManager:
     """Manager for Data Object"""
 
-    data = {}
+    data: ReferenceData = None
     lock = threading.Lock()
     url = ID_OBJECT_URL
     url += TEST_DATA_ID if Config.data["local"] else DATA_ID
@@ -49,8 +51,7 @@ class DataManager:
 
         new_data = yaml.safe_load(markdown.replace("```\n", ""))
 
-        cls.data.clear()
-        cls.data.update(new_data)
+        cls.data = ReferenceData(**new_data)
 
         return cls.data
 

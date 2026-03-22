@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from services.anytype_service import AnytypeService
+from services.anytype.core_service import AnytypeService
 from services.pushover_service import PushoverService
 from utils.logger import logger
 

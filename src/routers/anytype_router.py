@@ -2,13 +2,15 @@
 
 from fastapi import APIRouter
 
+from utils.data import DataManager
+from utils.logger import logger
+
+from services.anytype.core_service import AnytypeService
+
 from models.data_request import DataRequest
 from models.migrate_request import MigrateRequest
 from models.space_sync_request import SpaceSyncRequest
 from models.search_request import SearchRequest
-from services.anytype_service import AnytypeService
-from utils.data import DataManager
-from utils.logger import logger
 
 router = APIRouter()
 anytype_automation = AnytypeService()
@@ -86,17 +88,3 @@ async def list_views(
     """Endpoint to fetch automation list view"""
     logger.info("View fetcher endpoint called")
     return anytype_automation.view_list(space_name, query_name)
-
-
-@router.get("/other_anytype")
-async def other_endpoint():
-    """Endpoint for throwaway automations"""
-    logger.info("Anytype other endpoint called")
-    return anytype_automation.other()
-
-
-@router.get("/test_anytype")
-async def test_endpoint():
-    """Endpoint for throwaway tests"""
-    logger.info("Anytype test endpoint called")
-    return anytype_automation.test()
