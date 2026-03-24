@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter
 
-from utils.data import DataManager
 from utils.logger import logger
 
 from services.anytype.core_service import AnytypeService
@@ -63,14 +62,6 @@ async def scan_space(space_name):
     return anytype_automation.scan_space(space_name)
 
 
-@router.get("/reload", tags=["tools"])
-async def reload():
-    """Endpoint for Reloading local DATA"""
-    logger.info("Reload DATA endpoint called")
-    DataManager.reload()
-    return DataManager.data
-
-
 @router.post("/migrate")
 async def migrate(migrate_request: MigrateRequest):
     """Endpoint for copying types and their from one space to another"""
@@ -83,13 +74,3 @@ async def list_types(data_request: DataRequest):
     """Endpoint for getting various data"""
     logger.info("Data fetch endpoint called")
     return anytype_automation.fetch_data(DataRequest.model_dump(data_request))
-
-
-@router.post("/list_views")
-async def list_views(
-    space_name: str,
-    query_name: str,
-):
-    """Endpoint to fetch automation list view"""
-    logger.info("View fetcher endpoint called")
-    return anytype_automation.view_list(space_name, query_name)

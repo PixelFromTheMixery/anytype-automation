@@ -6,6 +6,7 @@ import random
 import time
 import urllib
 import requests
+from base64 import b64encode
 from dotenv import load_dotenv
 
 from utils.logger import logger
@@ -18,17 +19,36 @@ DELAY: int = 2
 TIMEOUT: int = 3
 
 RESPONSE_MAP = {
-    "delete": lambda u, h: requests.delete(u, headers=h, timeout=TIMEOUT),
-    "get": lambda u, h: requests.get(u, headers=h, timeout=TIMEOUT),
-    "patch": lambda u, h, d: requests.patch(u, headers=h, timeout=TIMEOUT, data=d),
-    "post": lambda u, h, d: requests.post(u, headers=h, timeout=TIMEOUT, data=d),
-    "put": lambda u, h, d: requests.put(u, headers=h, timeout=TIMEOUT, data=d),
+    "delete": lambda u, h, d=None: requests.delete(u, headers=h, timeout=TIMEOUT),
+    "get": lambda u, h, d=None: requests.get(u, headers=h, timeout=TIMEOUT),
+    "patch": lambda u, h, d: requests.patch(
+        u,
+        headers=h,
+        timeout=TIMEOUT,
+        json=d if isinstance(d, dict) else None,
+        data=d if isinstance(d, str) else None,
+    ),
+    "post": lambda u, h, d: requests.post(
+        u,
+        headers=h,
+        timeout=TIMEOUT,
+        json=d if isinstance(d, dict) else None,
+        data=d if isinstance(d, str) else None,
+    ),
+    "put": lambda u, h, d: requests.put(
+        u,
+        headers=h,
+        timeout=TIMEOUT,
+        json=d if isinstance(d, dict) else None,
+        data=d if isinstance(d, str) else None,
+    ),
 }
 
 
 def request_builder(url: str, data: dict = None, target: str = "anytype"):
     """Builds request scaffolding for API calls"""
     headers = {}
+    data_pack = data if data else None
 
     if target == "anytype":
         headers = {
@@ -36,16 +56,23 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
             "Content-Type": "application/json",
             "Anytype-Version": "2025-11-08",
         }
-        data = json.dumps(data) if data else None
-        logger.info(data)
+
         url = "http://localhost:" + Config.data["api_port"] + url
+    elif target == "toggl":
+        auth_str = os.getenv("TOGGL_KEY") + ":api_token"
+        token_name = b64encode(auth_str.encode("ascii")).decode()
+        headers = {
+            "Authorization": f"Basic {token_name}",
+            "Content-Type": "application/json",
+        }
 
     else:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        data = urllib.parse.urlencode(data)
-    return url, headers, data
+        data_pack = urllib.parse.urlencode(data)
+
+    return url, headers, data_pack
 
 
 def exception_handler(e, result, attempt):
@@ -65,7 +92,7 @@ def make_call(
 ):
     """Makes web request with retry and some error handling"""
 
-    url, headers, json_data = request_builder(url, data, target)
+    url, headers, data_pack = request_builder(url, data, target)
 
     attempt = 0
     while True:
@@ -73,7 +100,7 @@ def make_call(
             logger.info(f"Attempt to {info}: {attempt} of {RETRIES}")
 
             response = (
-                RESPONSE_MAP[category](url, headers, json_data)
+                RESPONSE_MAP[category](url, headers, data_pack)
                 if category in ["patch", "post", "put"]
                 else RESPONSE_MAP[category](url, headers)
             )

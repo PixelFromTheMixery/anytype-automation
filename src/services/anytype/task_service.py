@@ -1,6 +1,7 @@
 """Mask Management module"""
 
 import json
+import urllib.parse
 
 from utils.anytype import AnyTypeUtils
 from utils.config import Config
@@ -22,24 +23,55 @@ class TaskService:
         self.helper = Helper()
 
     def recurrent_check(self):
-        """Collect tasks for processing from completed view"""
-        logger.info("Running completed task processing")
-        tasks_to_check = self.anytype.get_list_view_objects(
-            DATA.root["tasks"].id,
-            DATA.root["tasks"].queries["Automation"].id,
-            DATA.root["tasks"].queries["Automation"].Done,
-        )
-        if not tasks_to_check:
-            return "No tasks to update"
-
-        for task in tasks_to_check:
-
-            next_date = (
-                self.helper.next_date(task["Rate"]) if "Rate" in task.keys() else None
+        """Collect tasks for processing"""
+        job_list = []
+        if Config.data["task_reset"]:
+            job_list.append("Complete Tasks")
+            logger.info("Running task processing")
+            tasks_to_check = self.anytype.get_list_view_objects(
+                DATA.root["tasks"].id,
+                DATA.root["tasks"].queries["Automation"].id,
+                DATA.root["tasks"].queries["Automation"].Done,
             )
 
-            self.task_status_reset(task, next_date)
-        return "Completed"
+            for task in tasks_to_check:
+
+                next_date = (
+                    self.helper.next_date(task["Rate"])
+                    if "Rate" in task.keys()
+                    else None
+                )
+
+                self.task_status_reset(task, next_date)
+        if Config.data["toggl"]:
+            job_list.append("Toggle URL")
+            new_tasks = self.anytype.get_list_view_objects(
+                DATA.root["tasks"].id,
+                DATA.root["tasks"].queries["Automation"].id,
+                DATA.root["tasks"].queries["Automation"].New,
+            )
+
+            for task in new_tasks:
+                build_url = Config.data["api_addr"] + urllib.parse.quote(
+                    "/toggl/" + f"{task["Mission"]}/{task["name"]}/" + "start_timer"
+                )
+                data = {
+                    "properties": [
+                        {
+                            "key": "status",
+                            "select": DATA.root["tasks"]
+                            .props["Status"]
+                            .options["Ready"]
+                            .id,
+                        },
+                        {"key": "timer", "url": build_url},
+                    ]
+                }
+                self.anytype.update_object(
+                    DATA.root["tasks"].id, task["name"], task["id"], data
+                )
+
+        return "Task Check Jobs completed: " + ", ".join(job_list)
 
     def overdue(self, dt_next_str):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""

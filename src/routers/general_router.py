@@ -1,6 +1,9 @@
 from http import HTTPStatus
 from fastapi import APIRouter, Depends
+
+
 from services.health_service import HealthService
+from utils.data import DataManager
 from utils.logger import logger
 
 
@@ -18,3 +21,11 @@ async def get_health_endpoint(
     """Health Endpoint, should always return 200 OK"""
     logger.info("Health endpoint called")
     return await health_service.check_health("OK")
+
+
+@router.get("/reload", tags=["tools"])
+async def reload():
+    """Endpoint for Reloading local DATA"""
+    logger.info("Reload DATA endpoint called")
+    DataManager.reload()
+    return DataManager.data
