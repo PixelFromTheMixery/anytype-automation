@@ -35,12 +35,9 @@ class TaskService:
             )
 
             for task in tasks_to_check:
-
-                next_date = (
-                    self.helper.next_date(task["Rate"])
-                    if "Rate" in task.keys()
-                    else None
-                )
+                next_date = None
+                if task.get("Rate") not in ["", None]:
+                    next_date = self.helper.next_date(task["Rate"])
 
                 self.task_status_reset(task, next_date)
         if Config.data["toggl"]:
