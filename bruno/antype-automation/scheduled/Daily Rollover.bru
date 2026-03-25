@@ -1,0 +1,16 @@
+meta {
+  name: Daily Rollover
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/daily_rollover
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

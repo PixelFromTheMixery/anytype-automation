@@ -1,0 +1,23 @@
+meta {
+  name: List Views
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/list_views
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "space_name": "tasks",
+    "query_name": "automation"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
