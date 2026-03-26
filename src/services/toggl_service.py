@@ -12,7 +12,7 @@ from utils.config import Config
 
 DATA = DataManager.get()
 TOGGL_WORKSPACE = Config.data["toggl_workspace"]
-TOGGL_URL = "https://api.track.toggl.com/api/v9/workspaces/" + TOGGL_WORKSPACE
+TOGGL_API = "https://api.track.toggl.com/api/v9/workspaces/" + TOGGL_WORKSPACE
 
 
 class TogglService:
@@ -26,7 +26,7 @@ class TogglService:
 
     def start_timer(self, project, task_name):
         """Start a time entry"""
-        time_entry_url = TOGGL_URL + "/time_entries"
+        time_entry_url = TOGGL_API + "/time_entries"
         project_id = self.project_cache.get(project)
         data = {
             "created_with": "Anytype Automation",
@@ -46,7 +46,7 @@ class TogglService:
     def collect_projects(
         self,
     ):
-        project_url = TOGGL_URL + "/projects"
+        project_url = TOGGL_API + "/projects"
 
         project_map = {}
         project_list = make_call(
@@ -57,3 +57,8 @@ class TogglService:
             project_map[project["name"]] = project["id"]
 
         return project_map
+
+    def check_subscriptions(
+        self,
+    ):
+        pass

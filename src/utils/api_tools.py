@@ -19,8 +19,8 @@ DELAY: int = 2
 TIMEOUT: int = 3
 
 RESPONSE_MAP = {
-    "delete": lambda u, h, d=None: requests.delete(u, headers=h, timeout=TIMEOUT),
-    "get": lambda u, h, d=None: requests.get(u, headers=h, timeout=TIMEOUT),
+    "delete": lambda u, h: requests.delete(u, headers=h, timeout=TIMEOUT),
+    "get": lambda u, h: requests.get(u, headers=h, timeout=TIMEOUT),
     "patch": lambda u, h, d: requests.patch(
         u,
         headers=h,
