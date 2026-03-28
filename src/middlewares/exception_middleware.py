@@ -4,10 +4,11 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import requests
 
-from utils.config import Config
 from utils.exception import AnytypeException
 from utils.logger import logger
 from utils.pushover import PushoverUtils
+
+from settings import generate_settings
 
 
 class ExceptionMiddleware(BaseHTTPMiddleware):
@@ -15,8 +16,9 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
-        self.pushover = PushoverUtils()
-        self.local = Config.data["local"]
+        settings = generate_settings()
+        if settings.config.pushover:
+            self.pushover = PushoverUtils()
 
     async def dispatch(self, request, call_next):
         try:
@@ -44,9 +46,9 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 "path": f"{request.method} {request.url.path}",
             }
 
-            if not self.local:
+            try:
                 self.pushover.send_message(
                     f"API Error: {error_type}", detail, priority=1
                 )
-
-            return JSONResponse(content, 500)
+            finally:
+                return JSONResponse(content, 500)

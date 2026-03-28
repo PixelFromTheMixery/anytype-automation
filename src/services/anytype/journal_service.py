@@ -1,16 +1,16 @@
 from utils.anytype import AnyTypeUtils
-from utils.data import DataManager
 from utils.helper import Helper
 from utils.pushover import PushoverUtils
 
-DATA = DataManager.get()
-
 
 class JournalService:
-    def __init__(self):
+    def __init__(self, settings):
+        self.settings = settings
+        self.data = self.settings.data.anytype
         self.anytype = AnyTypeUtils()
         self.helper = Helper()
-        self.pushover = PushoverUtils()
+        if settings.config.pushover:
+            self.pushover = PushoverUtils()
 
     def find_or_create_day_journal(self):
         """Searches for or creates a journal for the day"""
@@ -18,7 +18,7 @@ class JournalService:
         date_str = dt_now.strftime(r"%d.%m.%y")
 
         entry = self.anytype.search(
-            DATA.root["journal"].id,
+            self.data["journal"].id,
             "looking for journal object",
             {"query": date_str},
         )
@@ -28,14 +28,16 @@ class JournalService:
             data = {
                 "name": date_str,
                 "type_key": "entry",
-                "template_id": DATA.root["journal"].types["Entry"].templates["Day"],
+                "template_id": self.settings.data["journal"]
+                .types["Entry"]
+                .templates["Day"],
             }
 
             # Matching output of search
             entry = {
                 # fmt: off
                 date_str: self.anytype.create_object(
-                    DATA.root["journal"].id, data
+                    self.data.journal.id, data
                 )["object"]["id"]
             }
 
@@ -53,7 +55,7 @@ class JournalService:
             message = "Hey, hey, please take a moment to check in with "
 
         link = f"""<a href={self.helper.make_deeplink(
-            DATA.root["journal"].id, entry[date_str]
+            self.data["journal"].id, entry[date_str]
         )}>this</a>!"""
 
         self.pushover.send_message("Check in", message + link)

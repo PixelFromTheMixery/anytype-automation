@@ -1,22 +1,34 @@
 """API module to for sharing"""
 
-import json
-import os
+from base64 import b64encode
 import random
 import time
+from typing import Optional
 import urllib
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import requests
-from base64 import b64encode
-from dotenv import load_dotenv
 
 from utils.logger import logger
-from utils.config import Config
-
-load_dotenv()
 
 RETRIES: int = 3
 DELAY: int = 2
 TIMEOUT: int = 3
+
+
+class EnvSettings(BaseSettings):
+    """Env variables, usually tokens and env settings"""
+
+    anytype_key: str
+    anytype_port: str = "31012"
+    pushover_key: Optional[str] = None
+    pushover_user: Optional[str] = None
+    toggl_key: Optional[str] = None
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+keys = EnvSettings()
 
 RESPONSE_MAP = {
     "delete": lambda u, h: requests.delete(u, headers=h, timeout=TIMEOUT),
@@ -52,17 +64,17 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
 
     if target == "anytype":
         headers = {
-            "Authorization": f'Bearer {os.getenv("ANYTYPE_KEY")}',
+            "Authorization": "Bearer " + keys.anytype_key,
             "Content-Type": "application/json",
             "Anytype-Version": "2025-11-08",
         }
 
-        url = "http://localhost:" + Config.data["api_port"] + url
+        url = "http://localhost:" + keys.anytype_port + url
     elif target == "toggl":
-        auth_str = os.getenv("TOGGL_KEY") + ":api_token"
+        auth_str = keys.toggl_key + ":api_token"
         token_name = b64encode(auth_str.encode("ascii")).decode()
         headers = {
-            "Authorization": f"Basic {token_name}",
+            "Authorization": "Basic " + {token_name},
             "Content-Type": "application/json",
         }
 
@@ -70,6 +82,9 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         }
+        data["token"] = keys.pushover_key
+        data["user"] = keys.pushover_user
+
         data_pack = urllib.parse.urlencode(data)
 
     return url, headers, data_pack

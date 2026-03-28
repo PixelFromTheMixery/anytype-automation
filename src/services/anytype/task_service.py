@@ -4,34 +4,35 @@ import json
 import urllib.parse
 
 from utils.anytype import AnyTypeUtils
-from utils.config import Config
-from utils.data import DataManager
 from utils.helper import Helper
 from utils.logger import logger
 from utils.pushover import PushoverUtils
 
-DATA = DataManager.get()
+
 RESET = "Reset Count"
 
 
 class TaskService:
     """For managing"""
 
-    def __init__(self):
+    def __init__(self, settings):
+        self.settings = settings
+        self.data = self.settings.data.anytype
         self.anytype = AnyTypeUtils()
-        self.pushover = PushoverUtils()
+        if settings.config.pushover:
+            self.pushover = PushoverUtils()
         self.helper = Helper()
 
     def recurrent_check(self):
         """Collect tasks for processing"""
         job_list = []
-        if Config.data["task_reset"]:
+        if self.settings.config.task_reset:
             job_list.append("Complete Tasks")
             logger.info("Running task processing")
             tasks_to_check = self.anytype.get_list_view_objects(
-                DATA.root["tasks"].id,
-                DATA.root["tasks"].queries["Automation"].id,
-                DATA.root["tasks"].queries["Automation"].Done,
+                self.data["tasks"].id,
+                self.data["tasks"].queries["Automation"].id,
+                self.data["tasks"].queries["Automation"].Done,
             )
 
             for task in tasks_to_check:
@@ -40,23 +41,23 @@ class TaskService:
                     next_date = self.helper.next_date(task["Rate"])
 
                 self.task_status_reset(task, next_date)
-        if Config.data["toggl"]:
+        if self.settings.config.toggl:
             job_list.append("Toggle URL")
             new_tasks = self.anytype.get_list_view_objects(
-                DATA.root["tasks"].id,
-                DATA.root["tasks"].queries["Automation"].id,
-                DATA.root["tasks"].queries["Automation"].New,
+                self.data["tasks"].id,
+                self.data["tasks"].queries["Automation"].id,
+                self.data["tasks"].queries["Automation"].New,
             )
 
             for task in new_tasks:
-                build_url = Config.data["api_addr"] + urllib.parse.quote(
+                build_url = self.config.api_addr + urllib.parse.quote(
                     "/toggl/" + f"{task["Mission"]}/{task["name"]}/" + "start_timer"
                 )
                 data = {
                     "properties": [
                         {
                             "key": "status",
-                            "select": DATA.root["tasks"]
+                            "select": self.data["tasks"]
                             .props["Status"]
                             .options["Ready"]
                             .id,
@@ -65,7 +66,10 @@ class TaskService:
                     ]
                 }
                 self.anytype.update_object(
-                    DATA.root["tasks"].id, task["name"], task["id"], data
+                    self.data["tasks"].id,
+                    task["name"],
+                    task["id"],
+                    data,
                 )
 
         return "Task Check Jobs completed: " + ", ".join(job_list)
@@ -73,9 +77,9 @@ class TaskService:
     def overdue(self, dt_next_str):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            DATA.root["tasks"].id,
-            DATA.root["tasks"].queries["Automation"].id,
-            DATA.root["tasks"].queries["Automation"].Overdue,
+            self.data["tasks"].id,
+            self.data["tasks"].queries["Automation"].id,
+            self.data["tasks"].queries["Automation"].Overdue,
         )
         if tasks_to_check is None:
             return "raise exception"
@@ -89,15 +93,15 @@ class TaskService:
 
             data["properties"].append({"key": "due_date", "date": dt_next_str})
 
-            if Config.data["task_review_threshold"] > 0:
+            if self.settings.config.task_review_threshold > 0:
                 data = self.task_review_cleanup(task, data)
 
-                if task[RESET] > Config.data["task_review_threshold"] - 1:
+                if task[RESET] > self.settings.config.task_review_cleanup - 1:
                     self.anytype.create_object(
-                        DATA.root["journal"].id,
+                        self.data["journal"].id,
                         {
                             # fmt: off
-                            "template_id": DATA.root[
+                            "template_id": self.data[
                                 "journal"].types["Prompt"].templates["Task Review"
                             ],
                             "name": task["name"],
@@ -106,7 +110,7 @@ class TaskService:
                                 {
                                     "key": "url",
                                     "url": self.helper.make_deeplink(
-                                        DATA.root["tasks"].id, task["id"]
+                                        self.data["tasks"].id, task["id"]
                                     ),
                                 }
                             ],
@@ -116,29 +120,32 @@ class TaskService:
                         {
                             "key": "status",
                             # fmt: off
-                            "select": DATA.root["tasks"].props["Status"].options["Review"].id,
+                            "select": self.data["tasks"].props["Status"].options["Review"].id,
                         }
                     )
                     tasks_to_review.append(task["name"])
 
             self.anytype.update_object(
-                DATA.root["tasks"].id, task["name"], task["id"], data
+                self.data["tasks"].id, task["name"], task["id"], data
             )
 
-        if len(tasks_to_check) - len(tasks_to_review) > 15 and Config.data["pushover"]:
+        if (
+            len(tasks_to_check) - len(tasks_to_review) > 15
+            and self.settings.config.pushover
+        ):
             self.pushover.send_message(
                 "Loads of tasks incoming",
                 f"There are {len(tasks_to_check)} incoming. Please have a gentle day.",
                 1,
             )
 
-        if tasks_to_review and Config.data["pushover"]:
+        if tasks_to_review and self.settings.config.pushover:
             message = (
                 f"{len(tasks_to_review)} tasks have been reset 5 times. Please review "
             )
             message += "<a href="
             message += self.helper.make_deeplink(
-                DATA.root["journal"].id,
+                self.data["journal"].id,
                 "bafyreigcem27rencgalo2mtmkvxaet5cdrq6yagyin32cjpyy4ttkufcde",
             )
             message += ">your Journal space.<a/>"
@@ -157,14 +164,14 @@ class TaskService:
         }
 
         metadata_dict = {}
-        sorting = Config.data["task_log_props"]
+        sorting = self.settings.config.task_log_props
         for prop in task:
             if prop not in sorting:
                 continue
             metadata_dict[prop] = task[prop]
         sorted_data = {k: metadata_dict[k] for k in sorting}
         data["properties"].append({"key": "metadata", "text": json.dumps(sorted_data)})
-        self.anytype.create_object(DATA.root["journal"].id, data)
+        self.anytype.create_object(self.data["journal"].id, data)
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
@@ -183,11 +190,11 @@ class TaskService:
         Reset tasks that recur
         Update task based on reset count
         """
-        if Config.data["task_logs"]:
+        if self.settings.config.task_logs:
             self.log_task_in_archive(task)
 
         if next_date is None:
-            self.anytype.delete_object(DATA.root["tasks"].id, task["name"], task["id"])
+            self.anytype.delete_object(self.data["tasks"].id, task["name"], task["id"])
         else:
             update_data = {
                 "properties": [
@@ -196,10 +203,10 @@ class TaskService:
                     {
                         "key": "status",
                         # fmt: off
-                        "select": DATA.root["tasks"].props["Status"].options["Repeating"].id,
+                        "select": self.data["tasks"].props["Status"].options["Repeating"].id,
                     },
                 ]
             }
             self.anytype.update_object(
-                DATA.root["tasks"].id, task["name"], task["id"], update_data
+                self.data["tasks"].id, task["name"], task["id"], update_data
             )

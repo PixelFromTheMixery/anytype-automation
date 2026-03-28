@@ -1,12 +1,19 @@
 """Notification service for Anytype."""
 
 import datetime
+from fastapi import Depends
 
 from utils.anytype import AnyTypeUtils
-from utils.config import Config
 
 from utils.helper import Helper
 from utils.pushover import PushoverUtils
+
+from settings import generate_settings
+
+
+def get_settings():
+    """Generates Settings singleton"""
+    return generate_settings()
 
 
 class PushoverService:

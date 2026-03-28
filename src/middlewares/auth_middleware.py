@@ -6,13 +6,17 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from utils.logger import logger
 from utils.pushover import PushoverUtils
 
+from settings import generate_settings
+
 
 class IPAllowlistMiddleware(BaseHTTPMiddleware):
     """Class for IP allowlist middleware"""
 
     def __init__(self, app):
         super().__init__(app)
-        self.pushover = PushoverUtils()
+        settings = generate_settings()
+        if settings.config.pushover:
+            self.pushover = PushoverUtils()
         self.allowed_ips = [
             "100.89.127.5",
             "100.118.137.32",

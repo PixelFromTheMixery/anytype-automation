@@ -21,6 +21,7 @@ keywords = ["anytype", "automation", "api", "fastapi"]
 dependencies = [
     "fastapi",            # Web framework
     "pydantic",           # Data validation
+    "pydantic_settings",  # Singleton
     "uvicorn",            # ASGI server
     "requests",           # HTTP calls
     "python-dateutil",    # relativedelta
@@ -36,4 +37,9 @@ dev = [
     "black",              # Code formatter
     "pytest",             # Testing framework
     "ruff",               # Fast linting (optional but recommended for 2026)
+]
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "no-member",
 ]

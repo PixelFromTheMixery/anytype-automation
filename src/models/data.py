@@ -1,5 +1,9 @@
+"""Data model for local caching"""
+
 from typing import Dict, Optional
-from pydantic import BaseModel, ConfigDict, Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field
+
+from utils.helper import Helper
 
 
 class QueryData(BaseModel):
@@ -46,7 +50,12 @@ class SpaceData(BaseModel):
     props: Dict[str, PropData] = Field(default_factory=dict)
 
 
-class ReferenceData(RootModel):
+class ReferenceData(BaseModel):
     """Top-level keys map to Dict[str, SpaceData]. E.g. tasks, journal..."""
 
-    root: Dict[str, SpaceData]
+    anytype: Dict[str, SpaceData] = None
+    toggl: Dict[str, Dict] = {}
+
+    def file_sync(self):
+        """Writes model to local file for reference"""
+        Helper.read_write("data.yaml", "w", self.model_dump())

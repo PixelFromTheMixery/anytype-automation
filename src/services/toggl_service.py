@@ -3,31 +3,31 @@
 import datetime
 import urllib.parse
 
-from services.anytype.core_service import AnytypeService
+from fastapi import Depends
+
 from utils.anytype import AnyTypeUtils
 from utils.api_tools import make_call
-from utils.data import DataManager
 
-from utils.config import Config
+from settings import generate_settings
 
-DATA = DataManager.get()
-TOGGL_WORKSPACE = Config.data["toggl_workspace"]
-TOGGL_API = "https://api.track.toggl.com/api/v9/workspaces/" + TOGGL_WORKSPACE
+
+def get_settings():
+    """Generates Settings singleton"""
+    return generate_settings()
 
 
 class TogglService:
     """Toggl class for hosting functions"""
 
-    def __init__(self):
-        self.anytype_service = AnytypeService()
+    def __init__(self, settings):
+        self.settings = settings
         self.anytype_utils = AnyTypeUtils()
-        if Config.data["toggl"]:
-            self.project_cache = self.collect_projects()
+        self.api = "https://api.track.toggl.com/api/v9/workspaces/"
 
-    def start_timer(self, project, task_name):
+    def start_timer(self, project, task_name, settings=Depends(get_settings)):
         """Start a time entry"""
-        time_entry_url = TOGGL_API + "/time_entries"
-        project_id = self.project_cache.get(project)
+        time_entry_url = self.api + "/time_entries"
+        project_id = settings.data.toggl.projects.get(project)
         data = {
             "created_with": "Anytype Automation",
             "description": urllib.parse.unquote(task_name),
@@ -36,7 +36,7 @@ class TogglService:
             "start": datetime.datetime.now(datetime.timezone.utc)
             .isoformat()
             .replace("+00:00", "Z"),
-            "workspace_id": int(TOGGL_WORKSPACE),
+            "workspace_id": int(self.workspace),
         }
         make_call(
             "post", time_entry_url, "start time entry for " + task_name, data, "toggl"
@@ -46,7 +46,7 @@ class TogglService:
     def collect_projects(
         self,
     ):
-        project_url = TOGGL_API + "/projects"
+        project_url = self.api + self.settings.data.toggle.projects + "/projects"
 
         project_map = {}
         project_list = make_call(

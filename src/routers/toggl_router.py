@@ -1,11 +1,21 @@
+from functools import lru_cache
+
 from fastapi import APIRouter
 
 from services.toggl_service import TogglService
 
 from utils.logger import logger
 
+from settings import generate_settings
+
+
+@lru_cache
+def get_toggl_service():
+    return TogglService(generate_settings())
+
+
 router = APIRouter()
-toggl = TogglService()
+toggl = get_toggl_service()
 
 
 @router.get("/{project}/{task_name}/start_timer")
