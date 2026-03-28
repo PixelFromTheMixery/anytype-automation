@@ -1,0 +1,16 @@
+meta {
+  name: Data
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/general/data
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

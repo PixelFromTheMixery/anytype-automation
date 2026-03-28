@@ -59,9 +59,8 @@ class TogglService:
         )
 
         for project in project_list:
-            toggl_ref[workspace_name]["projects"][project["name"]] = project["id"]
+            toggl_ref["projects"][project["name"]] = project["id"]
 
-        toggl_ref["projects"] = project_list
         self.settings.data.toggl[workspace_name] = WorkspaceData(**toggl_ref)
 
         self.settings.data.file_sync()
