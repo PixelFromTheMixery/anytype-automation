@@ -74,9 +74,11 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         auth_str = keys.toggl_key + ":api_token"
         token_name = b64encode(auth_str.encode("ascii")).decode()
         headers = {
-            "Authorization": "Basic " + {token_name},
+            "Authorization": "Basic " + token_name,
             "Content-Type": "application/json",
         }
+        if "webhooks" in url:
+            headers["User-Agent"] = "pixelmixery@gmail.com"
 
     else:
         headers = {

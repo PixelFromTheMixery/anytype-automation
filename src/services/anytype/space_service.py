@@ -1,6 +1,6 @@
 """Service for managing Anytype Spaces"""
 
-from models.data import ReferenceData
+from models.data import SpaceData
 
 from utils.anytype import AnyTypeUtils
 from utils.helper import Helper
@@ -52,41 +52,8 @@ class SpaceService:
         self.data = settings.data.anytype
         self.anytype = AnyTypeUtils()
         self.helper = Helper()
-        if self.data is None:
+        if self.data == {}:
             self.scan_space("tasks", settings.config.task_space_id)
-
-    # def option_matching(self, props: dict, source: str, target: str):
-
-    #     """Ensures that select and multiselect fields have matching current options"""
-    #     # TODO: Refine
-    #     for prop in props[source]:
-    #         if props[source][prop]["format"] not in [
-    #             "select",
-    #             "multi_select",
-    #         ]:
-    #             continue
-
-    #         if props[target][prop]["options"] == []:
-    #             options_to_create = props[source][prop]["options"].keys()
-    #         else:
-    #             options_to_create = list(
-    #                 props[source][prop]["options"].keys()
-    #                 - props[target][prop]["options"].keys()
-    #             )
-    #         for option in options_to_create:
-    #             tag_info = props[source][prop]["options"][option]
-    #             data = {
-    #                 "color": tag_info["color"],
-    #                 "key": tag_info["key"],
-    #                 "name": option,
-    #             }
-
-    #             props[target][prop]["options"][option] = (
-    #                 self.anytype.add_tag_to_select_property(
-    #                     DATA.root[target], props[target][prop]["id"], data
-    #                 )
-    #             )
-    #     return props
 
     def scan_space(self, space_name, space_id):
         """
@@ -95,21 +62,17 @@ class SpaceService:
         - properties and their options
         """
 
-        anytype_ref = self.data if self.data else {}
-        anytype_ref[space_name] = {"id": space_id}
+        anytype_ref = {"id": space_id}
         data_types = [t for t in DEFAULT_TYPES if t != "Query"]
-        anytype_ref[space_name]["types"] = self.anytype.get_types(
-            space_id, system_types=data_types
-        )
-        anytype_ref[space_name]["queries"] = self.anytype.get_lists(
-            space_id, anytype_ref[space_name]["types"]["Query"]["id"]
+        anytype_ref["types"] = self.anytype.get_types(space_id, system_types=data_types)
+        anytype_ref["queries"] = self.anytype.get_lists(
+            space_id, anytype_ref["types"]["Query"]["id"]
         )
 
-        anytype_ref[space_name]["props"] = self.anytype.get_property_list(
+        anytype_ref["props"] = self.anytype.get_property_list(
             space_id, system_props=DEFAULT_PROPS
         )
-
-        self.settings.data = ReferenceData(anytype=anytype_ref)
+        self.settings.data.anytype[space_name] = SpaceData(**anytype_ref)
 
         self.settings.data.file_sync()
 
@@ -232,3 +195,36 @@ class SpaceService:
     #         DataManager().update()
 
     #         return tag_id
+
+    # def option_matching(self, props: dict, source: str, target: str):
+
+    #     """Ensures that select and multiselect fields have matching current options"""
+    #     # TODO: Refine
+    #     for prop in props[source]:
+    #         if props[source][prop]["format"] not in [
+    #             "select",
+    #             "multi_select",
+    #         ]:
+    #             continue
+
+    #         if props[target][prop]["options"] == []:
+    #             options_to_create = props[source][prop]["options"].keys()
+    #         else:
+    #             options_to_create = list(
+    #                 props[source][prop]["options"].keys()
+    #                 - props[target][prop]["options"].keys()
+    #             )
+    #         for option in options_to_create:
+    #             tag_info = props[source][prop]["options"][option]
+    #             data = {
+    #                 "color": tag_info["color"],
+    #                 "key": tag_info["key"],
+    #                 "name": option,
+    #             }
+
+    #             props[target][prop]["options"][option] = (
+    #                 self.anytype.add_tag_to_select_property(
+    #                     DATA.root[target], props[target][prop]["id"], data
+    #                 )
+    #             )
+    #     return props

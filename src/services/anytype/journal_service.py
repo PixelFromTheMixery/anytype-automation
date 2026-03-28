@@ -28,16 +28,14 @@ class JournalService:
             data = {
                 "name": date_str,
                 "type_key": "entry",
-                "template_id": self.settings.data["journal"]
-                .types["Entry"]
-                .templates["Day"],
+                "template_id": self.data["journal"].types["Entry"].templates["Day"],
             }
 
             # Matching output of search
             entry = {
                 # fmt: off
                 date_str: self.anytype.create_object(
-                    self.data.journal.id, data
+                    self.data["journal"].id, data
                 )["object"]["id"]
             }
 

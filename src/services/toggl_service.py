@@ -5,6 +5,8 @@ import urllib.parse
 
 from fastapi import Depends
 
+from models.data import WorkspaceData
+
 from utils.anytype import AnyTypeUtils
 from utils.api_tools import make_call
 
@@ -21,8 +23,12 @@ class TogglService:
 
     def __init__(self, settings):
         self.settings = settings
+        self.data = settings.data.toggl
         self.anytype_utils = AnyTypeUtils()
         self.api = "https://api.track.toggl.com/api/v9/workspaces/"
+        self.webhook = "https://api.track.toggl.com/webhooks/api/v1/"
+        if self.data == {}:
+            self.collect_projects("primary", self.settings.config.toggl_workspace)
 
     def start_timer(self, project, task_name, settings=Depends(get_settings)):
         """Start a time entry"""
@@ -43,22 +49,22 @@ class TogglService:
         )
         return f"Started {task_name} in {project}"
 
-    def collect_projects(
-        self,
-    ):
-        project_url = self.api + self.settings.data.toggle.projects + "/projects"
+    def collect_projects(self, workspace_name, workspace_id):
+        toggl_ref = {"id": workspace_id, "projects": {}}
 
-        project_map = {}
+        project_url = self.api + toggl_ref["id"] + "/projects"
+
         project_list = make_call(
             "get", project_url, "collect projects from toggl", None, "toggl"
         )
 
         for project in project_list:
-            project_map[project["name"]] = project["id"]
+            toggl_ref[workspace_name]["projects"][project["name"]] = project["id"]
 
-        return project_map
+        toggl_ref["projects"] = project_list
+        self.settings.data.toggl[workspace_name] = WorkspaceData(**toggl_ref)
 
-    def check_subscriptions(
-        self,
-    ):
+        self.settings.data.file_sync()
+
+    def setup_subscriptions(self, workspace_name):
         pass

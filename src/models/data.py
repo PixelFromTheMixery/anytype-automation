@@ -50,11 +50,16 @@ class SpaceData(BaseModel):
     props: Dict[str, PropData] = Field(default_factory=dict)
 
 
+class WorkspaceData(BaseModel):
+    id: str
+    projects: dict[str, int]
+
+
 class ReferenceData(BaseModel):
     """Top-level keys map to Dict[str, SpaceData]. E.g. tasks, journal..."""
 
-    anytype: Dict[str, SpaceData] = None
-    toggl: Dict[str, Dict] = {}
+    anytype: Dict[str, SpaceData] = {}
+    toggl: Dict[str, WorkspaceData] = {}
 
     def file_sync(self):
         """Writes model to local file for reference"""
