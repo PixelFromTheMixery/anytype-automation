@@ -3,6 +3,7 @@
 from utils.api_tools import make_call
 from utils.logger import logger
 
+
 URL = "/v1/spaces/"
 OBJ = "/objects/"
 PROPS = "/properties/"
@@ -50,7 +51,7 @@ class AnyTypeUtils:
         for type_obj in types["data"] if types is not None else []:
             if type_obj["name"] in system_types:
                 continue
-            type_dict = {"key": type_obj["key"], "id": type_obj["id"]}
+            type_dict = {"id": type_obj["id"], "key": type_obj["key"]}
             if props:
                 type_dict["plural_name"] = type_obj["plural_name"]
                 type_dict["layout"] = type_obj["layout"]

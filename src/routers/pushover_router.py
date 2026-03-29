@@ -1,21 +1,33 @@
 """Module that handles endpoints for pushover automation."""
 
+from functools import lru_cache
+
 from fastapi import APIRouter
 
-from services.anytype_service import AnytypeService
+from services.anytype.journal_service import JournalService
 from services.pushover_service import PushoverService
 from utils.logger import logger
 
+from settings import generate_settings
+
+
+@lru_cache
+def get_journal_service():
+    return JournalService(generate_settings())
+
+
 router = APIRouter()
-anytype_automation = AnytypeService()
+
+settings = generate_settings()
+anytype_journal = get_journal_service()
 pushover = PushoverService()
 
 
-@router.get("/test_pushover")
-async def create_repeating_obj():
-    """Endpoint to update overdue or no collection tasks"""
-    logger.info("Create repeating object endpoint called")
-    return pushover.create_object_and_notify("ritual", "morning", " - Morning")
+@router.get("/day_journal", tags=["scheduled"])
+async def day_journal():
+    """Endpoint to fetch or create day journal instance id"""
+    logger.info("Day Journal endpoint called")
+    return anytype_journal.find_or_create_day_journal()
 
 
 @router.get("/regular_task_alert")

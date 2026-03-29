@@ -1,21 +1,14 @@
 """Pushover utilities for sending notifications."""
 
-import os
-from dotenv import load_dotenv
-
 from utils.api_tools import make_call
-
-load_dotenv()
 
 
 class PushoverUtils:
-    """Class to handle Overpush notifications."""
+    """Class to handle Pushover notifications."""
 
     def __init__(self):
         self.url = "https://api.pushover.net/1/messages.json"
         self.data = {
-            "token": os.getenv("PUSHOVER_KEY"),
-            "user": os.getenv("PUSHOVER_USER"),
             "html": 1,
         }
 

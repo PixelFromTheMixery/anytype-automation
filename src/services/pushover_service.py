@@ -1,12 +1,19 @@
 """Notification service for Anytype."""
 
 import datetime
+from fastapi import Depends
 
 from utils.anytype import AnyTypeUtils
-from utils.config import Config
 
-from utils.helper import make_deeplink
+from utils.helper import Helper
 from utils.pushover import PushoverUtils
+
+from settings import generate_settings
+
+
+def get_settings():
+    """Generates Settings singleton"""
+    return generate_settings()
 
 
 class PushoverService:
@@ -14,6 +21,7 @@ class PushoverService:
 
     def __init__(self):
         self.anytype = AnyTypeUtils()
+        self.helper = Helper()
         self.pushover = PushoverUtils()
 
     def create_object_and_notify(
@@ -32,7 +40,7 @@ class PushoverService:
         data = {"type_key": type_name, "name": date_str + suffix}
 
         new_obj = self.anytype.create_object(space_id, data)
-        obj_url = make_deeplink(space_id, new_obj["object"]["id"])
+        obj_url = self.helper.make_deeplink(space_id, new_obj["object"]["id"])
 
         title = ""
         if type_name == "entry":
@@ -65,7 +73,7 @@ class PushoverService:
         title = f"Good {segment}!"
 
         tasks = self.anytype.get_list_view_objects(
-            task_segments[segment], "simple", Config["queries"]["task_by_day"]
+            task_segments[segment], "simple", Config.data["queries"]["task_by_day"]
         )
         if len(tasks) == 0:
             return None
@@ -73,7 +81,7 @@ class PushoverService:
         if len(tasks) > 1:
             message += "s"
         message += "<br>"
-        link = make_deeplink(
+        link = self.helper.make_deeplink(
             Config.data["spaces"]["journal"],
             Config.data["queries"]["task_by_day"],
         )
@@ -87,8 +95,12 @@ class PushoverService:
 
     def pushover_test(self, test_option: int = 0):
         """Testing notification service"""
-        link = "https://object.any.coop/bafyreihpmajq4tyclweganwy4djfwl4cvh3kcj6pzbw7ereivnaay4be5u?spaceId=bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
+        link = (
+            "https://object.any.coop/bafyreihpmajq4tyclweganwy4djfwl4cvh3kcj6pzbw7ereivnaay4be5u?"
+            "spaceId=bafyreifxsujwztkbi2zrf3yudthopppmhcz36aiyozmbuc323ai6q6347e.2bx9tjqqte21g"
+        )
 
+        title = ""
         if test_option == 0:
             title = "Pushover Test"
             message = "This is a test message from Anytype Automation."

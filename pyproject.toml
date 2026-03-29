@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[project]
+name = "anytype-automation"
+version = "0.1.0"
+description = "Automation tools and utilities for Anytype"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [
+    {name = "Aya Jackson", email = "pixelmixery@gmail.com"}
+]
+keywords = ["anytype", "automation", "api", "fastapi"]
+
+# Core dependencies (Third-party packages only)
+dependencies = [
+    "fastapi",            # Web framework
+    "pydantic",           # Data validation
+    "pydantic_settings",  # Singleton
+    "uvicorn",            # ASGI server
+    "requests",           # HTTP calls
+    "python-dateutil",    # relativedelta
+    "python-dotenv",      # load_dotenv
+    "pyyaml",             # YAML support 
+    "python-json-logger", # Structured logging
+    "pytokens",           # Used in AnyTypeUtils
+    "apscheduler",        # Background jobs
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",              # Code formatter
+    "pytest",             # Testing framework
+    "ruff",               # Fast linting (optional but recommended for 2026)
+]
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "no-member",
+]
