@@ -214,3 +214,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+docker-compose.yml
+docker-compose.dev.yml
+docker-compose.tagger.yml
+Dockerfile
+.dockerignore
