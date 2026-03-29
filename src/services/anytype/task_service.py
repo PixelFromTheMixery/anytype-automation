@@ -41,36 +41,6 @@ class TaskService:
                     next_date = self.helper.next_date(task["Rate"])
 
                 self.task_status_reset(task, next_date)
-        if self.settings.config.toggl:
-            job_list.append("Toggle URL")
-            new_tasks = self.anytype.get_list_view_objects(
-                self.data["tasks"].id,
-                self.data["tasks"].queries["Automation"].id,
-                self.data["tasks"].queries["Automation"].New,
-            )
-
-            for task in new_tasks:
-                build_url = self.config.api_addr + urllib.parse.quote(
-                    "/toggl/" + f"{task["Mission"]}/{task["name"]}/" + "start_timer"
-                )
-                data = {
-                    "properties": [
-                        {
-                            "key": "status",
-                            "select": self.data["tasks"]
-                            .props["Status"]
-                            .options["Ready"]
-                            .id,
-                        },
-                        {"key": "timer", "url": build_url},
-                    ]
-                }
-                self.anytype.update_object(
-                    self.data["tasks"].id,
-                    task["name"],
-                    task["id"],
-                    data,
-                )
 
         return "Task Check Jobs completed: " + ", ".join(job_list)
 

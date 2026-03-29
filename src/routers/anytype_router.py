@@ -41,28 +41,28 @@ async def task_status_reset():
     return anytype_automation.daily_rollover()
 
 
-@router.get("/recurrent_check", tags=["scheduled"])
+@router.get("/recurrent_check", tags=["scheduled", "tasks"])
 async def recurrent_check():
     """Endpoint for task maintenance"""
     logger.info("Recurrent check endpoint called")
     return anytype_tasks.recurrent_check()
 
 
-@router.post("/sync_spaces", tags=["tools"])
+@router.post("/sync_spaces", tags=["tools", "spaces"])
 async def scan_spaces(sync_request: SpaceSyncRequest):
     """Endpoint for scanning spaces for altering configuration file"""
     logger.info("Space syncer endpoint called")
     return anytype_automation.sync_spaces(SpaceSyncRequest.model_dump(sync_request))
 
 
-@router.get("/scan_space/{space_name}/id/{space_id}")
+@router.get("/scan_space/{space_name}/id/{space_id}", tags=["tools", "spaces"])
 async def scan_space(space_name, space_id):
     """Endpoint to populate Data with space data"""
     logger.info("Space scanner endpoint called")
     return anytype_spaces.scan_space(space_name, space_id)
 
 
-@router.post("/migrate")
+@router.post("/migrate", tags=["tools", "spaces"])
 async def migrate(migrate_request: MigrateRequest):
     """Endpoint for copying types and their from one space to another"""
     logger.info("Migration Endpoint called")

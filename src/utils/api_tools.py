@@ -6,8 +6,12 @@ import time
 from typing import Optional
 import urllib
 
+from fastapi import Request, status
+from fastapi.responses import JSONResponse
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import requests
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from utils.logger import logger
 
@@ -20,12 +24,20 @@ class EnvSettings(BaseSettings):
     """Env variables, usually tokens and env settings"""
 
     anytype_key: str
+    allowed_ips: list[str]
+    allowed_urls: Optional[list[str]] = None
     anytype_port: str = "31012"
     pushover_key: Optional[str] = None
     pushover_user: Optional[str] = None
-    toggl_key: Optional[str] = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @field_validator("allowed_ips", "allowed_urls", mode="before")
+    @classmethod
+    def parse_comma_delimited(cls, v):
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
 
 
 keys = EnvSettings()
@@ -70,16 +82,6 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         }
 
         url = "http://localhost:" + keys.anytype_port + url
-    elif target == "toggl":
-        auth_str = keys.toggl_key + ":api_token"
-        token_name = b64encode(auth_str.encode("ascii")).decode()
-        headers = {
-            "Authorization": "Basic " + token_name,
-            "Content-Type": "application/json",
-        }
-        if "webhooks" in url:
-            headers["User-Agent"] = "pixelmixery@gmail.com"
-
     else:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -154,3 +156,22 @@ def make_call(
             if attempt > RETRIES:
                 raise
             time.sleep(DELAY)
+
+
+class IPAllowlistMiddleware(BaseHTTPMiddleware):
+    """Class for IP allowlist middleware"""
+
+    def __init__(self, app):
+        super().__init__(app)
+
+    async def dispatch(self, request: Request, call_next):
+        if request.client is not None:
+            if request.client.host not in keys.allowed_ips:
+                logger.error(
+                    "Unauthorized access attempt from IP: " + {request.client.host},
+                )
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"detail": "Access denied: IP not allowed"},
+                )
+            return await call_next(request)

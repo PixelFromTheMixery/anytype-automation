@@ -86,26 +86,6 @@ class ConfigSettings(BaseModel):
         ),
     ] = []
 
-    # Toggl
-    toggl: Annotated[
-        bool,
-        Field(
-            description="Flag for toggl integration, like timer url and task mgmt",
-        ),
-    ] = False
-    toggl_workspace: Annotated[
-        str,
-        Field(
-            description="Toggle workspace required for updates",
-        ),
-    ]
-    toggl_hook: Annotated[
-        bool,
-        Field(
-            description="Flag for two-way toggl sync",
-        ),
-    ]
-
 
 class Settings(BaseModel):
     """The Top-Level Singleton Registry"""

@@ -15,8 +15,3 @@ if settings.config.pushover:
     from routers import pushover_router
 
     router.include_router(pushover_router.router, prefix="/pushover", tags=["pushover"])
-
-if settings.config.toggl:
-    from routers import toggl_router
-
-    router.include_router(toggl_router.router, prefix="/toggl", tags=["toggl"])

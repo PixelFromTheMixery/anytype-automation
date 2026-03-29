@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 
 from middlewares.exception_middleware import ExceptionMiddleware
-from middlewares.auth_middleware import IPAllowlistMiddleware
+from utils.api_tools import IPAllowlistMiddleware
 from utils.docs import description, tags_metadata
 from utils.logger import logger
 
