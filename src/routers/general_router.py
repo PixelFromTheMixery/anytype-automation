@@ -14,7 +14,7 @@ router = APIRouter()
 async def get_health_endpoint():
     """Health Endpoint, should always return 200 OK"""
     logger.info("Health endpoint called")
-    return await {"status": "ok"}
+    return {"status": "ok"}
 
 
 @router.get("/data")

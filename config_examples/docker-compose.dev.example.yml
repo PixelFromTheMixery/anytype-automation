@@ -16,7 +16,7 @@ services:
     volumes:
       - ./src:/app/src  
       - ./config.yaml:/app/config.yaml
-      - ./data.yaml:/app/data.yaml
+      - ./data/:/app/data/
     command: >
       uvicorn main:app 
       --host 0.0.0.0 

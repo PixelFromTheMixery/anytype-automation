@@ -1,6 +1,5 @@
 """API module to for sharing"""
 
-from base64 import b64encode
 import random
 import time
 from typing import Optional
@@ -24,15 +23,15 @@ class EnvSettings(BaseSettings):
     """Env variables, usually tokens and env settings"""
 
     anytype_key: str
-    allowed_ips: list[str]
-    allowed_urls: Optional[list[str]] = None
+    allowed_ips: str
+    allowed_urls: Optional[str] = None
     anytype_port: str = "31012"
     pushover_key: Optional[str] = None
     pushover_user: Optional[str] = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    @field_validator("allowed_ips", "allowed_urls", mode="before")
+    @field_validator("allowed_ips", "allowed_urls", mode="after")
     @classmethod
     def parse_comma_delimited(cls, v):
         if isinstance(v, str):
@@ -168,7 +167,7 @@ class IPAllowlistMiddleware(BaseHTTPMiddleware):
         if request.client is not None:
             if request.client.host not in keys.allowed_ips:
                 logger.error(
-                    "Unauthorized access attempt from IP: " + {request.client.host},
+                    "Unauthorized access attempt from IP: " + request.client.host,
                 )
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,

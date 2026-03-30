@@ -1,6 +1,7 @@
 config.yaml
 bruno/direct
 
+_timetagger/
 
 *.sh
 *.yaml

@@ -57,4 +57,4 @@ class ReferenceData(BaseModel):
 
     def file_sync(self):
         """Writes model to local file for reference"""
-        Helper.read_write("data.yaml", "w", self.model_dump())
+        Helper.read_write("data/data.yaml", "w", self.model_dump())

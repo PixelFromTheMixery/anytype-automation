@@ -27,3 +27,4 @@ wheels/
 .mypy_cache
 .vscode
 .idea
+/.ven

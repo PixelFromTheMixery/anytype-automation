@@ -102,7 +102,7 @@ def generate_settings() -> Settings:
     except FileNotFoundError as exc:
         raise FileNotFoundError("config.yaml required") from exc
     try:
-        data_yaml = helper.read_write("data.yaml", "r")
+        data_yaml = helper.read_write("data/data.yaml", "r")
     except FileNotFoundError:
         print("Reference data file requires generation")
         data_yaml = {}

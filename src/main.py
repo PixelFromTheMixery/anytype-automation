@@ -49,4 +49,4 @@ app = create_app()
 async def get_root():
     """Root Endpoint"""
     logger.info("Root endpoint called")
-    return {"Intervalia": "Currently maintained by Pixel from the Mixery"}
+    return {"Anytype Automation": "Currently maintained by Pixel from the Mixery"}
