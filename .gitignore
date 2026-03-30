@@ -3,6 +3,8 @@ bruno/direct
 
 _timetagger/
 
+.vscode
+
 *.sh
 *.yaml
 **/direct/**
