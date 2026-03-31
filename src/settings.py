@@ -1,6 +1,7 @@
 """Settings for API"""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, Field
@@ -101,9 +102,12 @@ def generate_settings() -> Settings:
         config_yaml = helper.read_write("config.yaml", "r")
     except FileNotFoundError as exc:
         raise FileNotFoundError("config.yaml required") from exc
+    data_path = "data/data.yaml"
     try:
-        data_yaml = helper.read_write("data/data.yaml", "r")
+        data_yaml = helper.read_write(data_path, "r")
     except FileNotFoundError:
+        make_dir = Path(data_path).parent
+        make_dir.mkdir(parents=True,exist_ok=True)
         print("Reference data file requires generation")
         data_yaml = {}
 
