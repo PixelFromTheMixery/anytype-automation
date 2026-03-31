@@ -1,7 +1,6 @@
 """Mask Management module"""
 
 import json
-import urllib.parse
 
 from utils.anytype import AnyTypeUtils
 from utils.helper import Helper
@@ -66,7 +65,7 @@ class TaskService:
             if self.settings.config.task_review_threshold > 0:
                 data = self.task_review_cleanup(task, data)
 
-                if task[RESET] > self.settings.config.task_review_cleanup - 1:
+                if task[RESET] > self.settings.config.task_review_threshold - 1:
                     self.anytype.create_object(
                         self.data["journal"].id,
                         {
