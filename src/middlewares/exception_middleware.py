@@ -50,5 +50,5 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 self.pushover.send_message(
                     f"API Error: {error_type}", detail, priority=1
                 )
-            finally:
+            except:
                 return JSONResponse(content, 500)

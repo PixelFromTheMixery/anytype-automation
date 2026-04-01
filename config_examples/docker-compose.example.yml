@@ -18,10 +18,10 @@ services:
       - PYTHONUNBUFFERED=1
       - TIMETAGGER_URL=http://timetagger:80 
     healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:8000/general/health"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
+      test: ["CMD", "curl", "-f", "http://localhost:8000/general/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   timetagger:
     image: ghcr.io/almarklein/timetagger

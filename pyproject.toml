@@ -10,7 +10,7 @@ name = "anytype-automation"
 version = "0.1.0"
 description = "Automation tools and utilities for Anytype"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 license = {text = "MIT"}
 authors = [
     {name = "Aya Jackson", email = "pixelmixery@gmail.com"}
@@ -32,11 +32,12 @@ dependencies = [
     "apscheduler",        # Background jobs
 ]
 
-[project.optional-dependencies]
+
+[dependency-groups]
 dev = [
     "black",              # Code formatter
+    "ruff",               # Fast linting  
     "pytest",             # Testing framework
-    "ruff",               # Fast linting (optional but recommended for 2026)
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
