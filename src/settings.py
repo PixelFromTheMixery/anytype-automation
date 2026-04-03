@@ -87,6 +87,14 @@ class ConfigSettings(BaseModel):
         ),
     ] = []
 
+    # Time Tagger
+    timetagger: Annotated[
+        bool, Field(description="If time tagger side car is used")
+    ] = False
+    timetagger_url: Annotated[
+        str, Field(description="URL to use to make calls to timetagger")
+    ]
+
 
 class Settings(BaseModel):
     """The Top-Level Singleton Registry"""
@@ -107,7 +115,7 @@ def generate_settings() -> Settings:
         data_yaml = helper.read_write(data_path, "r")
     except FileNotFoundError:
         make_dir = Path(data_path).parent
-        make_dir.mkdir(parents=True,exist_ok=True)
+        make_dir.mkdir(parents=True, exist_ok=True)
         print("Reference data file requires generation")
         data_yaml = {}
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from routers import anytype_router, general_router, timetagger_router
+from routers import anytype_router, general_router
 
 from settings import generate_settings
 
@@ -17,4 +17,8 @@ if settings.config.pushover:
     router.include_router(pushover_router.router, prefix="/pushover", tags=["pushover"])
 
 if settings.config.timetagger:
-    pass
+    from routers import timetagger_router
+
+    router.include_router(
+        timetagger_router.router, prefix="/timetagger", tags=["timetagger"]
+    )

@@ -28,6 +28,7 @@ class EnvSettings(BaseSettings):
     anytype_port: str = "31012"
     pushover_key: Optional[str] = None
     pushover_user: Optional[str] = None
+    timetagger_key: Optional[str] = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -81,6 +82,8 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         }
 
         url = "http://localhost:" + keys.anytype_port + url
+    if target == "timetagger":
+        headers = {"authtoken": keys.timetagger_key}
     else:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
