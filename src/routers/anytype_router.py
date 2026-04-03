@@ -10,8 +10,7 @@ from services.anytype.core_service import AnytypeService
 from services.anytype.task_service import TaskService
 from services.anytype.space_service import SpaceService
 
-from models.migrate_request import MigrateRequest
-from models.space_sync_request import SpaceSyncRequest
+from models.anytype_models import SpaceEditRequest
 
 from settings import generate_settings
 
@@ -49,10 +48,10 @@ async def recurrent_check():
 
 
 @router.post("/sync_spaces", tags=["tools", "spaces"])
-async def scan_spaces(sync_request: SpaceSyncRequest):
+async def scan_spaces(sync_request: SpaceEditRequest):
     """Endpoint for scanning spaces for altering configuration file"""
     logger.info("Space syncer endpoint called")
-    return anytype_automation.sync_spaces(SpaceSyncRequest.model_dump(sync_request))
+    return anytype_automation.sync_spaces(sync_request)
 
 
 @router.get("/scan_space/{space_name}/id/{space_id}", tags=["tools", "spaces"])
@@ -63,7 +62,7 @@ async def scan_space(space_name, space_id):
 
 
 @router.post("/migrate", tags=["tools", "spaces"])
-async def migrate(migrate_request: MigrateRequest):
+async def migrate(edit_request: SpaceEditRequest):
     """Endpoint for copying types and their from one space to another"""
     logger.info("Migration Endpoint called")
-    return anytype_automation.migrate_spaces(MigrateRequest.model_dump(migrate_request))
+    return anytype_spaces.migrate_spaces(edit_request)

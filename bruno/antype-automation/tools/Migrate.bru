@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{host}}/migrate
+  url: {{host}}/anytype/migrate
   body: json
   auth: inherit
 }
@@ -13,9 +13,10 @@ post {
 body:json {
   {
     "source_space_name": "tasks",
-    "target_space_name": "new_tasks",
-    "target_space_id": "bafyreibyrslzehvfvhiwgralzlybf6i2jc53b5ufmshvqakfolvincnzwi.2bx9tjqqte21g",
-    "stages": ["clear", "props", "types", "objects"]
+    "source_space_id": "bafyreie5m7sen2wtuhazxdfalpaftlaxvzsy6ui2buflnfsdw3ikyoz4p4.2bx9tjqqte21g",
+    "target_space_name": "tasks",
+    "target_space_id": "bafyreib4ttqu2qbqxeunuf4dgvfybibcg7mznbe5jntgyze4id27f7rlpy.2bx9tjqqte21g",
+    "stages": ["objects"]
   }
 }
 

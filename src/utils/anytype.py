@@ -48,6 +48,7 @@ class AnyTypeUtils:
         types = make_call("get", types_url, "get types from space")
         types_formatted = {}
 
+        system_types = [] if system_types is None else system_types
         for type_obj in types["data"] if types is not None else []:
             if type_obj["name"] in system_types:
                 continue
@@ -140,19 +141,28 @@ class AnyTypeUtils:
 
         return objs_to_check
 
-    def create_type(self, space_id, type_dict: dict):
+    def create_type(self, space_id, type_data: dict):
         """Creates a type with the provided data"""
         type_url = URL + space_id
         type_url += "/types"
+        type_dict = type_data.copy()
+        del type_dict["id"]
 
         make_call("post", type_url, f'create type {type_dict["name"]}', type_dict)
 
-    def delete_type(self, space_id, type_dict: dict):
+    def delete_type(self, space_id, type_data: dict):
         """Creates a type with the provided data"""
         type_url = URL + space_id
-        type_url += "/types/" + type_dict["id"]
+        type_url += "/types/" + type_data["id"]
 
-        make_call("delete", type_url, f'delete type {type_dict["key"]}')
+        make_call("delete", type_url, f'delete type {type_data["key"]}')
+
+    def update_type(self, space_id: str, type_id: str, type_name: str, type_data: dict):
+        """Patches a type with the provided data"""
+        type_url = URL + space_id
+        type_url += "/types/" + type_id
+
+        make_call("patch", type_url, f"update type {type_name}", type_data)
 
     def unpack_object(self, object_obj: dict, sub_objects: bool = True):
         """Pulls out name, id, and properties for use"""
@@ -231,6 +241,7 @@ class AnyTypeUtils:
         prop_url = URL + space_id
         prop_url += PROPS
         props = make_call("get", prop_url, f"get props from space {space_id}")
+        system_props = [] if system_props is None else system_props
         formatted_props = {}
         if props["data"]:
             for prop in props["data"]:
@@ -247,7 +258,7 @@ class AnyTypeUtils:
                         space_id, prop["id"]
                     )
             return formatted_props
-        return []
+        return {}
 
     def get_tags_from_prop(self, space_id: str, prop_id: str):
         """Returns the tag and name from the provided list"""

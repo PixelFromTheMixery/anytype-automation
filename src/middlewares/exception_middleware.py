@@ -17,7 +17,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         settings = generate_settings()
-        if settings.config.pushover:
+        if not settings.config.local:
             self.pushover = PushoverUtils()
 
     async def dispatch(self, request, call_next):
