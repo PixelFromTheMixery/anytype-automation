@@ -65,34 +65,18 @@ class TaskService:
             if self.settings.config.task_review_threshold > 0:
                 data = self.task_review_cleanup(task, data)
 
-                if task[RESET] > self.settings.config.task_review_threshold - 1:
-                    self.anytype.create_object(
-                        self.data["journal"].id,
-                        {
-                            # fmt: off
-                            "template_id": self.data[
-                                "journal"].types["Prompt"].templates["Task Review"
-                            ],
-                            "name": task["name"],
-                            "type_key": "prompt",
-                            "properties": [
-                                {
-                                    "key": "url",
-                                    "url": self.helper.make_deeplink(
-                                        self.data["tasks"].id, task["id"]
-                                    ),
-                                }
-                            ],
-                        },
-                    )
-                    data["properties"].append(
-                        {
-                            "key": "status",
-                            # fmt: off
-                            "select": self.data["tasks"].props["Status"].options["Review"].id,
-                        }
-                    )
-                    tasks_to_review.append(task["name"])
+            if task[RESET] > self.settings.config.task_review_threshold - 1:
+                self.review_overflow(task)
+                data["properties"].append(
+                    {
+                        "key": "status",
+                        "select": self.data["tasks"]
+                        .props["Status"]
+                        .options["Review"]
+                        .id,
+                    }
+                )
+                tasks_to_review.append(task["name"])
 
             self.anytype.update_object(
                 self.data["tasks"].id, task["name"], task["id"], data
@@ -121,6 +105,29 @@ class TaskService:
             self.pushover.send_message("Task reset threshold reached", message, 1)
 
         return f"{len(tasks_to_check)} tasks with dates updated"
+
+    def review_overflow(
+        self,
+        task,
+    ):
+        self.anytype.create_object(
+            self.data["journal"].id,
+            {
+                "template_id": self.data["journal"]
+                .types["Prompt"]
+                .templates["Task Review"],
+                "name": task["name"],
+                "type_key": "prompt",
+                "properties": [
+                    {
+                        "key": "url",
+                        "url": self.helper.make_deeplink(
+                            self.data["tasks"].id, task["id"]
+                        ),
+                    }
+                ],
+            },
+        )
 
     def log_task_in_archive(self, task):
         """
@@ -159,23 +166,46 @@ class TaskService:
         Reset tasks that recur
         Update task based on reset count
         """
-        if self.settings.config.task_logs:
-            self.log_task_in_archive(task)
-
         if next_date is None:
             self.anytype.delete_object(self.data["tasks"].id, task["name"], task["id"])
         else:
             update_data = {
                 "properties": [
                     {"key": "due_date", "date": next_date},
-                    {"key": "reset_count", "number": 0},
                     {
                         "key": "status",
-                        # fmt: off
-                        "select": self.data["tasks"].props["Status"].options["Repeating"].id,
+                        "select": self.data["tasks"]
+                        .props["Status"]
+                        .options["Repeating"]
+                        .id,
                     },
                 ]
             }
+            if task["Status"] == "Skipped":
+                if task[RESET] > self.settings.config.task_review_threshold - 1:
+                    self.review_overflow(task)
+                    update_data["properties"].append(
+                        {
+                            "key": "status",
+                            "select": self.data["tasks"]
+                            .props["Status"]
+                            .options["Review"]
+                            .id,
+                        }
+                    )
+
+                update_data["properties"].append(
+                    {
+                        "key": "reset_count",
+                        "number": (
+                            0 if task["Status"] == "Done" else task["Reset Count"] + 1
+                        ),
+                    }
+                )
+
             self.anytype.update_object(
                 self.data["tasks"].id, task["name"], task["id"], update_data
             )
+
+        if self.settings.config.task_logs and task["Status"] == "Done":
+            self.log_task_in_archive(task)

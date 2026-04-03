@@ -92,6 +92,6 @@ class Helper:
         now = datetime.datetime.now().replace(minute=0, second=0, microsecond=0)
 
         if midnight:
-            now.replace(hour=0)
+            now = now.replace(hour=0)
 
         return now
