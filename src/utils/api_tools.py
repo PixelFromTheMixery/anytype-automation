@@ -30,6 +30,9 @@ class EnvSettings(BaseSettings):
     anytype_port: str = "31012"
     pushover_key: Optional[str] = None
     pushover_user: Optional[str] = None
+    timetagger_url: Optional[str] = None
+    timetagger_user: Optional[str] = None
+    timetagger_pass: Optional[str] = None
     timetagger_key: Optional[str] = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -84,6 +87,8 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
 
         url = "http://" + keys.anytype_url + ":" + keys.anytype_port + url
     elif target == "timetagger":
+        if keys.timetagger_key is None:
+            get_timetagger_token()
         headers["authtoken"] = keys.timetagger_key
         data_pack = json.dumps([data])
     else:
@@ -96,6 +101,18 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         data_pack = urllib.parse.urlencode(data)
 
     return url, headers, data_pack
+
+
+def get_timetagger_token():
+
+    raise NotImplementedError("Please just collect the api token from the app for now")
+    headers = {"Content-Type": "application/json; charset=utf-8"}
+    web_token = requests.post(
+        "http://" + keys.timetagger_url + "/timetagger/api/v2/auth",
+        json={"username": keys.timetagger_user, "password": keys.timetagger_pass},
+        headers=headers,
+    )
+    pass
 
 
 def exception_handler(e, result, attempt):
@@ -169,9 +186,7 @@ class IPAllowlistMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next):
-        if not keys.allowed_ips:
-            logger.info("Network layer mode")
-        elif request.client is not None:
+        if request.client is not None and keys.allowed_ips:
             if request.client.host not in keys.allowed_ips:
                 logger.error(
                     "Unauthorized access attempt from IP: " + request.client.host,

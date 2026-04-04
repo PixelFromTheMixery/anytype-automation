@@ -19,10 +19,15 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 
 COPY src/ ./src/
-COPY config.yaml data/data.yaml .env ./
+COPY .env ./
 
-ENV PATH="/app/.venv/bin:$PATH" \
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src
 
-CMD ["uvicorn", "main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+ENV IP_ADDR=0.0.0.0
+ENV IP_PORT=8000
+
+# 3. Use the shell form of CMD to resolve the variables
+CMD uvicorn main:create_app --factory --host $IP_ADDR --port $IP_PORT

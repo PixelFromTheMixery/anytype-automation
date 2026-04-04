@@ -41,12 +41,7 @@ class TimetaggerService:
             "put", records_url, "start timetagger timer", timer_data, "timetagger"
         )
 
-        return (
-            f'{object_data["type"]} Timer started for '
-            f'{object_data["name"]} '
-            f'in {object_data["Project"]} '
-            f'under {object_data["AoC"]}'
-        )
+        return timer_data["ds"]
 
     def record_builder(
         self, object_data: dict, start_time: float = None, end_time: float = None
