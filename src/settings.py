@@ -93,7 +93,7 @@ class ConfigSettings(BaseModel):
     ] = False
     timetagger_url: Annotated[
         str, Field(description="URL to use to make calls to timetagger")
-    ]
+    ] = "http://timetagger:80"
 
 
 class Settings(BaseModel):

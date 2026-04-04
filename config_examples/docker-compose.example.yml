@@ -16,7 +16,6 @@ services:
          condition: service_started 
     environment:
       - PYTHONUNBUFFERED=1
-      - TIMETAGGER_URL=http://timetagger:80 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/general/health"]
       interval: 30s
