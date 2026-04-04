@@ -24,7 +24,7 @@ class EnvSettings(BaseSettings):
     """Env variables, usually tokens and env settings"""
 
     anytype_key: str
-    allowed_ips: str
+    allowed_ips: Optional[str] = None
     allowed_urls: Optional[str] = None
     anytype_port: str = "31012"
     pushover_key: Optional[str] = None
@@ -168,7 +168,7 @@ class IPAllowlistMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next):
-        if request.client is not None:
+        if request.client is not None and keys.allowed_ips is not None:
             if request.client.host not in keys.allowed_ips:
                 logger.error(
                     "Unauthorized access attempt from IP: " + request.client.host,
