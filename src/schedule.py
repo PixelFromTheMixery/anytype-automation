@@ -28,13 +28,13 @@ def lifespan(_app: FastAPI) -> None:
         logger.info("Local mode, no jobs to add")
     else:
         logger.info("Adding daily rollover")
-        scheduler.add_job(anytype_service.daily_rollover, "cron", hour=23)
+        scheduler.add_job(anytype_service.daily_rollover, "cron", hour=1)
 
         # Anytype
         if settings.config.task_reset:
             logger.info("Adding task reset")
             scheduler.add_job(
-                task_service.recurrent_check, "cron", hour="7-21", minute="*/30"
+                task_service.recurrent_check, "cron", hour="2-23", minute="*/30"
             )
 
         # Pushover
