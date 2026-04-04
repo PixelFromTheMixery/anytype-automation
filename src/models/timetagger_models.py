@@ -13,6 +13,6 @@ class TimeEntry(BaseModel):
     key: str
     ds: str
     t1: float
-    t2: float = 0.0 # To start running entry
+    t2: float
     mt: float
-    st: float = 0.0 # To start running entry
+    st: float

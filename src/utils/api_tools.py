@@ -1,5 +1,6 @@
 """API module to for sharing"""
 
+import json
 import random
 import time
 from typing import Optional
@@ -71,19 +72,19 @@ RESPONSE_MAP = {
 
 def request_builder(url: str, data: dict = None, target: str = "anytype"):
     """Builds request scaffolding for API calls"""
-    headers = {}
+    headers = {
+        "Content-Type": "application/json",
+    }
     data_pack = data if data else None
 
     if target == "anytype":
-        headers = {
-            "Authorization": "Bearer " + keys.anytype_key,
-            "Content-Type": "application/json",
-            "Anytype-Version": "2025-11-08",
-        }
+        headers["Authorization"] = "Bearer " + keys.anytype_key
+        headers["Anytype-Version"] = "2025-11-08"
 
         url = "http://localhost:" + keys.anytype_port + url
-    if target == "timetagger":
-        headers = {"authtoken": keys.timetagger_key}
+    elif target == "timetagger":
+        headers["authtoken"] = keys.timetagger_key
+        data_pack = json.dumps([data])
     else:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -148,7 +149,7 @@ def make_call(
                     continue
 
             # If it's not a 429, or we ran out of 429 retries, handle normally
-            attempt = exception_handler(e, response.json(), attempt)
+            attempt = exception_handler(e, response, attempt)
             if attempt > RETRIES:
                 raise
 

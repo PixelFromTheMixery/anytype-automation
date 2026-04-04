@@ -26,19 +26,24 @@ dependencies = [
     "requests",           # HTTP calls
     "python-dateutil",    # relativedelta
     "python-dotenv",      # load_dotenv
-    "pyyaml",             # YAML support 
+    "pyyaml",             # YAML support
     "python-json-logger", # Structured logging
     "pytokens",           # Used in AnyTypeUtils
     "apscheduler",        # Background jobs
 ]
 
-
-[dependency-groups]
+# uv sync --extra dev,timetagger
+[project.optional-dependencies]
 dev = [
     "black",              # Code formatter
     "ruff",               # Fast linting  
     "pytest",             # Testing framework
 ]
+
+timetagger = [
+    "python-ulid>=1.1",          # Unique keys for time entries
+]
+
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [

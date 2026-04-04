@@ -1,0 +1,20 @@
+meta {
+  name: Untitled
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/timetagger/toggle_timer/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: bafyreiafn7gru62ajcfiyj75pj6cgukl2zwc7dronod6rurfxu73jdmj2y
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

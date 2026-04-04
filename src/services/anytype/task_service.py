@@ -17,6 +17,7 @@ class TaskService:
     def __init__(self, settings):
         self.settings = settings
         self.data = self.settings.data.anytype
+        self.space_id = self.data["tasks"].id
         self.anytype = AnyTypeUtils()
         if settings.config.pushover:
             self.pushover = PushoverUtils()
@@ -26,10 +27,10 @@ class TaskService:
         """Collect tasks for processing"""
         job_list = []
         if self.settings.config.task_reset:
-            job_list.append("Complete Tasks")
+            job_list.append("Shifted tasks")
             logger.info("Running task processing")
             tasks_to_check = self.anytype.get_list_view_objects(
-                self.data["tasks"].id,
+                self.space_id,
                 self.data["tasks"].queries["Automation"].id,
                 self.data["tasks"].queries["Automation"].Done,
             )
@@ -40,13 +41,36 @@ class TaskService:
                     next_date = self.helper.next_date(task["Rate"])
 
                 self.task_status_reset(task, next_date)
+        if self.settings.config.timetagger:
+            job_list.append("Adding id to timers")
+            logger.info("Running id injection for timer")
+            tasks_to_check = self.anytype.get_list_view_objects(
+                self.space_id,
+                self.data["tasks"].queries["Automation"].id,
+                self.data["tasks"].queries["Automation"].Timer,
+            )
+
+            for task in tasks_to_check:
+                update_data = {
+                    "properties": [
+                        {
+                            "key": "timer",
+                            "url": self.settings.config.api_addr
+                            + "/timetagger/toggle_timer/"
+                            + task["id"],
+                        }
+                    ]
+                }
+                self.anytype.update_object(
+                    self.space_id, task["name"], task["id"], update_data
+                )
 
         return "Task Check Jobs completed: " + ", ".join(job_list)
 
     def overdue(self, dt_next_str):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
-            self.data["tasks"].id,
+            self.space_id,
             self.data["tasks"].queries["Automation"].id,
             self.data["tasks"].queries["Automation"].Overdue,
         )
@@ -78,9 +102,7 @@ class TaskService:
                 )
                 tasks_to_review.append(task["name"])
 
-            self.anytype.update_object(
-                self.data["tasks"].id, task["name"], task["id"], data
-            )
+            self.anytype.update_object(self.space_id, task["name"], task["id"], data)
 
         if (
             len(tasks_to_check) - len(tasks_to_review) > 15
@@ -121,9 +143,7 @@ class TaskService:
                 "properties": [
                     {
                         "key": "url",
-                        "url": self.helper.make_deeplink(
-                            self.data["tasks"].id, task["id"]
-                        ),
+                        "url": self.helper.make_deeplink(self.space_id, task["id"]),
                     }
                 ],
             },
@@ -167,7 +187,7 @@ class TaskService:
         Update task based on reset count
         """
         if next_date is None:
-            self.anytype.delete_object(self.data["tasks"].id, task["name"], task["id"])
+            self.anytype.delete_object(self.space_id, task["name"], task["id"])
         else:
             update_data = {
                 "properties": [
@@ -204,7 +224,7 @@ class TaskService:
                 )
 
             self.anytype.update_object(
-                self.data["tasks"].id, task["name"], task["id"], update_data
+                self.space_id, task["name"], task["id"], update_data
             )
 
         if self.settings.config.task_logs and task["Status"] == "Done":

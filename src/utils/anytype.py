@@ -167,10 +167,11 @@ class AnyTypeUtils:
     def unpack_object(self, object_obj: dict, sub_objects: bool = True):
         """Pulls out name, id, and properties for use"""
         object_dict = {
-            "name": object_obj["object"]["name"],
-            "id": object_obj["object"]["id"],
+            "name": object_obj["name"],
+            "id": object_obj["id"],
+            "type": object_obj["type"]["name"],
         }
-        for prop in object_obj["object"]["properties"]:
+        for prop in object_obj["properties"]:
             prop_type = prop["format"]
             prop_value = None
             # Basic props that match their type
@@ -191,7 +192,7 @@ class AnyTypeUtils:
         object_url = URL + space_id
         object_url += OBJ + object_id
 
-        object_obj = make_call("get", object_url, "get object by id")
+        object_obj = make_call("get", object_url, "get object by id")["object"]
 
         if object_obj is None:
             return "raise exception"
@@ -199,7 +200,7 @@ class AnyTypeUtils:
         object_formatted = None
 
         if isinstance(object_obj, str):
-            return {"Clear me": object_obj}
+            return {"Clear me": object_obj["id"]}
 
         if simple:
             object_formatted = self.unpack_object(object_obj, False)
