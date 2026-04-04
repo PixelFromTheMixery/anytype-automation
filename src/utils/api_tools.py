@@ -168,7 +168,9 @@ class IPAllowlistMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next):
-        if request.client is not None and keys.allowed_ips:
+        if not keys.allowed_ips:
+            logger.info("Network layer mode")
+        elif request.client is not None:
             if request.client.host not in keys.allowed_ips:
                 logger.error(
                     "Unauthorized access attempt from IP: " + request.client.host,
@@ -177,4 +179,4 @@ class IPAllowlistMiddleware(BaseHTTPMiddleware):
                     status_code=status.HTTP_403_FORBIDDEN,
                     content={"detail": "Access denied: IP not allowed"},
                 )
-            return await call_next(request)
+        return await call_next(request)
