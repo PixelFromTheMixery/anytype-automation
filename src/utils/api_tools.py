@@ -24,6 +24,7 @@ class EnvSettings(BaseSettings):
     """Env variables, usually tokens and env settings"""
 
     anytype_key: str
+    anytype_url: str = "localhost"
     allowed_ips: str = ""
     allowed_urls: Optional[str] = None
     anytype_port: str = "31012"
@@ -81,7 +82,7 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         headers["Authorization"] = "Bearer " + keys.anytype_key
         headers["Anytype-Version"] = "2025-11-08"
 
-        url = "http://localhost:" + keys.anytype_port + url
+        url = "http://" + keys.anytype_url + ":" + keys.anytype_port + url
     elif target == "timetagger":
         headers["authtoken"] = keys.timetagger_key
         data_pack = json.dumps([data])
