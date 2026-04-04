@@ -30,20 +30,16 @@ dependencies = [
     "python-json-logger", # Structured logging
     "pytokens",           # Used in AnyTypeUtils
     "apscheduler",        # Background jobs
+    "python-ulid",          # Unique keys for time entries
 ]
 
-# uv sync --extra dev,timetagger
+# uv sync --extra dev
 [project.optional-dependencies]
 dev = [
     "black",              # Code formatter
     "ruff",               # Fast linting  
     "pytest",             # Testing framework
 ]
-
-timetagger = [
-    "python-ulid>=1.1",          # Unique keys for time entries
-]
-
 
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
