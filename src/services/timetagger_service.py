@@ -31,8 +31,14 @@ class TimetaggerService:
         if settings.config.pushover:
             self.pushover = PushoverUtils()
 
+
     def generate_key(self):
         return str(ULID())
+
+
+    def fetch_anytype_object(self, object_id: str):
+        return self.anytype.get_object_by_id(self.space_id, object_id)
+
 
     def changes(self):
         updates_url = self.url + "/updates?since=" + str(self.since)
@@ -50,14 +56,30 @@ class TimetaggerService:
 
         self.since = update_data["server_time"]
 
+
+    def update_object(self, known: dict|str, option_name: str):
+        object_data = {}
+        if isinstance(known, str): self.fetch_anytype_object(known)
+        else: object_data = known
+        self.anytype.update_object(
+            self.space_id,
+            object_data["name"],
+            object_data["id"],
+            {
+                "properties": [
+                    {"key": "status", "select": self.status_options[option_name].id}
+                ]
+            },
+        )
+
     def toggle(self, object_id: str):
         records_url = self.url + "/records"
 
         self.changes()
 
-        object_data = self.anytype.get_object_by_id(self.space_id, object_id)
+        self.changes()
 
-        message = ""
+        object_data = self.fetch_anytype_object(object_id)
 
         entries_to_update = []
         old_entry = {"ds": ""}
@@ -81,49 +103,36 @@ class TimetaggerService:
 
         if object_data["name"] not in old_entry["ds"]:
             new_timer = self.record_builder(object_data)
-            message += "Starting " + new_timer["ds"]
             entries_to_update.append(new_timer)
-            if object_data["type"] == "Task":
-                message += ", recommendation: " + object_data["Focus"]
-            self.anytype.update_object(
-                self.space_id,
-                object_data["name"],
-                object_data["id"],
-                {
-                    "properties": [
-                        {"key": "status", "select": self.status_options["Doing"].id}
-                    ]
-                },
-            )
-
-        else:
-            message += "Stopping " + old_entry["ds"]
-            if "task" in message:
-                self.settings.data.timetagger.running_task = None
+            self.update_object(object_data, "Doing")
+            if "task" in old_entry["ds"]:
+                self.settings.data.timetagger.task_dict = object_data
             else:
+                self.settings.data.timetagger.state_dict = object_data
+        else:
+            if "task" in old_entry["ds"]:
+                self.update_object(self.settings.data.timetagger.task_dict, "Ready")
+                self.settings.data.timetagger.running_task = None
+                self.settings.data.timetagger.task_dict = None
+            else:
+                self.update_object(self.settings.data.timetagger.state_dict, "Ready")
                 self.settings.data.timetagger.running_state = None
-            self.settings.data.file_sync()
-
-            self.anytype.update_object(
-                self.space_id,
-                object_data["name"],
-                object_data["id"],
-                {
-                    "properties": [
-                        {"key": "status", "select": self.status_options["Ready"].id}
-                    ]
-                },
-            )
+                self.settings.data.timetagger.state_dict = None
+        self.settings.data.file_sync()
 
         make_call(
-            "put",
-            records_url,
-            "start timetagger timer",
-            entries_to_update,
-            "timetagger",
+            "put", records_url, "updating timetagger timer", entries_to_update, "timetagger"
         )
 
+        message = {}
+        if len(entries_to_update) > 1:
+            message["Stopping"] = entries_to_update[0]["ds"]
+            message["Starting"] = entries_to_update[1]["ds"]
+        else:
+            message["Starting"] = entries_to_update[0]["ds"]
+        
         return message
+
 
     def record_builder(self, entry: TimeEntry | dict):
 

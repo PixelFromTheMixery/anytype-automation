@@ -54,7 +54,9 @@ class TimetaggerPersistent(BaseModel):
     """Basic persistent data across reloads"""
 
     running_state: Optional[dict] = None
+    state_dict: Optional[str] = None
     running_task: Optional[dict] = None
+    task_dict: Optional[str] = None
 
 
 class ReferenceData(BaseModel):
