@@ -90,7 +90,7 @@ def request_builder(url: str, data: dict = None, target: str = "anytype"):
         if keys.timetagger_key is None:
             get_timetagger_token()
         headers["authtoken"] = keys.timetagger_key
-        data_pack = json.dumps([data])
+        data_pack = json.dumps(data)
     else:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
