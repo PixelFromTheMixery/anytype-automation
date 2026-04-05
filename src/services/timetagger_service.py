@@ -3,11 +3,12 @@
 import time
 from ulid import ULID
 
-from models.data import TimetaggerPersistent
+from models.data import TimetaggerPersistent, ActiveTimer
 from models.timetagger_models import TimeEntry
 
 from utils.anytype import AnyTypeUtils
 from utils.api_tools import make_call
+from utils.logger import logger
 from utils.pushover import PushoverUtils
 
 
@@ -21,6 +22,7 @@ class TimetaggerService:
         if settings.data.timetagger is None:
             self.settings.data.timetagger = TimetaggerPersistent()
             self.settings.data.file_sync()
+        self.data = self.settings.data.timetagger
         self.since = int(time.time())
         self.url = self.settings.config.timetagger_url + "/timetagger/api/v2"
         self.space_id = self.settings.config.task_space_id
@@ -31,36 +33,13 @@ class TimetaggerService:
         if settings.config.pushover:
             self.pushover = PushoverUtils()
 
-
     def generate_key(self):
         return str(ULID())
-
 
     def fetch_anytype_object(self, object_id: str):
         return self.anytype.get_object_by_id(self.space_id, object_id)
 
-
-    def changes(self):
-        updates_url = self.url + "/updates?since=" + str(self.since)
-
-        update_data = make_call(
-            "get", updates_url, "get recent updates", None, "timetagger"
-        )
-
-        for record in update_data["records"]:
-            if "#task" in record["ds"]:
-                self.settings.data.timetagger.running_task = record
-            if "#state" in record["ds"]:
-                self.settings.data.timetagger.running_state = record
-        self.settings.data.file_sync()
-
-        self.since = update_data["server_time"]
-
-
-    def update_object(self, known: dict|str, option_name: str):
-        object_data = {}
-        if isinstance(known, str): self.fetch_anytype_object(known)
-        else: object_data = known
+    def update_object(self, object_data, option_name: str):
         self.anytype.update_object(
             self.space_id,
             object_data["name"],
@@ -73,73 +52,69 @@ class TimetaggerService:
         )
 
     def toggle(self, object_id: str):
+        logger.info("Preparing timer update data")
+
         records_url = self.url + "/records"
-
-        self.changes()
-
-        self.changes()
 
         object_data = self.fetch_anytype_object(object_id)
 
+        object_type = object_data["type"].lower()
+
+        active = getattr(self.data, object_type)
+
         entries_to_update = []
-        old_entry = {"ds": ""}
 
-        if (
-            object_data["type"] == "Task"
-            and self.settings.data.timetagger.running_task is not None
-        ):
-            old_entry = self.record_builder(
-                TimeEntry(**self.settings.data.timetagger.running_task)
-            )
-            entries_to_update.append(old_entry)
-        elif (
-            object_data["type"] == "State"
-            and self.settings.data.timetagger.running_state is not None
-        ):
-            old_entry = self.record_builder(
-                TimeEntry(**self.settings.data.timetagger.running_state)
-            )
-            entries_to_update.append(old_entry)
+        message: dict = {}
 
-        if object_data["name"] not in old_entry["ds"]:
-            new_timer = self.record_builder(object_data)
-            entries_to_update.append(new_timer)
+        new_target: bool = True
+        logger.info("Stopping current timer")
+        if active.anytype:
+            new_target = object_data["name"] != active.anytype["name"]
+            self.update_object(active.anytype, "Ready")
+            stopped_timer = self.record_builder(active.entry, False)
+            entries_to_update.append(stopped_timer)
+            message["Stopping"] = stopped_timer["ds"]
+            setattr(self.data, object_type, ActiveTimer())
+
+        logger.info("Creating new timer:" + str(new_target))
+        if new_target:
             self.update_object(object_data, "Doing")
-            if "task" in old_entry["ds"]:
-                self.settings.data.timetagger.task_dict = object_data
-            else:
-                self.settings.data.timetagger.state_dict = object_data
-        else:
-            if "task" in old_entry["ds"]:
-                self.update_object(self.settings.data.timetagger.task_dict, "Ready")
-                self.settings.data.timetagger.running_task = None
-                self.settings.data.timetagger.task_dict = None
-            else:
-                self.update_object(self.settings.data.timetagger.state_dict, "Ready")
-                self.settings.data.timetagger.running_state = None
-                self.settings.data.timetagger.state_dict = None
+            new_timer = self.record_builder(object_data, True)
+            entries_to_update.append(new_timer)
+            setattr(
+                self.data,
+                object_type,
+                ActiveTimer(anytype=object_data, entry=new_timer),
+            )
+            message["Starting"] = new_timer["ds"]
+
         self.settings.data.file_sync()
 
         make_call(
-            "put", records_url, "updating timetagger timer", entries_to_update, "timetagger"
+            "put",
+            records_url,
+            "updating timetagger timer",
+            entries_to_update,
+            "timetagger",
         )
+        logger.info("Response candy")
+        message["Running"] = {
+            "task": self.data.task.anytype["name"] if self.data.task.anytype else None,
+            "state": (
+                self.data.state.anytype["name"] if self.data.state.anytype else None
+            ),
+        }
+        if object_type == "task" and new_target:
+            message["Recommended Stimuli"] = object_data["Focus"]
 
-        message = {}
-        if len(entries_to_update) > 1:
-            message["Stopping"] = entries_to_update[0]["ds"]
-            message["Starting"] = entries_to_update[1]["ds"]
-        else:
-            message["Starting"] = entries_to_update[0]["ds"]
-        
         return message
 
-
-    def record_builder(self, entry: TimeEntry | dict):
+    def record_builder(self, entry: dict, start: bool):
 
         now_seconds = time.time()
         now_time = int(now_seconds)
 
-        if isinstance(entry, dict):
+        if start:
             tags = [
                 entry["AoC"].lower(),
                 entry["Project"].lower(),
@@ -154,9 +129,9 @@ class TimetaggerService:
                 "key": self.generate_key(),
             }
         else:
-            timer_data = entry.model_dump()
+            timer_data = entry
             timer_data["t2"] = now_time
-            timer_data["mt"] = self.since
+            timer_data["mt"] = now_time
 
         timer_data["st"] = 0.0
         TimeEntry(**timer_data)

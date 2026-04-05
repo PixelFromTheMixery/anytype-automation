@@ -4,6 +4,7 @@ from typing import Dict, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from utils.helper import Helper
+from utils.logger import logger
 
 
 class QueryData(BaseModel):
@@ -50,13 +51,18 @@ class SpaceData(BaseModel):
     props: Dict[str, PropData] = Field(default_factory=dict)
 
 
+class ActiveTimer(BaseModel):
+    """Stores Mirrored timer data"""
+
+    entry: Optional[dict] = None
+    anytype: Optional[dict] = None
+
+
 class TimetaggerPersistent(BaseModel):
     """Basic persistent data across reloads"""
 
-    running_state: Optional[dict] = None
-    state_dict: Optional[str] = None
-    running_task: Optional[dict] = None
-    task_dict: Optional[str] = None
+    task: Optional[ActiveTimer] = ActiveTimer()
+    state: Optional[ActiveTimer] = ActiveTimer()
 
 
 class ReferenceData(BaseModel):
@@ -67,4 +73,5 @@ class ReferenceData(BaseModel):
 
     def file_sync(self):
         """Writes model to local file for reference"""
+        logger.info("File sync")
         Helper.read_write("data/data.yaml", "w", self.model_dump())
