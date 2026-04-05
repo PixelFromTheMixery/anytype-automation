@@ -6,18 +6,20 @@ from fastapi import APIRouter
 
 from services.timetagger_service import TimetaggerService
 
-from utils.anytype import AnyTypeUtils
 from utils.logger import logger
 
 from settings import generate_settings
+
 
 @lru_cache
 def get_timetagger_service():
     return TimetaggerService(generate_settings())
 
+
 router = APIRouter()
 
 timetagger = get_timetagger_service()
+
 
 @router.get("/toggle_timer/{object_id}")
 async def toggle_time(object_id: str):

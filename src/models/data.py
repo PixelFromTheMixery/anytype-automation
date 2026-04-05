@@ -50,10 +50,18 @@ class SpaceData(BaseModel):
     props: Dict[str, PropData] = Field(default_factory=dict)
 
 
+class TimetaggerPersistent(BaseModel):
+    """Basic persistent data across reloads"""
+
+    running_state: Optional[dict] = None
+    running_task: Optional[dict] = None
+
+
 class ReferenceData(BaseModel):
     """Top-level keys map to Dict[str, SpaceData]. E.g. tasks, journal..."""
 
     anytype: Dict[str, SpaceData] = {}
+    timetagger: Optional[TimetaggerPersistent] = None
 
     def file_sync(self):
         """Writes model to local file for reference"""
