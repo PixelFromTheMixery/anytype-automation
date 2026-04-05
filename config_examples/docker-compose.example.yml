@@ -9,6 +9,7 @@ services:
     volumes:
       - ./config.yaml:/app/config.yaml
       - ./data:/app/data
+      - /etc/localtime:/etc/localtime:ro
     network_mode: host 
     depends_on:
        timetagger:
