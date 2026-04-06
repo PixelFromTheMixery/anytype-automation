@@ -2,6 +2,7 @@
 
 import datetime
 from dateutil.relativedelta import relativedelta
+import re
 
 import yaml
 
@@ -18,6 +19,17 @@ CONVERTER = {
     "sun": 6,
 }
 
+PATTERN = r"(\d)-(day|week|month|quarter|year)(:?(?:mon|tue|wed|thu|fri|sat|sun|\d+]))?(@\d{1,4})?"
+
+DELTA_MAP = {
+    "day": lambda d, n: d + relativedelta(days=n),
+    "week": lambda d, n: d + relativedelta(weeks=n),
+    "month": lambda d, n, m=None: (
+        d + relativedelta(months=n, day=m) if m else d + relativedelta(months=n)
+    ),
+    "quarter": lambda d, n: d + relativedelta(months=n * 3),
+    "year": lambda d, n: d + relativedelta(years=n),
+}
 
 class Helper:
 
@@ -53,32 +65,22 @@ class Helper:
     def next_date(self, rate: str):
         """
         Returns formatted string of the next date based on the timescale provided
-        n@unit:modifier
+        n-unit:modifier@time
         Currently supported units:
-        days of the week - 1@week:mon,thu
-        day of the month - 1@month:15
+        days of the week - 1-week:mon,thu@14
+        day of the month - 1-month:15
         """
-        n, unit = rate.split("@")
-        n = int(n)
-        modifier = None
-        if ":" in unit:
-            unit, modifier = unit.split(":", 1)
-            if unit in ["month", "year"]:
-                modifier = int(modifier)
 
+        captured = re.search(PATTERN, rate).groups()
+        n = captured[0]
+        unit = captured[1]
+        
+
+        exit(0)
         allowed = self.date_eligibility(unit, modifier)
 
-        delta_map = {
-            "day": lambda d, n: d + relativedelta(days=n),
-            "week": lambda d, n: d + relativedelta(weeks=n),
-            "month": lambda d, n, m=None: (
-                d + relativedelta(months=n, day=m) if m else d + relativedelta(months=n)
-            ),
-            "quarter": lambda d, n: d + relativedelta(months=n * 3),
-            "year": lambda d, n: d + relativedelta(years=n),
-        }
 
-        dt_next = delta_map.get(unit, lambda d, n: d + relativedelta(days=n))(
+        dt_next = DELTA_MAP.get(unit, lambda d, n: d + relativedelta(days=n))(
             self.get_today(), n
         )
 

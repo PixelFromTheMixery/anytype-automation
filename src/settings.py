@@ -93,7 +93,7 @@ class ConfigSettings(BaseModel):
                 "for simple but flexible logging"
             ),
         ),
-    ]
+    ] = []
 
     pushover_journal_hours: Annotated[
         list[str],

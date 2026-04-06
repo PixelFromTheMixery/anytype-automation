@@ -27,7 +27,7 @@ class AnytypeService:
 
     def daily_rollover(self):
         """Daily automation script"""
-        dt_tmw_str = self.helper.next_date("1@day")
+        dt_tmw_str = self.helper.next_date("1-day")
         if self.settings.config.task_reset:
             logger.info("Running overdue tasks")
             self.task.overdue(dt_tmw_str)
