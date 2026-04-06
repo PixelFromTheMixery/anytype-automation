@@ -59,7 +59,10 @@ class SpaceService:
         self.helper = Helper()
         if self.data == {}:
             self.scan_space("tasks", settings.config.task_space_id)
-        if self.settings.config.journal_space_id and self.data.get("journal") is None:
+        if (
+            self.settings.config.journal_space_id != ""
+            and self.data.get("journal") is None
+        ):
             self.scan_space("journal", settings.config.journal_space_id)
 
     def scan_space(self, space_name, space_id):

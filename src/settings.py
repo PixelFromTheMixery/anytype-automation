@@ -59,7 +59,7 @@ class ConfigSettings(BaseModel):
         Field(
             description="Anytype space id for journal management",
         ),
-    ]
+    ] = ""
 
     habit_logs: Annotated[
         bool,

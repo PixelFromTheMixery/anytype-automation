@@ -2,20 +2,29 @@ local: false
 
 api_addr: "http://your.ip:port"
 
-task_space_id: anytimespace.id
+task_space_id: anytypespace.id
 task_reset: true
 
+pushover: true
+
+journal_space_id: anytypespace.id
+
+habit_logs: true
 task_logs: true
+task_review_threshold: 5
 task_log_props:
 - A
 - Few
 - Prop
 - Names
-task_review_threshold: 5
 
-pushover: true
 pushover_journal_hours: 
 - "0"
 - "1"
 - "2"
 - "3"
+
+pushover: true
+
+timetagger: true
+timetagger_url: "host:port"
