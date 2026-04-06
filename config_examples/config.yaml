@@ -13,18 +13,22 @@ habit_logs: true
 task_logs: true
 task_review_threshold: 5
 task_log_props:
-- A
-- Few
-- Prop
-- Names
+  - A
+  - Few
+  - Prop
+  - Names
 
 pushover_journal_hours: 
-- "0"
-- "1"
-- "2"
-- "3"
+  - "0"
+  - "1"
+  - "2"
+  - "3"
 
 pushover: true
 
 timetagger: true
 timetagger_url: "host:port"
+timetagger_types:
+  - lowercase
+  - type
+  - names

@@ -30,6 +30,8 @@ class TimetaggerService:
         self.status_options = (
             self.settings.data.anytype["tasks"].props["Status"].options
         )
+        self.possible_types = self.settings.config.timetagger_types
+
         if settings.config.pushover:
             self.pushover = PushoverUtils()
 
@@ -98,11 +100,14 @@ class TimetaggerService:
             "timetagger",
         )
         logger.info("Response candy")
-        message["Running"] = {
-            "task": self.data.task.anytype["name"] if self.data.task.anytype else None,
-            "state": (
-                self.data.state.anytype["name"] if self.data.state.anytype else None
-            ),
+
+        message["🔁Running"] = {
+            any_type: (
+                getattr(self.data, any_type).anytype["name"]
+                if getattr(self.data, any_type).anytype
+                else None
+            )
+            for any_type in self.possible_types
         }
         if object_type == "task" and new_target:
             message["🧠Recommended Stimuli"] = object_data["Focus"]

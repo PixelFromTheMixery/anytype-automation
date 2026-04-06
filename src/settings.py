@@ -109,6 +109,9 @@ class ConfigSettings(BaseModel):
     timetagger_url: Annotated[
         str, Field(description="URL to use to make calls to timetagger")
     ] = "http://timetagger:80"
+    timetagger_types: Annotated[
+        list[str], Field(description="URL to use to make calls to timetagger")
+    ] = []
 
 
 class Settings(BaseModel):
