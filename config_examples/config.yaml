@@ -28,7 +28,3 @@ pushover: true
 
 timetagger: true
 timetagger_url: "host:port"
-timetagger_types:
-  - lowercase
-  - type
-  - names

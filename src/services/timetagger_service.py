@@ -3,7 +3,7 @@
 import time
 from ulid import ULID
 
-from models.data import TimetaggerPersistent, ActiveTimer
+from models.data import ActiveTimer
 from models.timetagger_models import TimeEntry
 
 from utils.anytype import AnyTypeUtils
@@ -20,7 +20,7 @@ class TimetaggerService:
     def __init__(self, settings):
         self.settings = settings
         if settings.data.timetagger is None:
-            self.settings.data.timetagger = TimetaggerPersistent()
+            self.settings.data.timetagger = {}
             self.settings.data.file_sync()
         self.data = self.settings.data.timetagger
         self.since = int(time.time())
@@ -56,13 +56,11 @@ class TimetaggerService:
     def toggle(self, object_id: str):
         logger.info("Preparing timer update data")
 
-        records_url = self.url + "/records"
-
         object_data = self.fetch_anytype_object(object_id)
 
         object_type = object_data["type"].lower()
 
-        active = getattr(self.data, object_type)
+        active = self.data.get(object_type)
 
         entries_to_update = []
 
@@ -70,28 +68,25 @@ class TimetaggerService:
 
         new_target: bool = True
         logger.info("Stopping current timer")
-        if active.anytype:
+        if active.anytype and active is not None:
             new_target = object_data["name"] != active.anytype["name"]
             self.update_object(active.anytype, "Ready")
             stopped_timer = self.record_builder(active.entry, False)
             entries_to_update.append(stopped_timer)
             message["⏹️Stopping"] = stopped_timer["ds"]
-            setattr(self.data, object_type, ActiveTimer())
+            self.data[object_type] = ActiveTimer()
 
         logger.info("Creating new timer:" + str(new_target))
         if new_target:
             self.update_object(object_data, "Doing")
             new_timer = self.record_builder(object_data, True)
             entries_to_update.append(new_timer)
-            setattr(
-                self.data,
-                object_type,
-                ActiveTimer(anytype=object_data, entry=new_timer),
-            )
+            self.data[object_type] = ActiveTimer(anytype=object_data, entry=new_timer)
             message["▶️Starting"] = new_timer["ds"]
 
         self.settings.data.file_sync()
 
+        records_url = self.url + "/records"
         make_call(
             "put",
             records_url,
@@ -102,12 +97,9 @@ class TimetaggerService:
         logger.info("Response candy")
 
         message["🔁Running"] = {
-            any_type: (
-                getattr(self.data, any_type).anytype["name"]
-                if getattr(self.data, any_type).anytype
-                else None
-            )
-            for any_type in self.possible_types
+            object_type: self.data[object_type].anytype["name"]
+            for object_type in self.data
+            if self.data[object_type].anytype
         }
         if object_type == "task" and new_target:
             message["🧠Recommended Stimuli"] = object_data["Focus"]

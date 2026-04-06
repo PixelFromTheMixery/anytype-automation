@@ -58,19 +58,11 @@ class ActiveTimer(BaseModel):
     anytype: Optional[dict] = None
 
 
-class TimetaggerPersistent(BaseModel):
-    """Basic persistent data across reloads"""
-
-    task: Optional[ActiveTimer] = ActiveTimer()
-    state: Optional[ActiveTimer] = ActiveTimer()
-    habit: Optional[ActiveTimer] = ActiveTimer()
-
-
 class ReferenceData(BaseModel):
     """Top-level keys map to Dict[str, SpaceData]. E.g. tasks, journal..."""
 
     anytype: Dict[str, SpaceData] = {}
-    timetagger: Optional[TimetaggerPersistent] = None
+    timetagger: Optional[dict[str, ActiveTimer]] = None
 
     def file_sync(self):
         """Writes model to local file for reference"""
