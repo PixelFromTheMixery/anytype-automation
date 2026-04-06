@@ -67,7 +67,7 @@ class TimetaggerService:
 
         new_target: bool = True
         logger.info("Stopping current timer")
-        if active.anytype and active is not None:
+        if active is not None:
             new_target = object_data["name"] != active.anytype["name"]
             self.update_object(active.anytype, "Ready")
             stopped_timer = self.record_builder(active.entry, False)
@@ -98,7 +98,7 @@ class TimetaggerService:
         message["🔁Running"] = {
             object_type: self.data[object_type].anytype["name"]
             for object_type in self.data
-            if self.data[object_type].anytype
+            if self.data[object_type]
         }
         if object_type == "task" and new_target:
             message["🧠Recommended Stimuli"] = object_data["Focus"]
