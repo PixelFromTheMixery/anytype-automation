@@ -87,7 +87,7 @@ if settings.config.journal_space_id:
         logger.info("Day Journal endpoint called")
         return anytype_journal.find_or_create_day_journal()
 
-    @router.post("/log_habit/{object_id}", tags=["journal"])
+    @router.get("/log_habit/{object_id}", tags=["journal"])
     async def log_habit(object_id):
         """Endpoint to Log Habit occurrences"""
         logger.info("Log Habit endpoint called")
