@@ -30,7 +30,6 @@ class TimetaggerService:
         self.status_options = (
             self.settings.data.anytype["tasks"].props["Status"].options
         )
-        self.possible_types = self.settings.config.timetagger_types
 
         if settings.config.pushover:
             self.pushover = PushoverUtils()
