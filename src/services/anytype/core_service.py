@@ -13,10 +13,12 @@ class AnytypeService:
     - adds task to collection based on project
     """
 
-    def __init__(self, settings, task_service, space_service):
+    def __init__(self, settings, task_service, space_service, journal=None):
         self.settings = settings
         self.task = task_service
         self.space = space_service
+        if journal:
+            self.journal = journal
 
         self.anytype = AnyTypeUtils()
         self.helper = Helper()

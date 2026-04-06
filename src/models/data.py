@@ -63,6 +63,7 @@ class TimetaggerPersistent(BaseModel):
 
     task: Optional[ActiveTimer] = ActiveTimer()
     state: Optional[ActiveTimer] = ActiveTimer()
+    habit: Optional[ActiveTimer] = ActiveTimer()
 
 
 class ReferenceData(BaseModel):

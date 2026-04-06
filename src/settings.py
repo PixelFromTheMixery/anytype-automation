@@ -36,7 +36,7 @@ class ConfigSettings(BaseModel):
         Field(
             description="Anytype space id for task management",
         ),
-    ]
+    ] = None
 
     task_reset: Annotated[
         bool,
@@ -44,23 +44,36 @@ class ConfigSettings(BaseModel):
             description="Flag for resetting tasks with a Rate variable",
         ),
     ] = False
-    # Task Review
+
+    # Pushover
+    pushover: Annotated[
+        bool,
+        Field(
+            description="Flag for pushover notifications",
+        ),
+    ] = False
+
+    # Journal Management
+    journal_space_id: Annotated[
+        str,
+        Field(
+            description="Anytype space id for journal management",
+        ),
+    ]
+
+    habit_logs: Annotated[
+        bool,
+        Field(
+            description="If habits gets logged in journal space",
+        ),
+    ] = False
+
     task_logs: Annotated[
         bool,
         Field(
             description="If task gets logged in journal space",
         ),
     ] = False
-
-    task_log_props: Annotated[
-        list[str],
-        Field(
-            description=(
-                "List of Props to put into a metadata dictionary "
-                "for simple but flexible task logging"
-            ),
-        ),
-    ]
 
     task_review_threshold: Annotated[
         int,
@@ -72,13 +85,15 @@ class ConfigSettings(BaseModel):
         ),
     ] = 0
 
-    # Pushover
-    pushover: Annotated[
-        bool,
+    log_props: Annotated[
+        list[str],
         Field(
-            description="Flag for pushover notifications",
+            description=(
+                "List of Props to put into a metadata dictionary "
+                "for simple but flexible logging"
+            ),
         ),
-    ] = False
+    ]
 
     pushover_journal_hours: Annotated[
         list[str],

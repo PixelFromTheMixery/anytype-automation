@@ -1,7 +1,5 @@
 """Mask Management module"""
 
-import json
-
 from utils.anytype import AnyTypeUtils
 from utils.helper import Helper
 from utils.logger import logger
@@ -14,14 +12,22 @@ RESET = "Reset Count"
 class TaskService:
     """For managing"""
 
-    def __init__(self, settings):
+    def __init__(self, settings, journal=None):
         self.settings = settings
         self.data = self.settings.data.anytype
-        self.space_id = self.data["tasks"].id
+        self.space_id = self.settings.config.task_space_id
         self.anytype = AnyTypeUtils()
         if settings.config.pushover:
             self.pushover = PushoverUtils()
+        if journal:
+            self.journal = journal
         self.helper = Helper()
+
+    def set_ready(self):
+        return {
+            "key": "status",
+            "select": self.data["tasks"].props["Status"].options["Ready"].id,
+        }
 
     def recurrent_check(self):
         """Collect tasks for processing"""
@@ -44,25 +50,50 @@ class TaskService:
         if self.settings.config.timetagger:
             job_list.append("Adding id to timers")
             logger.info("Running id injection for timer")
-            tasks_to_check = self.anytype.get_list_view_objects(
+            objs_to_check = self.anytype.get_list_view_objects(
                 self.space_id,
                 self.data["tasks"].queries["Automation"].id,
                 self.data["tasks"].queries["Automation"].Timer,
             )
 
-            for task in tasks_to_check:
+            for obj in objs_to_check:
                 update_data = {
                     "properties": [
                         {
                             "key": "timer",
                             "url": self.settings.config.api_addr
                             + "/timetagger/toggle_timer/"
-                            + task["id"],
-                        }
+                            + obj["id"],
+                        },
+                        self.set_ready(),
                     ]
                 }
                 self.anytype.update_object(
-                    self.space_id, task["name"], task["id"], update_data
+                    self.space_id, obj["name"], obj["id"], update_data
+                )
+        if self.settings.config.habit_logs:
+            job_list.append("Adding id to habit url")
+            logger.info("Running id injection for habit")
+            habits_to_check = self.anytype.get_list_view_objects(
+                self.space_id,
+                self.data["tasks"].queries["Automation"].id,
+                self.data["tasks"].queries["Automation"].Habits,
+            )
+
+            for habit in habits_to_check:
+                update_data = {
+                    "properties": [
+                        {
+                            "key": "url",
+                            "url": self.settings.config.api_addr
+                            + "/anytype/log_habit/"
+                            + habit["id"],
+                        },
+                        self.set_ready(),
+                    ]
+                }
+                self.anytype.update_object(
+                    self.space_id, habit["name"], habit["id"], update_data
                 )
 
         return "Task Check Jobs completed: " + ", ".join(job_list)
@@ -128,6 +159,7 @@ class TaskService:
 
         return f"{len(tasks_to_check)} tasks with dates updated"
 
+    # TODO: Move this to journal service?
     def review_overflow(
         self,
         task,
@@ -148,26 +180,6 @@ class TaskService:
                 ],
             },
         )
-
-    def log_task_in_archive(self, task):
-        """
-        Define log object for archival
-        """
-        data = {
-            "type_key": "log",
-            "name": task["name"],
-            "properties": [],
-        }
-
-        metadata_dict = {}
-        sorting = self.settings.config.task_log_props
-        for prop in task:
-            if prop not in sorting:
-                continue
-            metadata_dict[prop] = task[prop]
-        sorted_data = {k: metadata_dict[k] for k in sorting}
-        data["properties"].append({"key": "metadata", "text": json.dumps(sorted_data)})
-        self.anytype.create_object(self.data["journal"].id, data)
 
     def task_review_cleanup(self, task, data):
         """Updates tasks that have been left unattended"""
@@ -228,4 +240,4 @@ class TaskService:
             )
 
         if self.settings.config.task_logs and task["Status"] == "Done":
-            self.log_task_in_archive(task)
+            self.journal.log_object(task)

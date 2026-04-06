@@ -59,6 +59,8 @@ class SpaceService:
         self.helper = Helper()
         if self.data == {}:
             self.scan_space("tasks", settings.config.task_space_id)
+        if self.settings.config.journal_space_id and self.data.get("journal") is None:
+            self.scan_space("journal", settings.config.journal_space_id)
 
     def scan_space(self, space_name, space_id):
         """
@@ -80,6 +82,8 @@ class SpaceService:
         self.settings.data.anytype[space_name] = SpaceData(**anytype_ref)
 
         self.settings.data.file_sync()
+
+        return self.settings.data
 
     def migrate_spaces(self, request: SpaceEditRequest):
         """Copy types and copy objects of that type to new space"""

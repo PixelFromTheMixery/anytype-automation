@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from middlewares.exception_middleware import ExceptionMiddleware
 from utils.api_tools import IPAllowlistMiddleware
-from utils.docs import description, tags_metadata
+from utils.docs import DESCRIPTION, TAGS
 from utils.logger import logger
 
 import routers
@@ -28,9 +28,9 @@ def create_app() -> FastAPI:
     """Configures the server"""
     fastapi_app = FastAPI(
         title="AnyType Automation",
-        description=description,
+        description=DESCRIPTION,
         summary="API endpoints for the Anytype App",
-        openapi_tags=tags_metadata,
+        openapi_tags=TAGS,
         lifespan=lifespan,
     )
 

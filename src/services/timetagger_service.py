@@ -73,7 +73,7 @@ class TimetaggerService:
             self.update_object(active.anytype, "Ready")
             stopped_timer = self.record_builder(active.entry, False)
             entries_to_update.append(stopped_timer)
-            message["Stopping"] = stopped_timer["ds"]
+            message["⏹️Stopping"] = stopped_timer["ds"]
             setattr(self.data, object_type, ActiveTimer())
 
         logger.info("Creating new timer:" + str(new_target))
@@ -86,7 +86,7 @@ class TimetaggerService:
                 object_type,
                 ActiveTimer(anytype=object_data, entry=new_timer),
             )
-            message["Starting"] = new_timer["ds"]
+            message["▶️Starting"] = new_timer["ds"]
 
         self.settings.data.file_sync()
 
@@ -105,7 +105,7 @@ class TimetaggerService:
             ),
         }
         if object_type == "task" and new_target:
-            message["Recommended Stimuli"] = object_data["Focus"]
+            message["🧠Recommended Stimuli"] = object_data["Focus"]
 
         return message
 

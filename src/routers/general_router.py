@@ -24,7 +24,7 @@ async def get_ref_data():
     return generate_settings()
 
 
-@router.get("/jobs")
+@router.get("/jobs", tags=["scheduled"])
 async def get_jobs():
     """Jobs Endpoint, should always return scheduled tasks"""
     logger.info("Jobs endpoint called")
