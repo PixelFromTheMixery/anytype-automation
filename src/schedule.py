@@ -18,10 +18,12 @@ settings = generate_settings()
 
 def lifespan(_app: FastAPI) -> None:
     """Job Scheduler"""
+    journal_service = None
+    if settings.config.journal_space_id != "":
+        journal_service = JournalService(settings)
     anytype_space = SpaceService(settings)
-    task_service = TaskService(settings)
+    task_service = TaskService(settings, journal_service)
     anytype_service = AnytypeService(settings, task_service, anytype_space)
-    journal_service = JournalService(settings)
 
     logger.info("Adding jobs")
     if settings.config.local:
