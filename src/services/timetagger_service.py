@@ -69,7 +69,7 @@ class TimetaggerService:
         logger.info("Stopping current timer")
         if active is not None and active.anytype is not None:
             new_target = object_data["name"] != active.anytype["name"]
-            self.update_object(active.anytype, "Ready")
+            self.update_object(active.anytype, "Timed")
             stopped_timer = self.record_builder(active.entry, False)
             entries_to_update.append(stopped_timer)
             message["⏹️Stopping"] = stopped_timer["ds"]

@@ -61,7 +61,8 @@ async def scan_space(space_name, space_id):
 async def reload_space(space_name):
     """Endpoint to reload space data at target"""
     logger.info("Space reloader endpoint called")
-    return anytype_spaces.scan_space(space_name, settings.data.anytype[space_name].id)
+    anytype_spaces.scan_space(space_name, settings.data.anytype[space_name].id)
+    return settings.data.anytype[space_name]
 
 
 @router.get("/space_data/{space_name}", tags=["spaces", "general"])
