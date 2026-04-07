@@ -204,13 +204,7 @@ class TaskService:
             update_data = {
                 "properties": [
                     {"key": "due_date", "date": next_date},
-                    {
-                        "key": "status",
-                        "select": self.data["tasks"]
-                        .props["Status"]
-                        .options["Repeating"]
-                        .id,
-                    },
+                    self.set_ready()
                 ]
             }
             if task["Status"] == "Skipped":
@@ -221,7 +215,7 @@ class TaskService:
                             "key": "status",
                             "select": self.data["tasks"]
                             .props["Status"]
-                            .options["Review"]
+                            .options["Blocked"]
                             .id,
                         }
                     )

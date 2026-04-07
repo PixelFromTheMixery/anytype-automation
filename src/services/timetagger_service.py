@@ -111,14 +111,16 @@ class TimetaggerService:
         now_time = int(now_seconds)
 
         if start:
-            tags = [
-                entry["AoC"].lower(),
-                entry["Project"].lower(),
-                entry["type"].lower(),
+            tags: list[str] = [
+                entry["AoC"],
+                entry["Project"],
+                entry["type"],
             ]
 
+            combined_tags = " ".join(["#"+ tag.lower().replace(" ", "-") for tag in tags])
+
             timer_data = {
-                "ds": entry["name"] + " #" + " #".join(tags),
+                "ds": entry["name"] + " " + combined_tags,
                 "t1": now_time,
                 "t2": now_time,
                 "mt": now_time,
