@@ -112,41 +112,24 @@ class JournalService:
             "Habit logged": obj_dict["name"],
             "Habit count": "✨" + str(new_count) + "✨",
         }
-
-    # def reflection_updates(self, dt_now, date_next):
-    #     """Updates dates of completed reflections"""
-    #     # TODO: Not in use, refine
-    #     objs_to_check = self.anytype.get_list_view_objects(
-    #         DATA.root["journal"]["id"],
-    #         DATA.root["journal"]["queries"]["reflections"]["id"],
-    #         DATA.root["journal"]["queries"]["reflections"]["update"],
-    #     )
-    #     for obj in objs_to_check:
-    #         today_day = dt_now
-
-    #         if "Rate" not in obj or obj["Rate"] == "":
-    #             new_tag = "1@day"
-    #         elif obj["Rate"] == "1@day":
-    #             new_tag = "1@week"
-    #         elif obj["Rate"] == "Week":
-    #             new_tag = "1@month"
-    #         elif obj["Rate"] == "Month":
-    #             new_tag = "1@quarter"
-    #         elif obj["Rate"] == "Quarter" and "Repeating Task" not in obj:
-    #             new_tag = "1@year"
-
-    #         new_day = self.next_date(today_day, new_tag)
-
-    #         data = {
-    #             "properties": [
-    #                 {
-    #                     "key": "status",
-    #                     "select": DATA.root["tags"]["journal"]["Status"]["options"][
-    #                         "Review"
-    #                     ]["id"],
-    #                 },
-    #                 {"key": "rate", "text": new_tag},
-    #                 {"key": "due_date", "date": new_day},
-    #             ]
-    #         }
-    #         # self.anytype.update_object(obj["name"], obj["id"], data)
+    def review_overflow(
+        self,
+        task,
+        space_id
+    ):
+        self.anytype.create_object(
+            self.data["journal"].id,
+            {
+                "template_id": self.data["journal"]
+                .types["Prompt"]
+                .templates["Task Review"],
+                "name": task["name"],
+                "type_key": "prompt",
+                "properties": [
+                    {
+                        "key": "url",
+                        "url": self.helper.make_deeplink(space_id, task["id"]),
+                    }
+                ],
+            },
+        )
