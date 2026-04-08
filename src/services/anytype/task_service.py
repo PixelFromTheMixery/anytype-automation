@@ -163,7 +163,7 @@ class TaskService:
             if task["Status"] == "Skipped" and self.max_reset > 0:
                 update_data = self.max_reset_cap(task, update_data)
             elif task["Status"] == "Done" and RESET in task:
-                update_data.append({"key": "reset_count", "number": 0})
+                update_data["properties"].append({"key": "reset_count", "number": 0})
 
 
             self.anytype.update_object(
