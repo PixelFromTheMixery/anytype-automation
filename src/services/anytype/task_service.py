@@ -23,7 +23,7 @@ class TaskService:
         if journal:
             self.journal = journal
         self.helper = Helper()
-        self.tmw_str = self.helper.dt_next_str("1@day")
+        self.tmw_str = self.helper.next_date("1@day")
 
     def set_ready(self):
         return {
