@@ -166,8 +166,10 @@ class TaskService:
                 )
             elif task["Status"] == "Done" and RESET in task:
                 update_data["properties"].append(
-                    {"key": "reset_count", "number": 0},
                     {"key": "due_date", "date": next_date},
+                )
+                update_data["properties"].append(
+                    {"key": "reset_count", "number": 0},
                 )
 
             self.anytype.update_object(
