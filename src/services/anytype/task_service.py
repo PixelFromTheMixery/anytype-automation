@@ -114,20 +114,21 @@ class TaskService:
             return "No tasks to update"
 
         for task in tasks_to_check:
-            data = {"properties": [{"key": "due_date", "date": self.tmw_str}]}
+            data = {
+                "properties": [
+                    {"key": "due_date", "date": self.helper.get_today(string=True)}
+                ]
+            }
             if self.max_reset > 0:
                 data = self.max_reset_cap(task, data)
 
             self.anytype.update_object(self.space_id, task["name"], task["id"], data)
 
-
         return f"{len(tasks_to_check)} tasks with dates updated"
 
-    def max_reset_cap(self, task: dict, data:dict):
+    def max_reset_cap(self, task: dict, data: dict):
         new_count = task[RESET] if RESET in task else 1
-        data["properties"].append(
-            {"key": "reset_count", "number": new_count})
-
+        data["properties"].append({"key": "reset_count", "number": new_count})
 
         if new_count >= self.max_reset:
             if self.settings.journal_space_id != "":
@@ -136,16 +137,11 @@ class TaskService:
             data["properties"].append(
                 {
                     "key": "status",
-                    "select": self.data["tasks"]
-                    .props["Status"]
-                    .options["Blocked"]
-                    .id,
+                    "select": self.data["tasks"].props["Status"].options["Blocked"].id,
                 }
             )
             data["properties"][0]["date"] = None
         return data
-
-
 
     def task_status_reset(self, task, next_date):
         """
@@ -157,10 +153,7 @@ class TaskService:
             self.anytype.delete_object(self.space_id, task["name"], task["id"])
         else:
             update_data = {
-                "properties": [
-                    {"key": "due_date", "date": next_date},
-                    self.set_ready()
-                ]
+                "properties": [{"key": "due_date", "date": next_date}, self.set_ready()]
             }
             if task["Status"] == "Skipped" and self.max_reset > 0:
                 update_data = self.max_reset_cap(task, update_data)
@@ -170,7 +163,7 @@ class TaskService:
             elif task["Status"] == "Done" and RESET in task:
                 update_data["properties"].append(
                     {"key": "reset_count", "number": 0},
-                    {"key": "due_date", "date": next_date}
+                    {"key": "due_date", "date": next_date},
                 )
 
             self.anytype.update_object(
