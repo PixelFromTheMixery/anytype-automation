@@ -23,6 +23,7 @@ class TaskService:
         if journal:
             self.journal = journal
         self.helper = Helper()
+        self.tmw_str = self.helper.dt_next_str("1@day")
 
     def set_ready(self):
         return {
@@ -99,20 +100,21 @@ class TaskService:
 
         return "Task Check Jobs completed: " + ", ".join(job_list)
 
-    def overdue(self, dt_next_str):
+    def overdue(self):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
         tasks_to_check = self.anytype.get_list_view_objects(
             self.space_id,
             self.data["tasks"].queries["Automation"].id,
             self.data["tasks"].queries["Automation"].Overdue,
         )
+        self.tmw_str = self.helper.next_date("1@day")
         if tasks_to_check is None:
             return "raise exception"
         if len(tasks_to_check) == 0:
             return "No tasks to update"
 
         for task in tasks_to_check:
-            data = {"properties": [{"key": "due_date", "date": dt_next_str}]}
+            data = {"properties": [{"key": "due_date", "date": self.tmw_str}]}
             if self.max_reset > 0:
                 data = self.max_reset_cap(task, data)
 
@@ -162,9 +164,14 @@ class TaskService:
             }
             if task["Status"] == "Skipped" and self.max_reset > 0:
                 update_data = self.max_reset_cap(task, update_data)
+                update_data["properties"].append(
+                    {"key": "due_date", "date": self.tmw_str}
+                )
             elif task["Status"] == "Done" and RESET in task:
-                update_data["properties"].append({"key": "reset_count", "number": 0})
-
+                update_data["properties"].append(
+                    {"key": "reset_count", "number": 0},
+                    {"key": "due_date", "date": next_date}
+                )
 
             self.anytype.update_object(
                 self.space_id, task["name"], task["id"], update_data
