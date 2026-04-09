@@ -49,6 +49,7 @@ class TaskService:
                     next_date = self.helper.next_date(task["Rate"])
 
                 self.task_status_reset(task, next_date)
+
         if self.settings.config.timetagger:
             job_list.append("Adding id to timers")
             logger.info("Running id injection for timer")
@@ -141,6 +142,9 @@ class TaskService:
                 }
             )
             data["properties"][0]["date"] = None
+        else:
+            data["properties"].append(self.set_ready)
+
         return data
 
     def task_status_reset(self, task, next_date):
