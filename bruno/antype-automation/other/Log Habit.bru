@@ -1,0 +1,20 @@
+meta {
+  name: Log Habit
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/anytype/log_habit/:object_id
+  body: none
+  auth: inherit
+}
+
+params:path {
+  object_id: bafyreianhmsa2eqkippwrb7ubaxl22e5gicgjfk7ldwv2rifq3tng43v74
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

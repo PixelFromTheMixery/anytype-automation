@@ -12,6 +12,7 @@ class JournalService:
         self.settings = settings
         self.data = self.settings.data.anytype
         self.space_id = self.settings.config.journal_space_id
+        self.task_space = self.settings.config.task_space_id
         self.anytype = AnyTypeUtils()
         self.helper = Helper()
         if settings.config.pushover:
@@ -19,7 +20,7 @@ class JournalService:
 
     def find_or_create_day_journal(self):
         """Searches for or creates a journal for the day"""
-        dt_now = self.helper.get_today(False)
+        dt_now = self.helper.get_today()
         date_str = dt_now.strftime(r"%d.%m.%y")
 
         entry = self.anytype.search(
@@ -38,7 +39,6 @@ class JournalService:
 
             # Matching output of search
             entry = {
-                # fmt: off
                 date_str: self.anytype.create_object(
                     self.space_id, data
                 )["object"]["id"]
@@ -77,6 +77,10 @@ class JournalService:
                     .props["Log Type"]
                     .options[obj_dict["type"]]
                     .id,
+                },
+                {
+                    "key": "logged",
+                    "date": self.helper.get_today(string=True)
                 }
             ],
         }
@@ -95,14 +99,13 @@ class JournalService:
         self.anytype.create_object(self.space_id, data)
 
     def log_habit(self, object_id):
-        task_space = self.settings.config.task_space_id
-        obj_dict = self.anytype.get_object_by_id(task_space, object_id)
+        obj_dict = self.anytype.get_object_by_id(self.task_space, object_id)
 
-        self.log_object(obj_dict)
+        self.log_object(obj_dict)   
 
         new_count = obj_dict["Count"] + 1
         self.anytype.update_object(
-            task_space,
+            self.task_space,
             obj_dict["name"],
             object_id,
             {"properties": [{"key": "count", "number": new_count}]},
@@ -112,6 +115,7 @@ class JournalService:
             "Habit logged": obj_dict["name"],
             "Habit count": "✨" + str(new_count) + "✨",
         }
+
     def review_overflow(
         self,
         task,

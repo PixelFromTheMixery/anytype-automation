@@ -87,11 +87,14 @@ class Helper:
 
         return dt_next.strftime(DATETIME_FORMAT)
 
-    def get_today(self, midnight=True):
+    def get_today(self, replace = ["minute","hour"], string:bool = False):
         """gets midnight today"""
-        now = datetime.datetime.now().replace(minute=0, second=0, microsecond=0)
 
-        if midnight:
-            now = now.replace(hour=0)
-
+        now = datetime.datetime.now().replace(microsecond=0, second=0)
+        if "minute" in replace:
+            now = datetime.datetime.now().replace(minute=0)
+        if "hour" in replace:
+            now = datetime.datetime.now().replace(hour=0)
+        if string:
+            return now.strftime(DATETIME_FORMAT)
         return now
