@@ -143,7 +143,7 @@ class TaskService:
             )
             data["properties"][0]["date"] = None
         else:
-            data["properties"].append(self.set_ready)
+            data["properties"].append(self.set_ready())
 
         return data
 
