@@ -1,11 +1,12 @@
 """Module for managing non-specific methods"""
 
-import datetime
-from dateutil.relativedelta import relativedelta
 import re
 
+import datetime
+from dateutil.relativedelta import relativedelta
 import yaml
 
+from models.helper_models import DueDateTime
 
 DATETIME_FORMAT = r"%Y-%m-%dT%H:%M:%SZ"
 
@@ -19,7 +20,7 @@ CONVERTER = {
     "sun": 6,
 }
 
-PATTERN = r"(\d)-(day|week|month|quarter|year)(:?(?:mon|tue|wed|thu|fri|sat|sun|\d+]))?(@\d{1,4})?"
+PATTERN = r"(\d+)-(day|week|month|quarter|year)(:?(?:mon|tue|wed|thu|fri|sat|sun|\d+]))?(@\d{1,4})?"
 
 DELTA_MAP = {
     "day": lambda d, n: d + relativedelta(days=n),
@@ -72,9 +73,6 @@ class Helper:
         """
 
         captured = re.search(PATTERN, rate).groups()
-        n = captured[0]
-        unit = captured[1]
-        
 
         exit(0)
         allowed = self.date_eligibility(unit, modifier)
