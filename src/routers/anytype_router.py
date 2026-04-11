@@ -37,7 +37,6 @@ def get_journal_service():
 
 router = APIRouter()
 
-settings = generate_settings()
 anytype_spaces = get_space_service()
 anytype_tasks = get_task_service()
 anytype_automation = AnytypeService(settings, anytype_tasks, anytype_spaces)
@@ -56,6 +55,21 @@ async def scan_space(space_name, space_id):
     """Endpoint to populate Data with space data"""
     logger.info("Space scanner endpoint called")
     return anytype_spaces.scan_space(space_name, space_id)
+
+
+@router.get("/reload_space/{space_name}", tags=["spaces", "general"])
+async def reload_space(space_name):
+    """Endpoint to reload space data at target"""
+    logger.info("Space reloader endpoint called")
+    anytype_spaces.scan_space(space_name, settings.data.anytype[space_name].id)
+    return settings.data.anytype[space_name]
+
+
+@router.get("/space_data/{space_name}", tags=["spaces", "general"])
+async def space_data(space_name):
+    """Endpoint to inspect space data"""
+    logger.info("Space data endpoint called")
+    return settings.data.anytype[space_name]
 
 
 @router.post("/migrate", tags=["spaces"])

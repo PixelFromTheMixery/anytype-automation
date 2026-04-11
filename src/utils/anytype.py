@@ -26,6 +26,7 @@ class AnyTypeUtils:
         space_id,
         search_name,
         search_body: dict,
+        simple: bool = True
     ):
         """Returns all objects by type"""
         url = URL + space_id
@@ -37,7 +38,10 @@ class AnyTypeUtils:
 
         formatted_objects = {}
         for obj in objects["data"] if objects is not None else []:
-            formatted_objects[obj["name"]] = obj["id"]
+            if simple:
+                formatted_objects[obj["name"]] = obj["id"]
+            else:
+                formatted_objects[obj["name"]] = self.unpack_object(obj, False)
 
         return formatted_objects
 

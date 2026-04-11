@@ -12,6 +12,7 @@ class JournalService:
         self.settings = settings
         self.data = self.settings.data.anytype
         self.space_id = self.settings.config.journal_space_id
+        self.task_space = self.settings.config.task_space_id
         self.anytype = AnyTypeUtils()
         self.helper = Helper()
         if settings.config.pushover:
@@ -19,7 +20,7 @@ class JournalService:
 
     def find_or_create_day_journal(self):
         """Searches for or creates a journal for the day"""
-        dt_now = self.helper.get_today(False)
+        dt_now = self.helper.get_today()
         date_str = dt_now.strftime(r"%d.%m.%y")
 
         entry = self.anytype.search(
@@ -38,7 +39,6 @@ class JournalService:
 
             # Matching output of search
             entry = {
-                # fmt: off
                 date_str: self.anytype.create_object(
                     self.space_id, data
                 )["object"]["id"]
@@ -77,6 +77,10 @@ class JournalService:
                     .props["Log Type"]
                     .options[obj_dict["type"]]
                     .id,
+                },
+                {
+                    "key": "logged",
+                    "date": self.helper.get_today(string=True)
                 }
             ],
         }
@@ -95,14 +99,13 @@ class JournalService:
         self.anytype.create_object(self.space_id, data)
 
     def log_habit(self, object_id):
-        task_space = self.settings.config.task_space_id
-        obj_dict = self.anytype.get_object_by_id(task_space, object_id)
+        obj_dict = self.anytype.get_object_by_id(self.task_space, object_id)
 
-        self.log_object(obj_dict)
+        self.log_object(obj_dict)   
 
         new_count = obj_dict["Count"] + 1
         self.anytype.update_object(
-            task_space,
+            self.task_space,
             obj_dict["name"],
             object_id,
             {"properties": [{"key": "count", "number": new_count}]},
@@ -113,40 +116,24 @@ class JournalService:
             "Habit count": "✨" + str(new_count) + "✨",
         }
 
-    # def reflection_updates(self, dt_now, date_next):
-    #     """Updates dates of completed reflections"""
-    #     # TODO: Not in use, refine
-    #     objs_to_check = self.anytype.get_list_view_objects(
-    #         DATA.root["journal"]["id"],
-    #         DATA.root["journal"]["queries"]["reflections"]["id"],
-    #         DATA.root["journal"]["queries"]["reflections"]["update"],
-    #     )
-    #     for obj in objs_to_check:
-    #         today_day = dt_now
-
-    #         if "Rate" not in obj or obj["Rate"] == "":
-    #             new_tag = "1@day"
-    #         elif obj["Rate"] == "1@day":
-    #             new_tag = "1@week"
-    #         elif obj["Rate"] == "Week":
-    #             new_tag = "1@month"
-    #         elif obj["Rate"] == "Month":
-    #             new_tag = "1@quarter"
-    #         elif obj["Rate"] == "Quarter" and "Repeating Task" not in obj:
-    #             new_tag = "1@year"
-
-    #         new_day = self.next_date(today_day, new_tag)
-
-    #         data = {
-    #             "properties": [
-    #                 {
-    #                     "key": "status",
-    #                     "select": DATA.root["tags"]["journal"]["Status"]["options"][
-    #                         "Review"
-    #                     ]["id"],
-    #                 },
-    #                 {"key": "rate", "text": new_tag},
-    #                 {"key": "due_date", "date": new_day},
-    #             ]
-    #         }
-    #         # self.anytype.update_object(obj["name"], obj["id"], data)
+    def review_overflow(
+        self,
+        task,
+        space_id
+    ):
+        self.anytype.create_object(
+            self.data["journal"].id,
+            {
+                "template_id": self.data["journal"]
+                .types["Prompt"]
+                .templates["Task Review"],
+                "name": task["name"],
+                "type_key": "prompt",
+                "properties": [
+                    {
+                        "key": "url",
+                        "url": self.helper.make_deeplink(space_id, task["id"]),
+                    }
+                ],
+            },
+        )

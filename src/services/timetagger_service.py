@@ -69,7 +69,7 @@ class TimetaggerService:
         logger.info("Stopping current timer")
         if active is not None and active.anytype is not None:
             new_target = object_data["name"] != active.anytype["name"]
-            self.update_object(active.anytype, "Ready")
+            self.update_object(active.anytype, "Timed")
             stopped_timer = self.record_builder(active.entry, False)
             entries_to_update.append(stopped_timer)
             message["⏹️Stopping"] = stopped_timer["ds"]
@@ -111,14 +111,16 @@ class TimetaggerService:
         now_time = int(now_seconds)
 
         if start:
-            tags = [
-                entry["AoC"].lower(),
-                entry["Project"].lower(),
-                entry["type"].lower(),
+            tags: list[str] = [
+                entry["AoC"],
+                entry["Project"],
+                entry["type"],
             ]
 
+            combined_tags = " ".join(["#"+ tag.lower().replace(" ", "-") for tag in tags])
+
             timer_data = {
-                "ds": entry["name"] + " #" + " #".join(tags),
+                "ds": entry["name"] + " " + combined_tags,
                 "t1": now_time,
                 "t2": now_time,
                 "mt": now_time,
