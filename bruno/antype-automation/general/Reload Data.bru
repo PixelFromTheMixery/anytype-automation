@@ -5,11 +5,16 @@ meta {
 }
 
 get {
-  url: {{host}}/reload
+  url: {{host}}/anytype/reload_space/:value
   body: none
   auth: inherit
 }
 
+params:path {
+  value: tasks
+}
+
 settings {
   encodeUrl: true
+  timeout: 0
 }

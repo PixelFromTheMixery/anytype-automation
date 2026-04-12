@@ -3,6 +3,7 @@ import json
 
 from utils.anytype import AnyTypeUtils
 from utils.helper import Helper
+from utils.date_tools import get_today
 from utils.logger import logger
 from utils.pushover import PushoverUtils
 
@@ -20,7 +21,7 @@ class JournalService:
 
     def find_or_create_day_journal(self):
         """Searches for or creates a journal for the day"""
-        dt_now = self.helper.get_today()
+        dt_now = get_today()
         date_str = dt_now.strftime(r"%d.%m.%y")
 
         entry = self.anytype.search(
@@ -39,9 +40,9 @@ class JournalService:
 
             # Matching output of search
             entry = {
-                date_str: self.anytype.create_object(
-                    self.space_id, data
-                )["object"]["id"]
+                date_str: self.anytype.create_object(self.space_id, data)["object"][
+                    "id"
+                ]
             }
 
         message = ""
@@ -78,10 +79,7 @@ class JournalService:
                     .options[obj_dict["type"]]
                     .id,
                 },
-                {
-                    "key": "logged",
-                    "date": self.helper.get_today(string=True)
-                }
+                {"key": "logged", "date": get_today(string=True)},
             ],
         }
 
@@ -101,7 +99,7 @@ class JournalService:
     def log_habit(self, object_id):
         obj_dict = self.anytype.get_object_by_id(self.task_space, object_id)
 
-        self.log_object(obj_dict)   
+        self.log_object(obj_dict)
 
         new_count = obj_dict["Count"] + 1
         self.anytype.update_object(
@@ -116,11 +114,7 @@ class JournalService:
             "Habit count": "✨" + str(new_count) + "✨",
         }
 
-    def review_overflow(
-        self,
-        task,
-        space_id
-    ):
+    def review_overflow(self, task, space_id):
         self.anytype.create_object(
             self.data["journal"].id,
             {
