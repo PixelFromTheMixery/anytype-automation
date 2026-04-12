@@ -1,7 +1,7 @@
 """Mask Management module"""
 
 from utils.anytype import AnyTypeUtils
-from utils.helper import Helper
+from utils.date_tools import get_next_date, get_today, unpack_time
 from utils.logger import logger
 from utils.pushover import PushoverUtils
 
@@ -22,8 +22,7 @@ class TaskService:
             self.pushover = PushoverUtils()
         if journal:
             self.journal = journal
-        self.helper = Helper()
-        self.tmw_str = self.helper.next_date("1-day")
+        self.tmw_str = get_next_date("1-day")
 
     def set_ready(self):
         return {
@@ -46,7 +45,7 @@ class TaskService:
             for task in tasks_to_check:
                 next_date = None
                 if task.get("Rate") not in ["", None]:
-                    next_date = self.helper.next_date(task["Rate"])
+                    next_date = get_next_date(task["Rate"])
 
                 self.task_status_reset(task, next_date)
 
@@ -108,18 +107,19 @@ class TaskService:
             self.data["tasks"].queries["Automation"].id,
             self.data["tasks"].queries["Automation"].Overdue,
         )
-        self.tmw_str = self.helper.next_date("1@day")
         if tasks_to_check is None:
             return "raise exception"
         if len(tasks_to_check) == 0:
             return "No tasks to update"
 
         for task in tasks_to_check:
-            data = {
-                "properties": [
-                    {"key": "due_date", "date": self.helper.get_today(string=True)}
-                ]
-            }
+            new_due: str
+            if "@" in task["Rate"]:
+                hour, minute = unpack_time(task["Rate"].split("@")[1])
+                new_due = get_today([minute, hour], True)
+            else:
+                new_due = get_today(string=True)
+            data = {"properties": [{"key": "due_date", "date": new_due}]}
             if self.max_reset > 0:
                 data = self.max_reset_cap(task, data)
 
@@ -161,8 +161,16 @@ class TaskService:
             }
             if task["Status"] == "Skipped" and self.max_reset > 0:
                 update_data = self.max_reset_cap(task, update_data)
+                new_due: str
+                if "@" in task["Rate"]:
+                    due_time = task["Rate"].split("@")[1]
+                    new_due = get_next_date("1-day@" + due_time)
+
                 update_data["properties"].append(
-                    {"key": "due_date", "date": self.tmw_str}
+                    {
+                        "key": "due_date",
+                        "date": new_due if new_due else self.tmw_str,
+                    }
                 )
             elif task["Status"] == "Done" and RESET in task:
                 update_data["properties"].append(
