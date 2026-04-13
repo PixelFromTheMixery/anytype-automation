@@ -161,7 +161,7 @@ class TaskService:
             }
             if task["Status"] == "Skipped" and self.max_reset > 0:
                 update_data = self.max_reset_cap(task, update_data)
-                new_due: str
+                new_due: str = ""
                 if "@" in task["Rate"]:
                     due_time = task["Rate"].split("@")[1]
                     new_due = get_next_date("1-day@" + due_time)
@@ -169,7 +169,7 @@ class TaskService:
                 update_data["properties"].append(
                     {
                         "key": "due_date",
-                        "date": new_due if new_due else self.tmw_str,
+                        "date": new_due if new_due != "" else self.tmw_str,
                     }
                 )
             elif task["Status"] == "Done" and RESET in task:

@@ -1,4 +1,5 @@
 import re
+from typing import Optional
 
 import calendar
 from datetime import datetime
@@ -6,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 DATETIME_FORMAT = r"%Y-%m-%dT%H:%M:%SZ"
 
-PATTERN = r"(\d+)-(day|weekd(?:day|end)?|month|quarter|year)(.+)?"
+PATTERN = r"(\d+)-(day|week(?:day|end)?|month|quarter|year)(.+)?"
 
 CONVERTER = {
     "mon": 0,
@@ -99,7 +100,7 @@ def unpack_extra(extra_str: str, unit: str):
     minute = 0
     modifiers = []
 
-    possible_extras = extra_str.split(":@")
+    possible_extras = list(filter(None, re.split(r"(?=[:@])", extra_str)))
 
     for extra in possible_extras:
         if "@" in extra:
@@ -114,7 +115,7 @@ def process_due_datetime(number, unit, extra):
 
     hour: int = 0
     minute: int = 0
-    modifier: int | list[str]
+    modifier: Optional[int | list[str]] = None
 
     if extra is not None:
         modifier, hour, minute = unpack_extra(extra, unit)
@@ -131,7 +132,8 @@ def process_due_datetime(number, unit, extra):
             datetime.now(),
             number,
         )
-        allowed = [0, 1, 2, 3, 4, 5, 6]
+
+        allowed = date_eligibility(unit, modifier)
 
         while dt_next.weekday() not in allowed:
             dt_next += datetime.timedelta(days=1)
@@ -151,7 +153,6 @@ def get_next_date(rate_str: str):
     """
 
     captured = re.search(PATTERN, rate_str).groups()
-
     number: int = int(captured[0])
     unit: str = captured[1]
     extra: [str] = captured[2] if captured[2] else None
