@@ -116,7 +116,7 @@ class TaskService:
             new_due: str
             if "@" in task["Rate"]:
                 hour, minute = unpack_time(task["Rate"].split("@")[1])
-                new_due = get_today([minute, hour], True)
+                new_due = get_today([hour, minute], True)
             else:
                 new_due = get_today(string=True)
             data = {"properties": [{"key": "due_date", "date": new_due}]}
