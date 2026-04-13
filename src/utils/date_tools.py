@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 DATETIME_FORMAT = r"%Y-%m-%dT%H:%M:%SZ"
 
-PATTERN = r"(\d+)-(day|week|month|quarter|year)(.+)?"
+PATTERN = r"(\d+)-(day|weekd(?:day|end)?|month|quarter|year)(.+)?"
 
 CONVERTER = {
     "mon": 0,
