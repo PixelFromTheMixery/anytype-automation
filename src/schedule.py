@@ -5,7 +5,6 @@ from fastapi import FastAPI
 
 from services.anytype.core_service import AnytypeService
 from services.anytype.journal_service import JournalService
-from services.anytype.task_service import TaskService
 from services.anytype.space_service import SpaceService
 
 from utils.logger import logger
@@ -22,8 +21,7 @@ def lifespan(_app: FastAPI) -> None:
     if settings.config.journal_space_id != "":
         journal_service = JournalService(settings)
     anytype_space = SpaceService(settings)
-    task_service = TaskService(settings, journal_service)
-    anytype_service = AnytypeService(settings, task_service, anytype_space)
+    anytype_service = AnytypeService(settings, anytype_space)
 
     logger.info("Adding jobs")
     if settings.config.local:
@@ -31,13 +29,6 @@ def lifespan(_app: FastAPI) -> None:
     else:
         logger.info("Adding daily rollover")
         scheduler.add_job(anytype_service.daily_rollover, "cron", hour=1)
-
-        # Anytype
-        if settings.config.task_reset:
-            logger.info("Adding task reset")
-            scheduler.add_job(
-                task_service.recurrent_check, "cron", hour="2-23", minute="*/30"
-            )
 
         # Pushover
         ## Journal
