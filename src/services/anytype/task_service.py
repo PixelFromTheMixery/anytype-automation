@@ -22,7 +22,7 @@ class TaskService:
             self.pushover = PushoverUtils()
         if journal:
             self.journal = journal
-        self.tmw_str = get_next_date("1-day")
+        self.tmw_str = get_next_date("0-day")
 
     def set_ready(self):
         return {
@@ -128,7 +128,7 @@ class TaskService:
         return f"{len(tasks_to_check)} tasks with dates updated"
 
     def max_reset_cap(self, task: dict, data: dict):
-        new_count = task[RESET] if RESET in task else 1
+        new_count = task[RESET] + 1 if RESET in task else 1
         data["properties"].append({"key": "reset_count", "number": new_count})
 
         if new_count >= self.max_reset:
