@@ -22,7 +22,7 @@ class TaskService:
             self.pushover = PushoverUtils()
         if journal:
             self.journal = journal
-        self.tmw_str = get_next_date("0-day")
+        self.tmw_str = get_next_date("1-day")
 
     def set_ready(self):
         return {
@@ -102,6 +102,7 @@ class TaskService:
 
     def overdue(self):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
+        self.tmw_str = get_next_date("1-day")
         tasks_to_check = self.anytype.get_list_view_objects(
             self.space_id,
             self.data["tasks"].queries["Automation"].id,
