@@ -3,10 +3,8 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 
-from services.anytype.core_service import AnytypeService
 from services.anytype.journal_service import JournalService
 from services.anytype.task_service import TaskService
-from services.anytype.space_service import SpaceService
 
 from utils.logger import logger
 
@@ -21,18 +19,17 @@ def lifespan(_app: FastAPI) -> None:
     journal_service = None
     if settings.config.journal_space_id != "":
         journal_service = JournalService(settings)
-    anytype_space = SpaceService(settings)
     task_service = TaskService(settings, journal_service)
-    anytype_service = AnytypeService(settings, task_service, anytype_space)
 
     logger.info("Adding jobs")
     if settings.config.local:
         logger.info("Local mode, no jobs to add")
     else:
-        logger.info("Adding daily rollover")
-        scheduler.add_job(anytype_service.daily_rollover, "cron", hour=1)
 
         # Anytype
+        logger.info("Adding daily rollover")
+        scheduler.add_job(task_service.daily_rollover, "cron", hour=1)
+
         if settings.config.task_reset:
             logger.info("Adding task reset")
             scheduler.add_job(

@@ -187,3 +187,10 @@ class TaskService:
 
         if self.settings.config.task_logs and task["Status"] == "Done":
             self.journal.log_object(task)
+
+    def daily_rollover(self):
+        """Daily automation script"""
+        if self.settings.config.task_reset:
+            logger.info("Running overdue tasks")
+            self.task.overdue()
+        logger.info("Daily Rollover completed")
