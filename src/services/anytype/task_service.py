@@ -133,7 +133,7 @@ class TaskService:
         data["properties"].append({"key": "reset_count", "number": new_count})
 
         if new_count >= self.max_reset:
-            if self.settings.journal_space_id != "":
+            if self.settings.config.journal_space_id != "":
                 self.journal.review_overflow(task, self.space_id)
 
             data["properties"].append(
@@ -192,5 +192,5 @@ class TaskService:
         """Daily automation script"""
         if self.settings.config.task_reset:
             logger.info("Running overdue tasks")
-            self.task.overdue()
+            self.overdue()
         logger.info("Daily Rollover completed")
