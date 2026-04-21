@@ -30,6 +30,7 @@ def create_app() -> FastAPI:
         title="AnyType Automation",
         description=DESCRIPTION,
         summary="API endpoints for the Anytype App",
+        root_path="/aa-api",
         openapi_tags=TAGS,
         lifespan=lifespan,
     )
