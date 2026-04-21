@@ -6,7 +6,6 @@ from fastapi import APIRouter
 
 from utils.logger import logger
 
-from services.anytype.core_service import AnytypeService
 from services.anytype.journal_service import JournalService
 from services.anytype.space_service import SpaceService
 from services.anytype.task_service import TaskService
@@ -39,7 +38,6 @@ router = APIRouter()
 
 anytype_spaces = get_space_service()
 anytype_tasks = get_task_service()
-anytype_automation = AnytypeService(settings, anytype_tasks, anytype_spaces)
 anytype_journal = get_journal_service()
 
 
@@ -83,14 +81,14 @@ async def migrate(edit_request: SpaceEditRequest):
 async def scan_spaces(sync_request: SpaceEditRequest):
     """Endpoint for scanning spaces for altering configuration file"""
     logger.info("Space syncer endpoint called")
-    return anytype_automation.sync_spaces(sync_request)
+    return anytype_spaces.sync_spaces(sync_request)
 
 
 @router.get("/daily_rollover", tags=["scheduled"])
 async def task_status_reset():
     """Endpoint to update overdue or no collection tasks"""
     logger.info("Daily rollover endpoint called")
-    return anytype_automation.daily_rollover()
+    return anytype_tasks.daily_rollover()
 
 
 if settings.config.journal_space_id:

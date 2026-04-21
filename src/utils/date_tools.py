@@ -136,7 +136,7 @@ def process_due_datetime(number, unit, extra):
         allowed = date_eligibility(unit, modifier)
 
         while dt_next.weekday() not in allowed:
-            dt_next += datetime.timedelta(days=1)
+            dt_next += relativedelta(days=1)
 
     dt_next = dt_next.replace(hour=hour, minute=minute, second=0, microsecond=0)
 

@@ -102,6 +102,7 @@ class TaskService:
 
     def overdue(self):
         """Updates due date to tomorrow at 11pm so it will be 'today' upon viewing"""
+        self.tmw_str = get_next_date("1-day")
         tasks_to_check = self.anytype.get_list_view_objects(
             self.space_id,
             self.data["tasks"].queries["Automation"].id,
@@ -114,7 +115,7 @@ class TaskService:
 
         for task in tasks_to_check:
             new_due: str
-            if "@" in task["Rate"]:
+            if "Rate" in task and "@" in task["Rate"]:
                 hour, minute = unpack_time(task["Rate"].split("@")[1])
                 new_due = get_today([hour, minute], True)
             else:
@@ -128,11 +129,11 @@ class TaskService:
         return f"{len(tasks_to_check)} tasks with dates updated"
 
     def max_reset_cap(self, task: dict, data: dict):
-        new_count = task[RESET] if RESET in task else 1
+        new_count = task[RESET] + 1 if RESET in task else 1
         data["properties"].append({"key": "reset_count", "number": new_count})
 
         if new_count >= self.max_reset:
-            if self.settings.journal_space_id != "":
+            if self.settings.config.journal_space_id != "":
                 self.journal.review_overflow(task, self.space_id)
 
             data["properties"].append(
@@ -186,3 +187,10 @@ class TaskService:
 
         if self.settings.config.task_logs and task["Status"] == "Done":
             self.journal.log_object(task)
+
+    def daily_rollover(self):
+        """Daily automation script"""
+        if self.settings.config.task_reset:
+            logger.info("Running overdue tasks")
+            self.overdue()
+        logger.info("Daily Rollover completed")
