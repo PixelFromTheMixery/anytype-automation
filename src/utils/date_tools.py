@@ -143,7 +143,7 @@ def process_due_datetime(number, unit, extra):
     return dt_next
 
 
-def get_next_date(rate_str: str):
+def get_next_date(rate_str: str, task_name: str = ""):
     """
     Returns formatted string of the next date based on the timescale provided
     n-unit:modifier@time
@@ -152,7 +152,12 @@ def get_next_date(rate_str: str):
     day of the month - 1-month:15
     """
 
-    captured = re.search(PATTERN, rate_str).groups()
+    try:
+        captured = re.search(PATTERN, rate_str).groups()
+    except ValueError as exc:
+        raise ValueError(
+            "Rate not in acceptable format. Please review " + task_name
+        ) from exc
     number: int = int(captured[0])
     unit: str = captured[1]
     extra: [str] = captured[2] if captured[2] else None

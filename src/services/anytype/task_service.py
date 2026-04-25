@@ -45,7 +45,7 @@ class TaskService:
             for task in tasks_to_check:
                 next_date = None
                 if task.get("Rate") not in ["", None]:
-                    next_date = get_next_date(task["Rate"])
+                    next_date = get_next_date(task["Rate"], task["name"])
 
                 self.task_status_reset(task, next_date)
 
@@ -165,7 +165,7 @@ class TaskService:
                 new_due: str = ""
                 if "@" in task["Rate"]:
                     due_time = task["Rate"].split("@")[1]
-                    new_due = get_next_date("1-day@" + due_time)
+                    new_due = get_next_date("1-day@" + due_time, task["name"])
 
                 update_data["properties"].append(
                     {
