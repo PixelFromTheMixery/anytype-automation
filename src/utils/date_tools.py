@@ -154,8 +154,8 @@ def get_next_date(rate_str: str, task_name: str = ""):
 
     try:
         captured = re.search(PATTERN, rate_str).groups()
-    except ValueError as exc:
-        raise ValueError(
+    except AttributeError as exc:
+        raise AttributeError(
             "Rate not in acceptable format. Please review " + task_name
         ) from exc
     number: int = int(captured[0])
