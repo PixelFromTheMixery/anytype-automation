@@ -1,5 +1,9 @@
 # Anytype Automation
 
+> This project is paused as has grown in scope and has become less defined. It was a good learning opportunity in software achitecture, limitations, and suitability. I love anytype but it ultimately a database, not a state machine that I hoped it would be. That's on me for trying to put a square peg into a round hole.
+>
+>  I may at one point return to this to this project and make it solely an anytype automation project without sidecars and additional tools but from this commit, it will considered superceded by my new and better designed project: [Flux](https://github.com/PixelFromTheMixery/flux)
+
 A FastAPI-based automation service for managing tasks and workflows in Anytype, integrated with Pushover for notifications.
 
 ## Overview
